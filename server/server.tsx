@@ -316,7 +316,7 @@ app.prepare()
       });
     });
 
-    server.post('/api/submit', (req, res) => {
+    server.post('/api/submit', authBridge, (req, res) => {
       const taskId = parseInt(req.body.task_id, 10);
       const userId = (req.user as User).id;
       const userName = (req.user as User).name;
@@ -422,13 +422,13 @@ app.prepare()
       });
     });
 
-    server.post('/login', passport.authenticate('local', {
+    server.post('/login', noAuthBridge, passport.authenticate('local', {
       successRedirect: '/tasks',
       failureRedirect: '/login',
       failureFlash: true,
     }));
 
-    server.post('/register', (req, res) => {
+    server.post('/register', noAuthBridge, (req, res) => {
       const {
         username,
         email,

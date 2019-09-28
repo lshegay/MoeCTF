@@ -18,13 +18,10 @@ import fetch from 'isomorphic-fetch';
 import Navigation from '../../components/Navigation';
 import Footer from '../../components/Footer';
 import PageProps from '../../interfaces/props/TasksProps';
-import Task from '../../interfaces/Task';
-import User from '../../interfaces/User';
 
 import config from '../../server/config';
 
 import '../../styles/main.scss';
-import Category from '../../interfaces/Category';
 
 
 interface PageStates {
