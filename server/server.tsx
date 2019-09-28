@@ -10,6 +10,7 @@ import pbkdf2 from 'pbkdf2';
 import sqlite3Original from 'sqlite3';
 import connectSQLite3 from 'connect-sqlite3';
 
+import History from './history';
 import User from '../interfaces/User';
 import Task from '../interfaces/Task';
 import Category from '../interfaces/Category';
@@ -25,6 +26,7 @@ const db = new sqlite3.Database(config.database);
 app.prepare()
   .then(() => {
     const server = express();
+    const history = new History(config.logFileDir,);
 
     function authBridge(req, res, next): void {
       if (req.isAuthenticated()) {
@@ -317,18 +319,21 @@ app.prepare()
     server.post('/api/submit', (req, res) => {
       const taskId = parseInt(req.body.task_id, 10);
       const userId = (req.user as User).id;
+      const userName = (req.user as User).name;
       const flag = req.body.task_flag.trim().replace('\n', '');
 
       const statement = db.prepare('SELECT * from task WHERE task_id=(?) AND task_flag=(?)');
       statement.get(taskId, flag, (_, task) => {
         if (!task) {
           req.flash('error', 'Flag is invalid');
+          history.makeLog(`${userName} has submitted WRONG flag`, { userId, taskId, flag });
           return res.redirect(req.headers.referer || '/');
         }
 
         const currentDate: number = Date.now();
         db.run('INSERT INTO stask (stask_date, task_id, user_id) VALUES (?, ?, ?)', currentDate, taskId, userId, () => {
           req.flash('message', 'Flag was submitted!');
+          history.makeLog(`${userName} has solved a task!`, { userId, taskId });
           return res.redirect(req.headers.referer || '/');
         });
       });

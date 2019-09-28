@@ -9,6 +9,7 @@ interface Config {
   https: boolean;
   cookiesAge: number;
   staticDir: string;
+  logFileDir: string;
 }
 
 export default Config;
