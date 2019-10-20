@@ -16,7 +16,7 @@
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
-  },  
+  },
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -26,14 +26,28 @@
   },
   "overrides": [
     {
-      "files": ["*.js", "*.jsx"],
+      "files": [
+        "*.js",
+        "*.jsx"
+      ],
       "parser": "espree"
     }
   ],
   "rules": {
-    "linebreak-style": ["warn", "windows"],
+    "linebreak-style": [
+      "warn",
+      "windows"
+    ],
     "eqeqeq": "off",
-    "react/jsx-filename-extension": [1, { "extensions": [".jsx", "tsx"] }],
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [
+          ".jsx",
+          "tsx"
+        ]
+      }
+    ],
     "@typescript-eslint/no-var-requires": "off",
     "no-console": "off",
     "jsx-a11y/anchor-is-valid": "off",
@@ -41,12 +55,18 @@
     "comma-dangle": "off",
     "no-undef": "off",
     "no-shadow": "off",
-    "consistent-return": "off"
+    "consistent-return": "off",
+    "react/jsx-props-no-spreading": "off"
   },
   "settings": {
     "import/resolver": {
       "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".ts",
+          ".tsx"
+        ]
       }
     }
   }

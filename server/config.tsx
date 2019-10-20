@@ -1,3 +1,4 @@
+import moment from 'moment';
 import Config from '../interfaces/Config';
 
 const config: Readonly<Config> = {
@@ -12,6 +13,9 @@ const config: Readonly<Config> = {
   cookiesAge: 1000 * 60 * 60 * 24 * 30,
   staticDir: 'static',
   logFileDir: './logs/log.txt',
+  isTimer: true,
+  dateStart: moment('2019-10-01 00:00:00'),
+  dateEnd: moment('2019-11-01 18:00:00'),
 };
 
 export default config;

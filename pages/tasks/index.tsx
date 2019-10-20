@@ -13,8 +13,10 @@ import {
   ListGroup,
   ListGroupItem,
   Badge,
+  Jumbotron,
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
+import moment from 'moment';
 import Navigation from '../../components/Navigation';
 import Footer from '../../components/Footer';
 import PageProps from '../../interfaces/props/TasksProps';
@@ -30,14 +32,20 @@ interface PageStates {
 
 class Page extends React.PureComponent<PageProps, PageStates> {
   static async getInitialProps({ req }): Promise<PageProps> {
-    const { protocol, hostname, port } = config;
+    const {
+      protocol,
+      hostname,
+      port,
+      isTimer,
+      dateEnd,
+    } = config;
     const host = hostname + (port ? `:${port}` : '');
     const pageRequest = `${protocol}//${host}/api/tasks`;
     const res = await fetch(pageRequest, {
       method: 'POST',
-      body: JSON.stringify({ userId: req.user.id }),
       headers: {
         'Content-Type': 'application/json',
+        Cookie: req.headers.cookie
       },
     });
     const json = await res.json();
@@ -47,6 +55,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       categories: json.categories,
       message: req.flash('error'),
       user: req.user,
+      isGameEnded: isTimer && moment().isSameOrAfter(dateEnd),
     };
 
     return pageProps;
@@ -71,6 +80,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       categories,
       message,
       user,
+      isGameEnded,
     } = this.props;
     const { collapse } = this.state;
     const tasksElements: JSX.Element[] = [];
@@ -201,6 +211,17 @@ class Page extends React.PureComponent<PageProps, PageStates> {
         <Navigation currentNav="tasks" className="mb-5" user={user} />
         <main className="container mb-5">
           {adminPanel}
+          {
+            isGameEnded && (
+              <Jumbotron className="text-center">
+                <h1 className="display-3 text-center">The game is over</h1>
+                <h1 className="display-4 text-center">
+                  Thanks everyone for taking a part in this game!
+                </h1>
+                <h3><a href="/scoreboard">View scoreboard!</a></h3>
+              </Jumbotron>
+            )
+          }
           <div className="row">
             {tasksElements}
           </div>

@@ -12,6 +12,7 @@ import {
   Badge,
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
+import moment from 'moment';
 import Navigation from '../../components/Navigation';
 import Footer from '../../components/Footer';
 import PageProps from '../../interfaces/props/TasksProps';
@@ -29,14 +30,20 @@ interface PageStates {
 
 class Page extends React.PureComponent<PageProps, PageStates> {
   static async getInitialProps({ query, req }): Promise<PageProps> {
-    const { protocol, hostname, port } = config;
+    const {
+      protocol,
+      hostname,
+      port,
+      isTimer,
+      dateEnd,
+    } = config;
     const host = hostname + (port ? `:${port}` : '');
     const pageRequest = `${protocol}//${host}/api/tasks/${query.task_id}`;
     const res = await fetch(pageRequest, {
       method: 'POST',
-      body: JSON.stringify({ userId: req.user.id }),
       headers: {
         'Content-Type': 'application/json',
+        Cookie: req.headers.cookie
       },
     });
     const json = await res.json();
@@ -46,6 +53,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       categories: json.categories,
       user: req.user,
       message: req.flash('error') || req.flash('message'),
+      isGameEnded: isTimer && !req.user.admin && moment().isSameOrAfter(dateEnd),
     };
 
     return pageProps;
@@ -70,6 +78,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       categories,
       message,
       user,
+      isGameEnded,
     } = this.props;
     const { collapse } = this.state;
     const task = tasks[0];
@@ -78,9 +87,11 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       // eslint-disable-next-line react/jsx-one-expression-per-line
       ? (<p>Файл: <a href={`/${task.file}`}>{ task.file }</a></p>) : '';
 
-    const inputElement = task.solved
-      ? (<Input name="task_flag" disabled={task.solved} value="Solved!" />)
-      : (<Input name="task_flag" disabled={task.solved} />);
+    const inputElementAttrs = {
+      disabled: task.solved ? true : isGameEnded,
+      ...(isGameEnded && { value: 'Game has ended!' }),
+      ...(task.solved && { value: 'Solved!' }),
+    };
 
     const categoriesElements: JSX.Element[] = [];
 
@@ -181,11 +192,11 @@ class Page extends React.PureComponent<PageProps, PageStates> {
             <Form method="POST" action="/api/submit">
               <input type="hidden" name="task_id" value={task.id} />
               <FormGroup>
-                {inputElement}
+                <Input name="task_flag" {...inputElementAttrs} />
               </FormGroup>
               <p>{message}</p>
               <FormGroup>
-                <Button name="task_submit" disabled={task.solved}>
+                <Button name="task_submit" disabled={task.solved || isGameEnded}>
                   Подтвердить
                 </Button>
               </FormGroup>

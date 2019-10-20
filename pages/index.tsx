@@ -9,8 +9,10 @@ import {
   CardTitle,
   FormGroup,
   Label,
+  Jumbotron,
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
+import moment, { Moment, Duration } from 'moment';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 import PageProps from '../interfaces/props/PostsProps';
@@ -22,7 +24,10 @@ import '../styles/main.scss';
 
 interface PageStates {
   collapse: boolean;
+  currentDate: Moment;
 }
+
+let timer: NodeJS.Timeout;
 
 class Page extends React.PureComponent<PageProps, PageStates> {
   static async getInitialProps({ req }): Promise<PageProps> {
@@ -62,7 +67,20 @@ class Page extends React.PureComponent<PageProps, PageStates> {
 
     this.state = {
       collapse: false,
+      currentDate: moment(),
     };
+  }
+
+  componentDidMount(): void {
+    timer = setInterval(() => {
+      this.setState({
+        currentDate: moment(),
+      });
+    }, 1000);
+  }
+
+  componentWillUnmount(): void {
+    clearInterval(timer);
   }
 
   toggle(): void {
@@ -71,8 +89,20 @@ class Page extends React.PureComponent<PageProps, PageStates> {
 
   render(): JSX.Element {
     const { posts, user, message } = this.props;
-    const { collapse } = this.state;
+    const { collapse, currentDate } = this.state;
     const postsElements = [];
+
+    let duration: Duration;
+    if (currentDate.isBefore(config.dateStart)) {
+      duration = moment.duration(config.dateStart.diff(currentDate));
+    } else if (currentDate.isSameOrAfter(config.dateStart)) {
+      duration = moment.duration(config.dateEnd.diff(currentDate));
+    }
+
+    const timeLeft = `${duration.months() > 0 ? `${duration.months()} months ` : ''}${duration.days()} days `
+      + `${duration.hours() < 10 ? '0' : ''}${duration.hours()}`
+      + `:${duration.minutes() < 10 ? '0' : ''}${duration.minutes()}`
+      + `:${duration.seconds() < 10 ? '0' : ''}${duration.seconds()}`;
 
     let adminPanel: JSX.Element;
 
@@ -115,7 +145,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       const {
         id, title, content, date,
       } = post;
-      const textDate = new Date(parseInt(date, 10));
+      const textDate = moment(parseInt(date, 10));
       postsElements.push(
         <div className="blog-post" id={`post-${id}`} key={post.id}>
           <h2 className="blog-post-title">{title}</h2>
@@ -130,7 +160,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
             ) : ''
           }
           <p className="blog-post-meta">
-            {textDate.toUTCString()}
+            {textDate.fromNow()}
           </p>
           {content}
         </div>
@@ -142,6 +172,57 @@ class Page extends React.PureComponent<PageProps, PageStates> {
         <Navigation className="masthead mb-5" user={user} />
         <main className="container">
           {adminPanel}
+          {
+            config.isTimer && (
+              <div>
+                <Jumbotron color="black" className="text-center">
+                  {
+                    currentDate.isBefore(config.dateStart) && (
+                      <>
+                        <h1 className="display-3 text-center">The game hasn&apos;t started yet</h1>
+                        <h1 className="display-4 text-center">
+                          {
+                            `${timeLeft} left.`
+                          }
+                        </h1>
+                        <p className="lead text-center">
+                          {`Game starts in: ${config.dateStart.format('LL HH:mm:ss')}`}
+                        </p>
+                      </>
+                    )
+                  }
+                  {
+                    currentDate.isBetween(config.dateStart, config.dateEnd) && (
+                      <>
+                        <h1 className="display-3 text-center">The game started</h1>
+                        <h1 className="display-4 text-center">
+                          {
+                            `${timeLeft} left to finish.`
+                          }
+                        </h1>
+                        <p className="lead text-center">
+                          {
+                            `Game finishes in: ${config.dateEnd.format('LL HH:mm:ss')}`
+                          }
+                        </p>
+                      </>
+                    )
+                  }
+                  {
+                    currentDate.isSameOrAfter(config.dateEnd) && (
+                      <>
+                        <h1 className="display-3 text-center">The game is over</h1>
+                        <h1 className="display-4 text-center">
+                          Thanks everyone for taking a part in this game!
+                        </h1>
+                        <h3><a href="/scoreboard">View scoreboard!</a></h3>
+                      </>
+                    )
+                  }
+                </Jumbotron>
+              </div>
+            )
+          }
           <div className="blog-name">
             <h3 className="pb-3 mb-4 font-italic border-bottom">News</h3>
             {postsElements}

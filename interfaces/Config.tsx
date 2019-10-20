@@ -1,3 +1,5 @@
+import { Moment } from 'moment';
+
 interface Config {
   siteTitle: string;
   protocol: string;
@@ -10,6 +12,9 @@ interface Config {
   cookiesAge: number;
   staticDir: string;
   logFileDir: string;
+  isTimer: boolean;
+  dateStart: Moment;
+  dateEnd: Moment;
 }
 
 export default Config;

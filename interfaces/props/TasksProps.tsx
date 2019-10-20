@@ -5,6 +5,7 @@ import Category from '../Category';
 interface TasksProps extends PageProps {
   tasks: Task[];
   categories: Category[];
+  isGameEnded: boolean;
 }
 
 export default TasksProps;

@@ -9,7 +9,7 @@ import nextjs from 'next';
 import pbkdf2 from 'pbkdf2';
 import sqlite3Original from 'sqlite3';
 import connectSQLite3 from 'connect-sqlite3';
-
+import moment, { Moment } from 'moment';
 import History from './history';
 import User from '../interfaces/User';
 import Task from '../interfaces/Task';
@@ -26,21 +26,45 @@ const db = new sqlite3.Database(config.database);
 app.prepare()
   .then(() => {
     const server = express();
-    const history = new History(config.logFileDir,);
+    const history = new History(config.logFileDir);
 
-    function authBridge(req, res, next): void {
+    const authBridge = (req, res, next): void => {
       if (req.isAuthenticated()) {
         return next();
       }
       res.status(403).redirect('/login');
-    }
+    };
 
-    function noAuthBridge(req, res, next): void {
+    const startMatchBridge = (req, res, next): void => {
+      const currentDate: Moment = moment();
+
+      if (!config.isTimer
+        || (config.isTimer && currentDate.isSameOrAfter(config.dateStart))
+        || (req.isAuthenticated() && req.user.admin)) {
+        return next();
+      }
+      res.status(403).redirect('/');
+    };
+
+    const endMatchBridge = (req, res, next): void => {
+      const currentDate: Moment = moment();
+
+      if (!config.isTimer
+        || (config.isTimer && currentDate.isBefore(config.dateEnd))
+        || (req.isAuthenticated() && req.user.admin)) {
+        return next();
+      }
+
+      req.flash('error', 'Match has been already finished');
+      return res.redirect(req.headers.referer || '/');
+    };
+
+    const noAuthBridge = (req, res, next): void => {
       if (req.isAuthenticated()) {
         return res.status(403).redirect('/');
       }
       next();
-    }
+    };
 
     function adminBridge(req, res, next): void {
       if (req.isAuthenticated() && req.user.admin) {
@@ -50,7 +74,10 @@ app.prepare()
     }
 
     server.use(express.static(config.staticDir));
-    server.use(bodyParser());
+    server.use(bodyParser.urlencoded({
+      extended: true,
+    }));
+    server.use(bodyParser.json());
     server.use(session({
       secret: config.secret,
       resave: false,
@@ -118,10 +145,9 @@ app.prepare()
       });
     });
 
-    server.get('/tasks', authBridge);
+    server.get('/tasks', authBridge, startMatchBridge);
     server.get('/scoreboard', authBridge);
     server.get('/profile', authBridge);
-    server.get('/scoreboard', authBridge);
     server.get('/logout', authBridge, (req, res) => {
       req.logout();
       res.redirect('/');
@@ -130,26 +156,6 @@ app.prepare()
     server.get('/register', noAuthBridge);
 
     server.get('*', (req, res) => handle(req, res));
-
-    server.post('/api/users', (_, res) => {
-      db.all('SELECT u.user_id, u.user_name, SUM(t.task_points) '
-        + 'FROM user AS u LEFT JOIN stask AS s ON s.user_id = u.user_id '
-        + 'LEFT JOIN task AS t ON s.task_id = t.task_id '
-        + 'WHERE u.user_admin = 0 '
-        + 'GROUP BY u.user_id ORDER BY SUM(t.task_points) DESC, SUM(s.stask_date) ASC',
-      (_, users) => {
-        const newUsers: User[] = users.map((user) => {
-          const readyUser: User = {
-            id: user.user_id,
-            name: user.user_name,
-            points: user['SUM(t.task_points)'] || 0,
-          };
-
-          return readyUser;
-        });
-        res.json({ users: newUsers });
-      });
-    });
 
     server.post('/api/admin/create/category', adminBridge, (req, res) => {
       const { name } = req.body;
@@ -225,7 +231,7 @@ app.prepare()
       }
 
       const statement = db.prepare('INSERT INTO task (task_name, category_id, '
-      + 'task_content, task_points, task_file, task_flag) VALUES (?, ?, ?, ?, ?, ?)',
+        + 'task_content, task_points, task_file, task_flag) VALUES (?, ?, ?, ?, ?, ?)',
       (error): void => {
         if (error) {
           req.flash('error', 'Something happened wrong...');
@@ -316,7 +322,7 @@ app.prepare()
       });
     });
 
-    server.post('/api/submit', authBridge, (req, res) => {
+    server.post('/api/submit', authBridge, startMatchBridge, endMatchBridge, (req, res) => {
       const taskId = parseInt(req.body.task_id, 10);
       const userId = (req.user as User).id;
       const userName = (req.user as User).name;
@@ -330,7 +336,7 @@ app.prepare()
           return res.redirect(req.headers.referer || '/');
         }
 
-        const currentDate: number = Date.now();
+        const currentDate: number = moment().valueOf();
         db.run('INSERT INTO stask (stask_date, task_id, user_id) VALUES (?, ?, ?)', currentDate, taskId, userId, () => {
           req.flash('message', 'Flag was submitted!');
           history.makeLog(`${userName} has solved a task!`, { userId, taskId });
@@ -345,14 +351,34 @@ app.prepare()
       });
     });
 
-    server.post('/api/tasks', (req, res) => {
-      const { userId } = req.body;
+    server.post('/api/users', (_, res) => {
+      db.all('SELECT u.user_id, u.user_name, SUM(t.task_points) '
+        + 'FROM user AS u LEFT JOIN stask AS s ON s.user_id = u.user_id '
+        + 'LEFT JOIN task AS t ON s.task_id = t.task_id '
+        + 'WHERE u.user_admin = 0 '
+        + 'GROUP BY u.user_id ORDER BY SUM(t.task_points) DESC, SUM(s.stask_date) ASC',
+      (_, users) => {
+        const newUsers: User[] = users.map((user) => {
+          const readyUser: User = {
+            id: user.user_id,
+            name: user.user_name,
+            points: user['SUM(t.task_points)'] || 0,
+          };
+
+          return readyUser;
+        });
+        res.json({ users: newUsers });
+      });
+    });
+
+    server.post('/api/tasks', authBridge, startMatchBridge, (req, res) => {
+      const { id } = req.user as User;
 
       db.all('SELECT t.task_id, t.task_name, t.task_content, '
         + 't.task_points, t.task_file, t.category_id, c.category_name, s.stask_id FROM task AS t '
         + 'JOIN category AS c ON c.category_id = t.category_id '
         + 'LEFT JOIN stask AS s ON s.task_id = t.task_id AND s.user_id = (?)',
-      userId, (_, tasks) => {
+      id, (_, tasks) => {
         const compiledTasks: Task[] = [];
         tasks.forEach((task) => {
           const compiledTask: Task = {
@@ -385,16 +411,16 @@ app.prepare()
       });
     });
 
-    server.post('/api/tasks/:taskId', (req, res) => {
+    server.post('/api/tasks/:taskId', authBridge, startMatchBridge, (req, res) => {
       const { taskId } = req.params;
-      const { userId } = req.body;
+      const { id } = req.user as User;
 
       const statement = db.prepare('SELECT t.task_id, t.task_name, t.task_content, '
         + 't.task_points, t.task_file, t.category_id, c.category_name, s.stask_id FROM task AS t '
         + 'JOIN category AS c ON c.category_id = t.category_id '
         + 'LEFT JOIN stask AS s ON s.task_id = t.task_id AND s.user_id = (?) '
         + 'WHERE t.task_id = (?)');
-      statement.get(userId, taskId, (_, task) => {
+      statement.get(id, taskId, (_, task) => {
         const compiledTask: Task = {
           id: task.task_id,
           name: task.task_name,
@@ -490,6 +516,9 @@ app.prepare()
 
     server.listen(config.port, (error) => {
       if (error) throw error;
+      if (config.dateEnd.isBefore(config.dateStart)) {
+        console.error('Change dateEnd and dateStart in config file.');
+      }
       const host = config.hostname + (config.port ? `:${config.port}` : '');
       console.log(`> Ready on ${config.protocol}//${host}`);
     });
