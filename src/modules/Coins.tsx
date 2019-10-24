@@ -327,7 +327,6 @@ const coins = (options: CoinsOptions): RequestHandler => {
                   id: realHint.id,
                   hint: realHint.content,
                   taskId: realHint.taskId,
-                  residual: currentUser.wallet - realHint.price,
                   wallet: currentUser.wallet,
                 });
               } else {
@@ -399,7 +398,7 @@ const coins = (options: CoinsOptions): RequestHandler => {
             if (error || !hint) {
               console.error(error);
               return res.status(200).json({
-                status: `Fetching incompleted. There is no such hint with ${id} id.`,
+                status: `Fetching incompleted. There is no such hint attached to ${id} task.`,
               });
             }
             const realHint: Hint = {
@@ -425,11 +424,11 @@ const coins = (options: CoinsOptions): RequestHandler => {
         if (req.method == 'POST' && req.path == urljoin('/', routes.api, routes.coins.hints)) {
           const { id } = req.query;
 
-          db.all('SELECT * FROM hint AS h WHERE h.task_id = (?)', id, (error, hints) => {
+          db.all('SELECT * FROM hint', (error, hints) => {
             if (error || !hints) {
               console.error(error);
               return res.status(200).json({
-                status: `Fetching incompleted. There is no such hints which attached to ${id} task.`,
+                status: 'Fetching incompleted. There is no hints lol c:',
               });
             }
 
@@ -451,7 +450,7 @@ const coins = (options: CoinsOptions): RequestHandler => {
             });
 
             res.status(200).json({
-              status: `Fetching completed. All hints attached to ${id} task`,
+              status: 'Fetching completed. All hints are here c:',
               hints: realHints,
               wallet: currentUser.wallet,
             });
