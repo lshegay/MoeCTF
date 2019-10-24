@@ -13,12 +13,12 @@ import {
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 import moment, { Moment, Duration } from 'moment';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import PageProps from '../interfaces/props/PostsProps';
-import Post from '../interfaces/Post';
+import Navigation from '../src/components/Navigation';
+import Footer from '../src/components/Footer';
+import PageProps from '../src/interfaces/props/PostsProps';
+import Post from '../src/interfaces/Post';
 
-import config from '../server/config';
+import config from '../server/Config';
 
 import '../styles/main.scss';
 
@@ -27,9 +27,10 @@ interface PageStates {
   currentDate: Moment;
 }
 
-let timer: NodeJS.Timeout;
 
 class Page extends React.PureComponent<PageProps, PageStates> {
+  timer: NodeJS.Timeout;
+
   static async getInitialProps({ req }): Promise<PageProps> {
     const { protocol, hostname, port } = config;
     const host = hostname + (port ? `:${port}` : '');
@@ -72,7 +73,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
   }
 
   componentDidMount(): void {
-    timer = setInterval(() => {
+    this.timer = setInterval(() => {
       this.setState({
         currentDate: moment(),
       });
@@ -80,7 +81,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
   }
 
   componentWillUnmount(): void {
-    clearInterval(timer);
+    clearInterval(this.timer);
   }
 
   toggle(): void {
@@ -93,10 +94,10 @@ class Page extends React.PureComponent<PageProps, PageStates> {
     const postsElements = [];
 
     let duration: Duration;
-    if (currentDate.isBefore(config.dateStart)) {
-      duration = moment.duration(config.dateStart.diff(currentDate));
-    } else if (currentDate.isSameOrAfter(config.dateStart)) {
-      duration = moment.duration(config.dateEnd.diff(currentDate));
+    if (currentDate.isBefore(config.startMatchDate)) {
+      duration = moment.duration(config.startMatchDate.diff(currentDate));
+    } else if (currentDate.isSameOrAfter(config.startMatchDate)) {
+      duration = moment.duration(config.endMatchDate.diff(currentDate));
     }
 
     const timeLeft = `${duration.months() > 0 ? `${duration.months()} months ` : ''}${duration.days()} days `
@@ -145,7 +146,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       const {
         id, title, content, date,
       } = post;
-      const textDate = moment(parseInt(date, 10));
+      const textDate = moment(date);
       postsElements.push(
         <div className="blog-post" id={`post-${id}`} key={post.id}>
           <h2 className="blog-post-title">{title}</h2>
@@ -173,11 +174,11 @@ class Page extends React.PureComponent<PageProps, PageStates> {
         <main className="container">
           {adminPanel}
           {
-            config.isTimer && (
+            config.timer && (
               <div>
                 <Jumbotron color="black" className="text-center">
                   {
-                    currentDate.isBefore(config.dateStart) && (
+                    currentDate.isBefore(config.startMatchDate) && (
                       <>
                         <h1 className="display-3 text-center">The game hasn&apos;t started yet</h1>
                         <h1 className="display-4 text-center">
@@ -186,13 +187,13 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                           }
                         </h1>
                         <p className="lead text-center">
-                          {`Game starts in: ${config.dateStart.format('LL HH:mm:ss')}`}
+                          {`Game starts in: ${config.startMatchDate.format('LL HH:mm:ss')}`}
                         </p>
                       </>
                     )
                   }
                   {
-                    currentDate.isBetween(config.dateStart, config.dateEnd) && (
+                    currentDate.isBetween(config.startMatchDate, config.endMatchDate) && (
                       <>
                         <h1 className="display-3 text-center">The game started</h1>
                         <h1 className="display-4 text-center">
@@ -202,14 +203,14 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                         </h1>
                         <p className="lead text-center">
                           {
-                            `Game finishes in: ${config.dateEnd.format('LL HH:mm:ss')}`
+                            `Game finishes in: ${config.endMatchDate.format('LL HH:mm:ss')}`
                           }
                         </p>
                       </>
                     )
                   }
                   {
-                    currentDate.isSameOrAfter(config.dateEnd) && (
+                    currentDate.isSameOrAfter(config.endMatchDate) && (
                       <>
                         <h1 className="display-3 text-center">The game is over</h1>
                         <h1 className="display-4 text-center">

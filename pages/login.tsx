@@ -6,9 +6,9 @@ import {
   Button,
   Label,
 } from 'reactstrap';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import PageProps from '../interfaces/props/PageProps';
+import Navigation from '../src/components/Navigation';
+import Footer from '../src/components/Footer';
+import PageProps from '../src/interfaces/props/PageProps';
 
 import '../styles/main.scss';
 

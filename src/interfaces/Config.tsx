@@ -1,4 +1,5 @@
 import { Moment } from 'moment';
+import { RequestHandler } from 'express';
 
 interface Config {
   siteTitle: string;
@@ -8,13 +9,18 @@ interface Config {
   database: string;
   databaseSessions: string;
   secret: string;
-  https: boolean;
+  secure: boolean;
   cookiesAge: number;
   staticDir: string;
   logFileDir: string;
-  isTimer: boolean;
-  dateStart: Moment;
-  dateEnd: Moment;
+  timer: boolean;
+  startMatchDate?: Moment;
+  endMatchDate?: Moment;
+
+  plugins: {
+    launcher: (options?) => RequestHandler;
+    params: (options) => any;
+  }[];
 }
 
 export default Config;

@@ -17,11 +17,11 @@ import {
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 import moment from 'moment';
-import Navigation from '../../components/Navigation';
-import Footer from '../../components/Footer';
-import PageProps from '../../interfaces/props/TasksProps';
+import Navigation from '../../src/components/Navigation';
+import Footer from '../../src/components/Footer';
+import PageProps from '../../src/interfaces/props/TasksProps';
 
-import config from '../../server/config';
+import config from '../../server/Config';
 
 import '../../styles/main.scss';
 
@@ -36,8 +36,8 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       protocol,
       hostname,
       port,
-      isTimer,
-      dateEnd,
+      timer,
+      endMatchDate,
     } = config;
     const host = hostname + (port ? `:${port}` : '');
     const pageRequest = `${protocol}//${host}/api/tasks`;
@@ -55,7 +55,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       categories: json.categories,
       message: req.flash('error'),
       user: req.user,
-      isGameEnded: isTimer && moment().isSameOrAfter(dateEnd),
+      isGameEnded: timer && moment().isSameOrAfter(endMatchDate),
     };
 
     return pageProps;
@@ -135,7 +135,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                         </FormGroup>
                         <FormGroup>
                           <Label>Task Points</Label>
-                          <Input type="text" name="points" />
+                          <Input type="number" name="points" />
                         </FormGroup>
                         <FormGroup>
                           <Label>File</Label>

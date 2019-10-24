@@ -25,3 +25,15 @@ h1, h2, h3, h4, h5, h6 {
 .form-control:disabled, .form-control[readonly] {
   background-color: $color-black-choco;
 }
+
+.Live {
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  color: #000000;
+  padding: 0 20px 0 0;
+
+  .Live-chart {
+    
+  }
+}

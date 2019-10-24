@@ -1,8 +1,7 @@
 import React from 'react';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import PageProps from '../interfaces/props/PageProps';
-import User from '../interfaces/User';
+import Navigation from '../src/components/Navigation';
+import Footer from '../src/components/Footer';
+import PageProps from '../src/interfaces/props/PageProps';
 
 import '../styles/main.scss';
 
@@ -24,8 +23,9 @@ class Profile extends React.PureComponent<PageProps> {
         <main className="container">
           <div className="page-content mb-5">
             <h1>Profile</h1>
-            <h3>{ user.name }</h3>
-            <p>In the ass don't naruto run, but get a drink and chill</p>
+            <h3>{user.name}</h3>
+            <h5>{`${user.points} Points`}</h5>
+            <p>{user.content}</p>
           </div>
         </main>
         <Footer />

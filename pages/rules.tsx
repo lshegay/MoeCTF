@@ -1,8 +1,7 @@
 import React from 'react';
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import PageProps from '../interfaces/props/PageProps';
-import User from '../interfaces/User';
+import Navigation from '../src/components/Navigation';
+import Footer from '../src/components/Footer';
+import PageProps from '../src/interfaces/props/PageProps';
 
 import '../styles/main.scss';
 
@@ -28,7 +27,7 @@ class Rules extends React.PureComponent<PageProps> {
         <main className="container">
           <div className="page-content mb-5">
             <h1>Rules</h1>
-            <p>In the ass don't naruto run, but get a drink and chill</p>
+            <p>In the ass don&apos;t naruto run, but get a drink and chill</p>
           </div>
         </main>
         <Footer />

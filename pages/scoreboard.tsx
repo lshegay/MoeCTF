@@ -2,12 +2,11 @@ import React from 'react';
 import { Table } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 
-import Navigation from '../components/Navigation';
-import Footer from '../components/Footer';
-import PageProps from '../interfaces/props/ScoreboardProps';
-import User from '../interfaces/User';
+import Navigation from '../src/components/Navigation';
+import Footer from '../src/components/Footer';
+import PageProps from '../src/interfaces/props/ScoreboardProps';
 
-import config from '../server/config';
+import config from '../server/Config';
 
 import '../styles/main.scss';
 

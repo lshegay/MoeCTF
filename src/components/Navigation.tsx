@@ -15,7 +15,7 @@ import {
 } from 'reactstrap';
 import User from '../interfaces/User';
 
-import config from '../server/config';
+import config from '../../server/Config';
 
 
 interface NavigationProps extends HTMLAttributes<HTMLElement> {
@@ -82,17 +82,22 @@ class Navigation extends React.PureComponent<NavigationProps, NavigationStates> 
     );
     if (user) {
       loggedInNav = (
-        <UncontrolledDropdown nav inNavbar>
-          <DropdownToggle nav caret style={imageStyle} className="caret-off" />
-          <DropdownMenu right>
-            <DropdownItem href="/profile">
-              Profile
-            </DropdownItem>
-            <DropdownItem href="/logout">
-              Logout
-            </DropdownItem>
-          </DropdownMenu>
-        </UncontrolledDropdown>
+        <>
+          <NavItem>
+            <NavLink>{`${user.points} Points`}</NavLink>
+          </NavItem>
+          <UncontrolledDropdown nav inNavbar>
+            <DropdownToggle nav caret style={imageStyle} className="caret-off" />
+            <DropdownMenu right>
+              <DropdownItem href="/profile">
+                Profile
+              </DropdownItem>
+              <DropdownItem href="/logout">
+                Logout
+              </DropdownItem>
+            </DropdownMenu>
+          </UncontrolledDropdown>
+        </>
       );
     }
 

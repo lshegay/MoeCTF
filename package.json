@@ -6,9 +6,9 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "dev": "nodemon -w server/**/*.tsx -e tsx --exec \"ts-node --project tsconfig.server.json server/server.tsx\"",
+    "dev": "nodemon -w server/**/*.tsx -e tsx --exec \"ts-node --project tsconfig.server.json server/Server.tsx\"",
     "build": "next build & tsc --project tsconfig.server.json",
-    "start": "cross-env NODE_ENV=production ts-node --project tsconfig.server.json server/server.tsx"
+    "start": "cross-env NODE_ENV=production node .next/app/server/Server.js"
   },
   "dependencies": {
     "@zeit/next-css": "^1.0.1",
@@ -31,7 +31,10 @@
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "reactstrap": "^8.0.1",
-    "sqlite3": "^4.1.0"
+    "recharts": "^1.8.3",
+    "sqlite3": "^4.1.0",
+    "typescript": "^3.6.4",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@types/connect-flash": "0.0.35",
@@ -48,7 +51,9 @@
     "@types/react-dom": "^16.9.0",
     "@types/react-router": "^5.0.3",
     "@types/reactstrap": "^8.0.4",
+    "@types/recharts": "^1.7.1",
     "@types/sqlite3": "^3.1.5",
+    "@types/url-join": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
     "eslint": "^5.16.0",
@@ -58,7 +63,6 @@
     "eslint-plugin-react": "^7.14.3",
     "eslint-plugin-react-hooks": "^1.7.0",
     "nodemon": "^1.19.2",
-    "ts-node": "^8.4.1",
-    "typescript": "^3.5.3"
+    "ts-node": "^8.4.1"
   }
 }

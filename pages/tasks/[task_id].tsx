@@ -13,19 +13,24 @@ import {
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 import moment from 'moment';
-import Navigation from '../../components/Navigation';
-import Footer from '../../components/Footer';
-import PageProps from '../../interfaces/props/TasksProps';
-import Task from '../../interfaces/Task';
-import User from '../../interfaces/User';
+import Navigation from '../../src/components/Navigation';
+import Footer from '../../src/components/Footer';
+import PageProps from '../../src/interfaces/props/TasksProps';
 
-import config from '../../server/config';
+import config from '../../server/Config';
 
 import '../../styles/main.scss';
+import Task from '../../src/interfaces/Task';
 
 
 interface PageStates {
   collapse: boolean;
+}
+
+interface TaskWithHint extends Task {
+  hintPrice: number;
+  hintContent: string;
+  profit: number;
 }
 
 class Page extends React.PureComponent<PageProps, PageStates> {
@@ -34,8 +39,8 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       protocol,
       hostname,
       port,
-      isTimer,
-      dateEnd,
+      timer,
+      endMatchDate,
     } = config;
     const host = hostname + (port ? `:${port}` : '');
     const pageRequest = `${protocol}//${host}/api/tasks/${query.task_id}`;
@@ -48,12 +53,31 @@ class Page extends React.PureComponent<PageProps, PageStates> {
     });
     const json = await res.json();
 
+    if (req.user.admin) {
+      const pageRequestCoins = `${protocol}//${host}/api/admin/hint?id=${query.task_id}`;
+      const resCoins = await fetch(pageRequestCoins, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: req.headers.cookie
+        },
+      });
+
+      const jsonCoins = await resCoins.json();
+
+      if (jsonCoins.price) {
+        json.task.hintPrice = jsonCoins.price;
+        json.task.hintContent = jsonCoins.content;
+        json.task.profit = jsonCoins.taskProfit;
+      }
+    }
+
     const pageProps: PageProps = {
       tasks: [json.task],
       categories: json.categories,
       user: req.user,
       message: req.flash('error') || req.flash('message'),
-      isGameEnded: isTimer && !req.user.admin && moment().isSameOrAfter(dateEnd),
+      isGameEnded: timer && !req.user.admin && moment().isSameOrAfter(endMatchDate),
     };
 
     return pageProps;
@@ -82,17 +106,14 @@ class Page extends React.PureComponent<PageProps, PageStates> {
     } = this.props;
     const { collapse } = this.state;
     const task = tasks[0];
-
     const fileElement = task.file
       // eslint-disable-next-line react/jsx-one-expression-per-line
       ? (<p>Файл: <a href={`/${task.file}`}>{ task.file }</a></p>) : '';
-
     const inputElementAttrs = {
       disabled: task.solved ? true : isGameEnded,
       ...(isGameEnded && { value: 'Game has ended!' }),
       ...(task.solved && { value: 'Solved!' }),
     };
-
     const categoriesElements: JSX.Element[] = [];
 
     let adminPanel: JSX.Element;
@@ -134,7 +155,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                         </FormGroup>
                         <FormGroup>
                           <Label>Task Points</Label>
-                          <Input type="text" name="points" defaultValue={task.points.toString()} />
+                          <Input type="number" name="points" defaultValue={task.points.toString()} />
                         </FormGroup>
                         <FormGroup>
                           <Label>File</Label>
@@ -150,23 +171,59 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                     </CardBody>
                   </Card>
                 </div>
-                {/* <div className="mb-4 col-md-6">
+                <div className="mb-4 col-md-6">
                   <Card>
-                    <CardBody>
-                      <CardTitle className="mb-3">
-                        <h3 className="mb-0">Category Manager</h3>
-                      </CardTitle>
-
-                      <Form action="/api/admin/create/category" method="POST">
-                        <FormGroup>
-                          <Label>New Category Name</Label>
-                          <Input type="text" name="name" />
-                        </FormGroup>
-                        <Button>Create Category</Button>
-                      </Form>
-                    </CardBody>
+                    {(task as TaskWithHint).hintPrice ? (
+                      <CardBody>
+                        <CardTitle className="mb-3">
+                          <h3 className="mb-0">Hint Manager</h3>
+                        </CardTitle>
+                        <Form action="/api/admin/update/hint" method="POST" encType="multipart/form-data">
+                          <Input type="hidden" value={task.id} name="taskId" />
+                          <FormGroup>
+                            <Label>Hint Price</Label>
+                            <Input type="number" name="price" defaultValue={(task as TaskWithHint).hintPrice.toString()} />
+                          </FormGroup>
+                          <FormGroup>
+                            <Label>Hint Content</Label>
+                            <Input type="text" name="content" defaultValue={(task as TaskWithHint).hintContent} />
+                          </FormGroup>
+                          <FormGroup>
+                            <Label>Task Profit</Label>
+                            <Input type="number" name="taskProfit" defaultValue={(task as TaskWithHint).profit.toString()} />
+                          </FormGroup>
+                          <Button className="mb-2">Update Hint</Button>
+                        </Form>
+                        <Form action="/api/admin/delete/hint" method="POST">
+                          <Input type="hidden" value={task.id} name="taskId" />
+                          <Button color="danger">Delete Hint</Button>
+                        </Form>
+                      </CardBody>
+                    ) : (
+                      <CardBody>
+                        <CardTitle className="mb-3">
+                          <h3 className="mb-0">Hint Manager</h3>
+                        </CardTitle>
+                        <Form action="/api/admin/create/hint" method="POST" encType="multipart/form-data">
+                          <Input type="hidden" value={task.id} name="taskId" />
+                          <FormGroup>
+                            <Label>Hint Price</Label>
+                            <Input type="number" name="price" />
+                          </FormGroup>
+                          <FormGroup>
+                            <Label>Hint Content</Label>
+                            <Input type="text" name="content" />
+                          </FormGroup>
+                          <FormGroup>
+                            <Label>Task Profit</Label>
+                            <Input type="number" name="taskProfit" />
+                          </FormGroup>
+                          <Button>Create Hint</Button>
+                        </Form>
+                      </CardBody>
+                    )}
                   </Card>
-                </div> */}
+                </div>
               </div>
             </div>
           </Collapse>
