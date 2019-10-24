@@ -30,6 +30,7 @@
     "pbkdf2": "^3.0.17",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "react-icons": "^3.7.0",
     "reactstrap": "^8.0.1",
     "recharts": "^1.8.3",
     "sqlite3": "^4.1.0",

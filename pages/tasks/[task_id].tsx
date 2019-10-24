@@ -13,21 +13,22 @@ import {
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 import moment from 'moment';
+import { IoIosCash } from 'react-icons/io';
+
 import Navigation from '../../src/components/Navigation';
 import Footer from '../../src/components/Footer';
 import PageProps from '../../src/interfaces/props/TasksProps';
-
+import Task from '../../src/interfaces/Task';
 import config from '../../server/Config';
 
 import '../../styles/main.scss';
-import Task from '../../src/interfaces/Task';
 
 
 interface PageStates {
   collapse: boolean;
 }
 
-interface TaskWithHint extends Task {
+interface CoinsTask extends Task {
   hintPrice: number;
   hintContent: string;
   profit: number;
@@ -68,6 +69,22 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       if (jsonCoins.price) {
         json.task.hintPrice = jsonCoins.price;
         json.task.hintContent = jsonCoins.content;
+        json.task.profit = jsonCoins.taskProfit;
+      }
+    } else {
+      const pageRequestCoins = `${protocol}//${host}/api/hint?id=${query.task_id}`;
+      const resCoins = await fetch(pageRequestCoins, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: req.headers.cookie
+        },
+      });
+
+      const jsonCoins = await resCoins.json();
+
+      if (jsonCoins.price) {
+        json.task.hintPrice = jsonCoins.price;
         json.task.profit = jsonCoins.taskProfit;
       }
     }
@@ -173,7 +190,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                 </div>
                 <div className="mb-4 col-md-6">
                   <Card>
-                    {(task as TaskWithHint).hintPrice ? (
+                    {(task as CoinsTask).hintPrice ? (
                       <CardBody>
                         <CardTitle className="mb-3">
                           <h3 className="mb-0">Hint Manager</h3>
@@ -182,15 +199,15 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                           <Input type="hidden" value={task.id} name="taskId" />
                           <FormGroup>
                             <Label>Hint Price</Label>
-                            <Input type="number" name="price" defaultValue={(task as TaskWithHint).hintPrice.toString()} />
+                            <Input type="number" name="price" defaultValue={(task as CoinsTask).hintPrice.toString()} />
                           </FormGroup>
                           <FormGroup>
                             <Label>Hint Content</Label>
-                            <Input type="text" name="content" defaultValue={(task as TaskWithHint).hintContent} />
+                            <Input type="text" name="content" defaultValue={(task as CoinsTask).hintContent} />
                           </FormGroup>
                           <FormGroup>
                             <Label>Task Profit</Label>
-                            <Input type="number" name="taskProfit" defaultValue={(task as TaskWithHint).profit.toString()} />
+                            <Input type="number" name="taskProfit" defaultValue={(task as CoinsTask).profit.toString()} />
                           </FormGroup>
                           <Button className="mb-2">Update Hint</Button>
                         </Form>
@@ -239,7 +256,13 @@ class Page extends React.PureComponent<PageProps, PageStates> {
           <div className="page-content mb-5">
             <h1>
               <span className="mr-4">{task.name}</span>
-              <Badge color="secondary">{task.points}</Badge>
+              <Badge color="secondary" className="mr-2">{task.points}</Badge>
+              {((task as CoinsTask).profit && (
+                <Badge color="success">
+                  {(task as CoinsTask).profit}
+                  <IoIosCash style={{ width: '0.8em', height: '0.8em', marginLeft: 3 }} />
+                </Badge>
+              ))}
             </h1>
             <h3 className="text-muted">{ task.categoryName }</h3>
             <div className="mb-4">

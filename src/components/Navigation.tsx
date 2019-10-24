@@ -13,8 +13,10 @@ import {
   DropdownMenu,
   DropdownItem,
 } from 'reactstrap';
-import User from '../interfaces/User';
+import { IoIosCash } from 'react-icons/io';
 
+import User from '../interfaces/User';
+import { CoinsUser } from '../modules/Coins';
 import config from '../../server/Config';
 
 
@@ -85,6 +87,12 @@ class Navigation extends React.PureComponent<NavigationProps, NavigationStates> 
         <>
           <NavItem>
             <NavLink>{`${user.points} Points`}</NavLink>
+          </NavItem>
+          <NavItem>
+            <NavLink>
+              {`${(user as CoinsUser).wallet} `}
+              <IoIosCash style={{ width: '1.3em', height: '1.3em', marginBottom: '2px' }} />
+            </NavLink>
           </NavItem>
           <UncontrolledDropdown nav inNavbar>
             <DropdownToggle nav caret style={imageStyle} className="caret-off" />

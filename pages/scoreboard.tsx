@@ -5,6 +5,7 @@ import fetch from 'isomorphic-fetch';
 import Navigation from '../src/components/Navigation';
 import Footer from '../src/components/Footer';
 import PageProps from '../src/interfaces/props/ScoreboardProps';
+import { CoinsUser } from '../src/modules/Coins';
 
 import config from '../server/Config';
 
@@ -36,6 +37,7 @@ class Scoreboard extends React.PureComponent<PageProps> {
           <th scope="row">{index + 1}</th>
           <td>{user.name}</td>
           <td>{user.points}</td>
+          <td>{(user as CoinsUser).wallet}</td>
         </tr>
       );
     });
@@ -51,6 +53,7 @@ class Scoreboard extends React.PureComponent<PageProps> {
                   <th>#</th>
                   <th>UserName</th>
                   <th>Points</th>
+                  <th>Wallet</th>
                 </tr>
               </thead>
               <tbody>
