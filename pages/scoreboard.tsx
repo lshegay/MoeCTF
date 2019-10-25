@@ -36,8 +36,10 @@ class Scoreboard extends React.PureComponent<PageProps> {
         <tr key={user.id}>
           <th scope="row">{index + 1}</th>
           <td>{user.name}</td>
-          <td>{user.points}</td>
-          <td>{(user as CoinsUser).wallet}</td>
+          <td>
+            {user.points}
+            <b style={{ color: '#28a745' }}>{` (+${(user as CoinsUser).wallet / 10})`}</b>
+          </td>
         </tr>
       );
     });
@@ -53,7 +55,6 @@ class Scoreboard extends React.PureComponent<PageProps> {
                   <th>#</th>
                   <th>UserName</th>
                   <th>Points</th>
-                  <th>Wallet</th>
                 </tr>
               </thead>
               <tbody>
