@@ -22,10 +22,12 @@
   },
   "exclude": [
     "node_modules",
-    "server"
+    "app"
   ],
   "include": [
-    "**/*.ts",
-    "**/*.tsx"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "pages/**/*.ts",
+    "pages/**/*.tsx"
   ]
 }

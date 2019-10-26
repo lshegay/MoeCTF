@@ -1,4 +1,4 @@
-import Secret from '../src/interfaces/Secret';
+import Secret from '../../src/models/secret';
 
 const secret: Readonly<Secret> = {
   secret: 'secret_gay_key',

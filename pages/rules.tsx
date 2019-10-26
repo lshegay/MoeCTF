@@ -1,9 +1,9 @@
 import React from 'react';
-import Navigation from '../src/components/Navigation';
-import Footer from '../src/components/Footer';
-import PageProps from '../src/interfaces/props/PageProps';
+import Navigation from '../src/components/navigation';
+import Footer from '../src/components/footer';
+import PageProps from '../src/models/props/page';
 
-import '../styles/main.scss';
+import '../src/resources/stylesheet/main.scss';
 
 class Rules extends React.PureComponent<PageProps> {
   static async getInitialProps({ req }): Promise<PageProps> {

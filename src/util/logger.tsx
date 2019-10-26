@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import moment, { Moment } from 'moment';
 
-class History {
+class Logger {
   logPath: string;
 
   /**
-   * Creates an instance of History.
+   * Creates an instance of Logger.
    * @param {string} path Absolute or relative path of a log file
-   * @memberof History
+   * @memberof Logger
    */
   constructor(path: string) {
     this.logPath = path;
@@ -18,7 +18,7 @@ class History {
    * @param {string} message Any text.
    * @param {object} [object] Additional informaton.
    * @returns {Promise<boolean>} Returns if log was appended successfully.
-   * @memberof History
+   * @memberof Logger
    */
   async makeLog(message: string, object?: object): Promise<boolean> {
     const currentDate: Moment = moment();
@@ -40,4 +40,4 @@ class History {
   }
 }
 
-export default History;
+export default Logger;

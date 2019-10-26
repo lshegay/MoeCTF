@@ -1,5 +1,4 @@
 import { Moment } from 'moment';
-import { RequestHandler } from 'express';
 
 interface Config {
   siteTitle: string;
@@ -17,8 +16,8 @@ interface Config {
   endMatchDate?: Moment;
 
   plugins: {
-    launcher: (options?) => RequestHandler;
-    params: (options) => any;
+    launcher: (options?) => void;
+    params: object;
   }[];
 }
 

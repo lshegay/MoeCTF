@@ -2,14 +2,14 @@ import React from 'react';
 import { Table } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 
-import Navigation from '../src/components/Navigation';
-import Footer from '../src/components/Footer';
-import PageProps from '../src/interfaces/props/ScoreboardProps';
-import { CoinsUser } from '../src/modules/Coins';
+import Navigation from '../src/components/navigation';
+import Footer from '../src/components/footer';
+import PageProps from '../src/models/props/scoreboard';
+import { CoinsUser } from '../app/plugins/coins';
 
-import config from '../server/Config';
+import config from '../app/config/config';
 
-import '../styles/main.scss';
+import '../src/resources/stylesheet/main.scss';
 
 class Scoreboard extends React.PureComponent<PageProps> {
   static async getInitialProps({ req }): Promise<PageProps> {

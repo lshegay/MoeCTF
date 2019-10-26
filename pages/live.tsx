@@ -11,13 +11,13 @@ import {
 import fetch from 'isomorphic-fetch';
 import moment from 'moment';
 
-import User from '../src/interfaces/User';
-import STask from '../src/interfaces/STask';
-import PageProps from '../src/interfaces/props/PageProps';
+import User from '../src/models/user';
+import STask from '../src/models/stask';
+import PageProps from '../src/models/props/page';
 
-import config from '../server/Config';
+import config from '../app/config/config';
 
-import '../styles/main.scss';
+import '../src/resources/stylesheet/main.scss';
 
 const { protocol, hostname, port } = config;
 const host = hostname + (port ? `:${port}` : '');

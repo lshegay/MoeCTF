@@ -17,13 +17,13 @@ import {
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 import moment from 'moment';
-import Navigation from '../../src/components/Navigation';
-import Footer from '../../src/components/Footer';
-import PageProps from '../../src/interfaces/props/TasksProps';
+import Navigation from '../../src/components/navigation';
+import Footer from '../../src/components/footer';
+import PageProps from '../../src/models/props/tasks';
 
-import config from '../../server/Config';
+import config from '../../app/config/config';
 
-import '../../styles/main.scss';
+import '../../src/resources/stylesheet/main.scss';
 
 
 interface PageStates {

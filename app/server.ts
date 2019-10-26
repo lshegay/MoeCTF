@@ -1,8 +1,4 @@
-import express, {
-  Request,
-  Response,
-  NextFunction
-} from 'express';
+import express from 'express';
 import session from 'express-session';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import bodyParser from 'body-parser';
@@ -14,15 +10,18 @@ import pbkdf2 from 'pbkdf2';
 import path from 'path';
 import sqlite3Original from 'sqlite3';
 import connectSQLite3 from 'connect-sqlite3';
-import moment, { Moment } from 'moment';
+import moment from 'moment';
 
-import History from '../src/History';
-import User from '../src/interfaces/User';
-import Task from '../src/interfaces/Task';
-import STask from '../src/interfaces/STask';
-import Category from '../src/interfaces/Category';
-import config from './Config';
-import secret from './Secret';
+import Logger from '../src/util/logger';
+import User from '../src/models/user';
+import Task from '../src/models/task';
+import STask from '../src/models/stask';
+import Category from '../src/models/category';
+import config from './config/config';
+import secret from './config/secret';
+
+import { isNotMatchEnded, isMatchStarted } from './controllers/match';
+import { isAuthenticated, isNotAuthenticated, isAdmin } from './controllers/user';
 
 const sqlite3 = sqlite3Original.verbose();
 const SQLiteStore = connectSQLite3(session);
@@ -41,7 +40,7 @@ const domain = `${config.protocol}//${host}`;
 app.prepare()
   .then(() => {
     const server = express();
-    const history = new History(path.resolve('./', config.logFileDir));
+    const logger = new Logger(path.resolve('./', config.logFileDir));
 
     db.serialize(() => {
       db.run('CREATE TABLE IF NOT EXISTS post ( '
@@ -81,55 +80,8 @@ app.prepare()
       1);
     });
 
-    const requiresLogin = (req: Request, res: Response, next: NextFunction): void => {
-      if (req.isAuthenticated()) {
-        return next();
-      }
-      res.status(403).redirect('/login');
-    };
-
-    const requiresNoLogin = (req: Request, res: Response, next: NextFunction): void => {
-      if (!req.isAuthenticated()) {
-        return next();
-      }
-      res.status(403).redirect('/');
-    };
-
-    const requiresAdmin = (req: Request, res: Response, next: NextFunction): void => {
-      if (req.isAuthenticated() && (req.user as User).admin) {
-        return next();
-      }
-      res.status(403).redirect('/tasks');
-    };
-
-    const requiresStartMatch = (req: Request, res: Response, next: NextFunction): void => {
-      const currentDate: Moment = moment();
-
-      if (!config.timer
-        || (config.timer && currentDate.isSameOrAfter(config.startMatchDate))
-        || (req.isAuthenticated() && (req.user as User).admin)) {
-        return next();
-      }
-      res.status(403).redirect('/');
-    };
-
-    const requiresEndMatch = (req: Request, res: Response, next: NextFunction): void => {
-      const currentDate: Moment = moment();
-
-      if (!config.timer
-        || (config.timer && currentDate.isBefore(config.endMatchDate))
-        || (req.isAuthenticated() && (req.user as User).admin)) {
-        return next();
-      }
-
-      req.flash('error', 'Match has been already finished');
-      return res.redirect(req.headers.referer || '/');
-    };
-
     server.use(express.static(path.resolve('./', config.staticDir)));
-    server.use(bodyParser.urlencoded({
-      extended: true,
-    }));
+    server.use(bodyParser.urlencoded({ extended: true }));
     server.use(bodyParser.json());
     server.use(session({
       secret: secret.secret,
@@ -169,9 +121,7 @@ app.prepare()
       });
     }));
 
-    passport.serializeUser((user: any, done) => {
-      done(null, user.user_id);
-    });
+    passport.serializeUser((user: any, done) => done(null, user.user_id));
 
     passport.deserializeUser((id, done) => {
       const dbstatement = db.prepare('SELECT u.*, SUM(t.task_points) '
@@ -202,25 +152,29 @@ app.prepare()
       });
     });
 
-    config.plugins.forEach((plugin) => {
-      const options = plugin.params({ server, db, app });
-      server.use(plugin.launcher(options));
+    config.plugins.forEach(({ launcher, params }) => {
+      launcher({
+        ...params,
+        server,
+        db,
+        app,
+      });
     });
 
-    server.get('/tasks', requiresLogin, requiresStartMatch);
-    server.get('/scoreboard', requiresLogin);
-    server.get('/profile', requiresLogin);
-    server.get('/logout', requiresLogin, (req, res) => {
+    server.get('/tasks', isAuthenticated, isMatchStarted);
+    server.get('/scoreboard', isAuthenticated);
+    server.get('/profile', isAuthenticated);
+    server.get('/logout', isAuthenticated, (req, res) => {
       req.logout();
       res.redirect('/');
     });
-    server.get('/login', requiresNoLogin);
-    server.get('/register', requiresNoLogin);
-    server.get('/live', requiresAdmin);
+    server.get('/login', isNotAuthenticated);
+    server.get('/register', isNotAuthenticated);
+    server.get('/live', isAdmin);
 
     server.get('*', (req, res) => handle(req, res));
 
-    server.post('/api/admin/create/category', requiresAdmin, (req, res) => {
+    server.post('/api/admin/create/category', isAdmin, (req, res) => {
       const { name } = req.body;
 
       db.run('INSERT INTO category (category_name) VALUES (?)', name, (error) => {
@@ -232,7 +186,7 @@ app.prepare()
       });
     });
 
-    server.post('/api/admin/delete/category', requiresAdmin, (req, res) => {
+    server.post('/api/admin/delete/category', isAdmin, (req, res) => {
       const { id } = req.body;
 
       db.serialize(() => {
@@ -252,7 +206,7 @@ app.prepare()
       });
     });
 
-    server.post('/api/admin/create/post', requiresAdmin, (req, res) => {
+    server.post('/api/admin/create/post', isAdmin, (req, res) => {
       const { title, content } = req.body;
 
       db.run('INSERT INTO post (post_title, post_content, post_date) VALUES (?, ?, ?)',
@@ -265,7 +219,7 @@ app.prepare()
         });
     });
 
-    server.post('/api/admin/delete/post', requiresAdmin, (req, res) => {
+    server.post('/api/admin/delete/post', isAdmin, (req, res) => {
       const { id } = req.body;
 
       db.serialize(() => {
@@ -279,7 +233,7 @@ app.prepare()
       });
     });
 
-    server.post('/api/admin/create', requiresAdmin, (req, res) => {
+    server.post('/api/admin/create', isAdmin, (req, res) => {
       const {
         name,
         category,
@@ -319,7 +273,7 @@ app.prepare()
       }
     });
 
-    server.post('/api/admin/update', requiresAdmin, (req, res) => {
+    server.post('/api/admin/update', isAdmin, (req, res) => {
       const {
         id,
         name,
@@ -369,7 +323,7 @@ app.prepare()
       }
     });
 
-    server.post('/api/admin/delete', requiresAdmin, (req, res) => {
+    server.post('/api/admin/delete', isAdmin, (req, res) => {
       const { id } = req.body;
 
       db.serialize(() => {
@@ -385,7 +339,7 @@ app.prepare()
       });
     });
 
-    server.post('/api/admin/live', requiresAdmin, (req, res) => {
+    server.post('/api/admin/live', isAdmin, (req, res) => {
       db.all('SELECT s.stask_id, s.stask_date, u.user_id, '
         + 'u.user_name, t.task_id, t.task_points '
         + 'FROM user AS u LEFT OUTER JOIN stask AS s ON s.user_id = u.user_id '
@@ -405,11 +359,11 @@ app.prepare()
 
           return readyTask;
         });
-        res.json({ stasks: newStask });
+        res.status(200).json({ stasks: newStask });
       });
     });
 
-    server.post('/api/submit', requiresLogin, requiresStartMatch, requiresEndMatch, (req, res) => {
+    server.post('/api/submit', isAuthenticated, isMatchStarted, isNotMatchEnded, (req, res) => {
       const taskId = parseInt(req.body.task_id, 10);
       const userId = (req.user as User).id;
       const userName = (req.user as User).name;
@@ -419,23 +373,23 @@ app.prepare()
       statement.get(taskId, flag, (_, task) => {
         if (!task) {
           req.flash('error', 'Flag is invalid');
-          history.makeLog(`${userName} has submitted WRONG flag`, { userId, taskId, flag });
-          return res.redirect(req.headers.referer || '/');
+          logger.makeLog(`${userName} has submitted WRONG flag`, { userId, taskId, flag });
+          return res.status(400).redirect(req.headers.referer || '/');
         }
 
         const currentDate: number = moment().valueOf();
         db.run('INSERT INTO stask (stask_date, task_id, user_id) VALUES (?, ?, ?)',
           currentDate, taskId, userId, () => {
             req.flash('message', 'Flag was submitted!');
-            history.makeLog(`${userName} has solved a task!`, { userId, taskId });
-            return res.redirect(req.headers.referer || '/');
+            logger.makeLog(`${userName} has solved a task!`, { userId, taskId });
+            return res.status(200).redirect(req.headers.referer || '/');
           });
       });
     });
 
     server.post('/api/posts', (_, res) => {
       db.all('SELECT * FROM post ORDER BY post_date DESC', (_, posts) => {
-        res.json({ posts });
+        res.status(200).json({ posts });
       });
     });
 
@@ -455,11 +409,11 @@ app.prepare()
 
           return readyUser;
         });
-        res.json({ users: newUsers });
+        res.status(200).json({ users: newUsers });
       });
     });
 
-    server.post('/api/tasks', requiresLogin, requiresStartMatch, (req, res) => {
+    server.post('/api/tasks', isAuthenticated, isMatchStarted, (req, res) => {
       const { id } = req.user as User;
 
       db.all('SELECT t.task_id, t.task_name, t.task_content, '
@@ -494,12 +448,12 @@ app.prepare()
             compiledCategories.push(compiledCategory);
           });
 
-          res.json({ tasks: compiledTasks, categories: compiledCategories });
+          res.status(200).json({ tasks: compiledTasks, categories: compiledCategories });
         });
       });
     });
 
-    server.post('/api/tasks/:taskId', requiresLogin, requiresStartMatch, (req, res) => {
+    server.post('/api/tasks/:taskId', isAuthenticated, isMatchStarted, (req, res) => {
       const { taskId } = req.params;
       const { id } = req.user as User;
 
@@ -531,18 +485,18 @@ app.prepare()
             compiledCategories.push(compiledCategory);
           });
 
-          res.json({ task: compiledTask, categories: compiledCategories });
+          res.status(200).json({ task: compiledTask, categories: compiledCategories });
         });
       });
     });
 
-    server.post('/login', requiresNoLogin, passport.authenticate('local', {
+    server.post('/login', isNotAuthenticated, passport.authenticate('local', {
       successRedirect: '/tasks',
       failureRedirect: '/login',
       failureFlash: true,
     }));
 
-    server.post('/register', requiresNoLogin, (req, res) => {
+    server.post('/register', isNotAuthenticated, (req, res) => {
       const {
         username,
         email,

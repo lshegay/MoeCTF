@@ -1,6 +1,6 @@
 import moment from 'moment';
-import coins, { CoinsOptions } from '../src/modules/Coins';
-import Config from '../src/interfaces/Config';
+import coins from '../plugins/coins';
+import Config from '../../src/models/config';
 
 const config: Readonly<Config> = {
   siteTitle: 'MoeCTF',
@@ -20,13 +20,8 @@ const config: Readonly<Config> = {
   plugins: [
     {
       launcher: coins,
-      params: (options): CoinsOptions => {
-        const { db } = options;
-
-        return {
-          userCash: 100,
-          db,
-        };
+      params: {
+        userCash: 100,
       },
     }
   ],

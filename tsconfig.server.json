@@ -12,11 +12,11 @@
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
     "baseUrl": ".",
     "noEmit": false,
-    "outDir": ".next/app",
+    "outDir": ".next",
     "isolatedModules": false,
     "typeRoots": ["./node_modules/@types"]
   },
   "compileOnSave": true,
-  "include": ["server/**/*.tsx"],
+  "include": ["app/**/*.ts"],
   "exclude": []
 }

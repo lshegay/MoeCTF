@@ -15,13 +15,13 @@ import fetch from 'isomorphic-fetch';
 import moment from 'moment';
 import { IoIosCash } from 'react-icons/io';
 
-import Navigation from '../../src/components/Navigation';
-import Footer from '../../src/components/Footer';
-import PageProps from '../../src/interfaces/props/TasksProps';
-import Task from '../../src/interfaces/Task';
-import config from '../../server/Config';
+import Navigation from '../../src/components/navigation';
+import Footer from '../../src/components/footer';
+import PageProps from '../../src/models/props/tasks';
+import Task from '../../src/models/task';
+import config from '../../app/config/config';
 
-import '../../styles/main.scss';
+import '../../src/resources/stylesheet/main.scss';
 
 
 interface PageStates {
@@ -55,7 +55,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
     const json = await res.json();
 
     if (req.user.admin) {
-      const pageRequestCoins = `${protocol}//${host}/api/admin/hint?id=${query.task_id}`;
+      const pageRequestCoins = `${protocol}//${host}/api/admin/hint/${query.task_id}`;
       const resCoins = await fetch(pageRequestCoins, {
         method: 'POST',
         headers: {
@@ -72,7 +72,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
         json.task.profit = jsonCoins.taskProfit;
       }
     } else {
-      const pageRequestCoins = `${protocol}//${host}/api/hint?id=${query.task_id}`;
+      const pageRequestCoins = `${protocol}//${host}/api/hint/${query.task_id}`;
       const resCoins = await fetch(pageRequestCoins, {
         method: 'POST',
         headers: {

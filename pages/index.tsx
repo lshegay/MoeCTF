@@ -13,14 +13,14 @@ import {
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
 import moment, { Moment, Duration } from 'moment';
-import Navigation from '../src/components/Navigation';
-import Footer from '../src/components/Footer';
-import PageProps from '../src/interfaces/props/PostsProps';
-import Post from '../src/interfaces/Post';
+import Navigation from '../src/components/navigation';
+import Footer from '../src/components/footer';
+import PageProps from '../src/models/props/posts';
+import Post from '../src/models/post';
 
-import config from '../server/Config';
+import config from '../app/config/config';
 
-import '../styles/main.scss';
+import '../src/resources/stylesheet/main.scss';
 
 interface PageStates {
   collapse: boolean;

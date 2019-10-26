@@ -1,6 +1,6 @@
-import PageProps from './PageProps';
-import Task from '../Task';
-import Category from '../Category';
+import PageProps from './page';
+import Task from '../task';
+import Category from '../category';
 
 interface TasksProps extends PageProps {
   tasks: Task[];

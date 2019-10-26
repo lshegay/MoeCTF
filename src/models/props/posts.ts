@@ -1,5 +1,5 @@
-import PageProps from './PageProps';
-import Post from '../Post';
+import PageProps from './page';
+import Post from '../post';
 
 interface PostsProps extends PageProps {
   posts: Post[];

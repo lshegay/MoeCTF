@@ -6,9 +6,9 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "dev": "nodemon -w server/**/*.tsx -e tsx --exec \"ts-node --project tsconfig.server.json server/Server.tsx\"",
+    "dev": "nodemon -w app/**/*.ts -e ts --exec \"ts-node --project tsconfig.server.json app/server.ts\"",
     "build": "next build & tsc --project tsconfig.server.json",
-    "start": "cross-env NODE_ENV=production node .next/app/server/Server.js"
+    "start": "cross-env NODE_ENV=production node .next/app/server.js"
   },
   "dependencies": {
     "@zeit/next-css": "^1.0.1",
@@ -25,6 +25,7 @@
     "isomorphic-fetch": "^2.2.1",
     "moment": "^2.24.0",
     "next": "^9.0.5",
+    "next-server": "^9.0.5",
     "node-sass": "^4.12.0",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",

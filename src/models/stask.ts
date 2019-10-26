@@ -1,4 +1,4 @@
-import Post from './Post';
+import Post from './post';
 
 interface STask extends Post {
   userId: number;
