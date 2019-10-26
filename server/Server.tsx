@@ -22,14 +22,19 @@ import Task from '../src/interfaces/Task';
 import STask from '../src/interfaces/STask';
 import Category from '../src/interfaces/Category';
 import config from './Config';
+import secret from './Secret';
 
 const sqlite3 = sqlite3Original.verbose();
 const SQLiteStore = connectSQLite3(session);
 const dev = process.env.NODE_ENV !== 'production';
 const app = nextjs({ dev });
 const handle = app.getRequestHandler();
-const db = new sqlite3.Database(path.resolve('./', config.database));
-
+const db = new sqlite3.Database(
+  path.resolve('./', config.database),
+  (error): void => {
+    if (error) console.error(error);
+  }
+);
 const host = config.hostname + (config.port ? `:${config.port}` : '');
 const domain = `${config.protocol}//${host}`;
 
@@ -37,6 +42,44 @@ app.prepare()
   .then(() => {
     const server = express();
     const history = new History(path.resolve('./', config.logFileDir));
+
+    db.parallelize(() => {
+      db.run('CREATE TABLE IF NOT EXISTS post ( '
+        + 'post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
+        + 'post_title TEXT NOT NULL, '
+        + 'post_content TEXT NOT NULL, '
+        + 'post_date INTEGER NOT NULL)');
+      db.run('CREATE TABLE IF NOT EXISTS stask ( '
+        + 'stask_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
+        + 'stask_date INTEGER NOT NULL, '
+        + 'task_id INTEGER NOT NULL, '
+        + 'user_id INTEGER NOT NULL)');
+      db.run('CREATE TABLE IF NOT EXISTS task ( '
+        + 'task_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
+        + 'task_name TEXT NOT NULL, '
+        + 'task_content TEXT, '
+        + 'task_flag TEXT NOT NULL, '
+        + 'task_points INTEGER NOT NULL, '
+        + 'task_file TEXT, '
+        + 'category_id INTEGER NOT NULL)');
+      db.run('CREATE TABLE IF NOT EXISTS user ( '
+        + 'user_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
+        + 'user_name TEXT NOT NULL UNIQUE, '
+        + 'user_content TEXT, '
+        + 'user_password TEXT NOT NULL, '
+        + 'user_email TEXT UNIQUE, '
+        + 'user_admin BLOB NOT NULL DEFAULT 0, '
+        + 'user_avatar TEXT)');
+      db.run('CREATE TABLE IF NOT EXISTS category ( '
+        + 'category_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
+        + 'category_name TEXT NOT NULL)');
+      db.run('INSERT OR IGNORE INTO user '
+        + '(user_name, user_email, user_password, user_admin) VALUES (?, ?, ?, ?)',
+      secret.admin.username,
+      secret.admin.email,
+      pbkdf2.pbkdf2Sync(secret.admin.password, secret.secret, 1, 32, 'sha512').toString('hex'),
+      1);
+    });
 
     const requiresLogin = (req: Request, res: Response, next: NextFunction): void => {
       if (req.isAuthenticated()) {
@@ -89,7 +132,7 @@ app.prepare()
     }));
     server.use(bodyParser.json());
     server.use(session({
-      secret: config.secret,
+      secret: secret.secret,
       resave: false,
       saveUninitialized: true,
       store: new SQLiteStore({
@@ -111,7 +154,7 @@ app.prepare()
       session: true,
     }, (name, password, done): void => {
       const dbstatement = db.prepare('SELECT * FROM user WHERE user_name=(?)');
-      const passHash = pbkdf2.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
+      const passHash = pbkdf2.pbkdf2Sync(password, secret.secret, 1, 32, 'sha512').toString('hex');
 
       dbstatement.get(name, (err, user) => {
         if (err) {
@@ -529,7 +572,7 @@ app.prepare()
             return res.redirect('/register');
           }
 
-          const hashPassword = pbkdf2.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
+          const hashPassword = pbkdf2.pbkdf2Sync(password, secret.secret, 1, 32, 'sha512').toString('hex');
           statement.run([username, email, hashPassword], (error) => {
             if (error) {
               console.error('DB: Something wrong happened while was trying to register a new user');

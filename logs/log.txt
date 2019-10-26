@@ -1,1 +1,0 @@
-[Sat, 28 Sep 2019 08:16:09 GMT] moe_admin has submitted WRONG flag! | <{"userId":1,"taskId":1,"flag":"MoeCTF{Night_Tempo}"}>

@@ -8,7 +8,6 @@ interface Config {
   port: number;
   database: string;
   databaseSessions: string;
-  secret: string;
   secure: boolean;
   cookiesAge: number;
   staticDir: string;
