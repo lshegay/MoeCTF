@@ -43,7 +43,7 @@ app.prepare()
     const server = express();
     const history = new History(path.resolve('./', config.logFileDir));
 
-    db.parallelize(() => {
+    db.serialize(() => {
       db.run('CREATE TABLE IF NOT EXISTS post ( '
         + 'post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
         + 'post_title TEXT NOT NULL, '

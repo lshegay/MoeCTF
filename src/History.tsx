@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import moment, { Moment } from 'moment';
 
 class History {
@@ -17,14 +17,15 @@ class History {
    * Makes another log message and appends it to the log file.
    * @param {string} message Any text.
    * @param {object} [object] Additional informaton.
-   * @returns {boolean} Returns if log was appended successfully.
+   * @returns {Promise<boolean>} Returns if log was appended successfully.
    * @memberof History
    */
-  makeLog(message: string, object?: object): boolean {
+  async makeLog(message: string, object?: object): Promise<boolean> {
     const currentDate: Moment = moment();
     const dumpedObject: string = object ? ` | <${JSON.stringify(object)}>` : '';
     let success = false;
 
+    await fs.ensureFile(this.logPath);
     fs.appendFile(this.logPath,
       `[${currentDate.toLocaleString()}] ${message}${dumpedObject}\n`,
       (error) => {
