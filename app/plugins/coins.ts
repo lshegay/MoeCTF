@@ -152,9 +152,9 @@ const coins = (options: CoinsOptions): void => {
   });
 
   server.post(urljoin('/', routes.api, 'tasks'), isAuthenticated, isMatchStarted, (req, res) => {
-    const { id } = req.user as CoinsUser;
+    const { id, admin } = req.user as CoinsUser;
 
-    db.all('SELECT *, t.task_id FROM task AS t '
+    db.all('SELECT *, t.task_id, h.hint_id FROM task AS t '
       + 'JOIN category AS c ON c.category_id = t.category_id '
       + 'LEFT JOIN stask AS s ON s.task_id = t.task_id AND s.user_id = (?) '
       + 'LEFT JOIN hint as h ON h.task_id = t.task_id '
@@ -183,6 +183,9 @@ const coins = (options: CoinsOptions): void => {
             hint: {
               id: task.hint_id,
               price: task.hint_price,
+              ...((!!task.uhint_id || admin) && {
+                content: task.hint_content,
+              }),
             }
           })
         };
@@ -208,9 +211,9 @@ const coins = (options: CoinsOptions): void => {
 
   server.post(urljoin('/', routes.api, 'tasks', ':taskId'), isAuthenticated, isMatchStarted, (req, res) => {
     const { taskId } = req.params;
-    const { id } = req.user as User;
+    const { id, admin } = req.user as CoinsUser;
 
-    const statement = db.prepare('SELECT *, t.task_id FROM task AS t '
+    const statement = db.prepare('SELECT *, t.task_id, h.hint_id FROM task AS t '
       + 'JOIN category AS c ON c.category_id = t.category_id '
       + 'LEFT JOIN stask AS s ON s.task_id = t.task_id AND s.user_id = (?) '
       + 'LEFT JOIN hint as h ON h.task_id = t.task_id '
@@ -238,6 +241,9 @@ const coins = (options: CoinsOptions): void => {
           hint: {
             id: task.hint_id,
             price: task.hint_price,
+            ...((!!task.uhint_id || admin) && {
+              content: task.hint_content,
+            }),
           }
         })
       };
@@ -254,32 +260,6 @@ const coins = (options: CoinsOptions): void => {
         });
 
         res.status(200).json({ task: compiledTask, categories: compiledCategories });
-      });
-    });
-  });
-
-  server.post(urljoin('/', routes.api, routes.admin.hint, ':taskId'), isAdmin, (req, res) => {
-    const { taskId } = req.params;
-
-    db.get('SELECT * FROM hint AS h WHERE h.task_id = (?)', taskId, (error, hint) => {
-      if (error) {
-        console.error(error);
-        return res.status(400).redirect(`/tasks/${taskId}`);
-      }
-
-      if (!hint) {
-        return res.status(200).json({
-          status: 'Fetching completed. No hint was found.',
-        });
-      }
-
-      res.status(200).json({
-        status: 'Fetching completed. Small info.',
-        id: hint.hint_id,
-        price: hint.hint_price,
-        content: hint.hint_content,
-        taskProfit: hint.task_profit,
-        taskId: hint.task_id,
       });
     });
   });

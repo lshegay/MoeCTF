@@ -20,18 +20,13 @@ import Footer from '../../src/components/footer';
 import PageProps from '../../src/models/props/tasks';
 import Task from '../../src/models/task';
 import config from '../../app/config/config';
+import { CoinsTask } from '../../app/plugins/coins';
 
 import '../../src/resources/stylesheet/main.scss';
 
 
 interface PageStates {
   collapse: boolean;
-}
-
-interface CoinsTask extends Task {
-  hintPrice: number;
-  hintContent: string;
-  profit: number;
 }
 
 class Page extends React.PureComponent<PageProps, PageStates> {
@@ -53,41 +48,6 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       },
     });
     const json = await res.json();
-
-    if (req.user.admin) {
-      const pageRequestCoins = `${protocol}//${host}/api/admin/hint/${query.task_id}`;
-      const resCoins = await fetch(pageRequestCoins, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Cookie: req.headers.cookie
-        },
-      });
-
-      const jsonCoins = await resCoins.json();
-
-      if (jsonCoins.price) {
-        json.task.hintPrice = jsonCoins.price;
-        json.task.hintContent = jsonCoins.content;
-        json.task.profit = jsonCoins.taskProfit;
-      }
-    } else {
-      const pageRequestCoins = `${protocol}//${host}/api/hint/${query.task_id}`;
-      const resCoins = await fetch(pageRequestCoins, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Cookie: req.headers.cookie
-        },
-      });
-
-      const jsonCoins = await resCoins.json();
-
-      if (jsonCoins.price) {
-        json.task.hintPrice = jsonCoins.price;
-        json.task.profit = jsonCoins.taskProfit;
-      }
-    }
 
     const pageProps: PageProps = {
       tasks: [json.task],
@@ -122,7 +82,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
       isGameEnded,
     } = this.props;
     const { collapse } = this.state;
-    const task = tasks[0];
+    const task = tasks[0] as CoinsTask;
     const fileElement = task.file
       // eslint-disable-next-line react/jsx-one-expression-per-line
       ? (<p>Файл: <a href={`/${task.file}`}>{ task.file }</a></p>) : '';
@@ -190,7 +150,7 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                 </div>
                 <div className="mb-4 col-md-6">
                   <Card>
-                    {(task as CoinsTask).hintPrice ? (
+                    {task.hint ? (
                       <CardBody>
                         <CardTitle className="mb-3">
                           <h3 className="mb-0">Hint Manager</h3>
@@ -199,15 +159,15 @@ class Page extends React.PureComponent<PageProps, PageStates> {
                           <Input type="hidden" value={task.id} name="taskId" />
                           <FormGroup>
                             <Label>Hint Price</Label>
-                            <Input type="number" name="price" defaultValue={(task as CoinsTask).hintPrice.toString()} />
+                            <Input type="number" name="price" defaultValue={task.hint.price.toString()} />
                           </FormGroup>
                           <FormGroup>
                             <Label>Hint Content</Label>
-                            <Input type="text" name="content" defaultValue={(task as CoinsTask).hintContent} />
+                            <Input type="text" name="content" defaultValue={task.hint.content} />
                           </FormGroup>
                           <FormGroup>
                             <Label>Task Profit</Label>
-                            <Input type="number" name="taskProfit" defaultValue={(task as CoinsTask).profit.toString()} />
+                            <Input type="number" name="taskProfit" defaultValue={task.profit.toString()} />
                           </FormGroup>
                           <Button className="mb-2">Update Hint</Button>
                         </Form>
