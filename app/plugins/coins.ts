@@ -349,7 +349,7 @@ const coins = (options: CoinsOptions): void => {
     });
   });
 
-  server.post(urljoin('/', routes.api, routes.coins.pay, ':hintId'), isAdmin, (req, res) => {
+  server.post(urljoin('/', routes.api, routes.coins.pay, ':hintId'), isAuthenticated, (req, res) => {
     const currentUser = req.user as CoinsUser;
     const { hintId } = req.params;
 
