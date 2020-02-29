@@ -1,4 +1,5 @@
 import React from 'react';
+import { NextPage } from 'next';
 import {
   Form,
   FormGroup,
@@ -6,48 +7,41 @@ import {
   Button,
   Label,
 } from 'reactstrap';
+
+import Context from '../app/models/context';
 import Navigation from '../src/components/navigation';
 import Footer from '../src/components/footer';
 import PageProps from '../src/models/props/page';
 
 import '../src/resources/stylesheet/main.scss';
 
+const Page: NextPage<PageProps> = ({ message }) => (
+  <>
+    <Navigation className="masthead mb-5" currentNav="login" />
+    <main className="container mb-5">
+      <h1>Авторизация</h1>
+      <Form method="POST" action="/login">
+        <FormGroup>
+          <Label>Логин</Label>
+          <Input type="text" name="username" />
+        </FormGroup>
+        <FormGroup>
+          <Label>Пароль</Label>
+          <Input type="password" name="password" />
+        </FormGroup>
+        <p>{ message }</p>
+        <Button type="submit">Авторизация</Button>
+      </Form>
+    </main>
+    <Footer />
+  </>
+);
 
-class Page extends React.PureComponent<PageProps> {
-  static async getInitialProps({ req }): Promise<PageProps> {
-    const props: PageProps = {
-      user: null,
-      message: req.flash('error'),
-    };
-
-    return props;
+Page.getInitialProps = async ({ req }: Context): Promise<PageProps> => (
+  {
+    user: null,
+    message: req.flash('error'),
   }
-
-  render(): JSX.Element {
-    const { message } = this.props;
-
-    return (
-      <>
-        <Navigation className="masthead mb-5" currentNav="login" />
-        <main className="container mb-5">
-          <h1>Авторизация</h1>
-          <Form method="POST" action="/login">
-            <FormGroup>
-              <Label>Логин</Label>
-              <Input type="text" name="username" />
-            </FormGroup>
-            <FormGroup>
-              <Label>Пароль</Label>
-              <Input type="password" name="password" />
-            </FormGroup>
-            <p>{ message }</p>
-            <Button type="submit">Авторизация</Button>
-          </Form>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-}
+);
 
 export default Page;

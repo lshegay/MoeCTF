@@ -1,7 +1,7 @@
-import Secret from '../../src/models/secret';
+import Secret from '../models/secret';
 
 const secret: Readonly<Secret> = {
-  secret: 'secret_gay_key',
+  key: 'secret_gay_key',
   admin: {
     username: 'moe_admin',
     password: 'another_bruh_password',

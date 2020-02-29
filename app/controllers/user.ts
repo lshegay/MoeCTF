@@ -4,7 +4,7 @@ import {
   NextFunction
 } from 'express';
 
-import User from '../../src/models/user';
+import User from '../models/user';
 
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {

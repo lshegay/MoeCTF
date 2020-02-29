@@ -1,4 +1,4 @@
-import User from '../user';
+import User from '../../../app/models/user';
 
 interface PageProps {
   user: User;

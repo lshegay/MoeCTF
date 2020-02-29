@@ -1,6 +1,6 @@
 import PageProps from './page';
-import Task from '../task';
-import Category from '../category';
+import Task from '../../../app/models/task';
+import Category from '../../../app/models/category';
 
 interface TasksProps extends PageProps {
   tasks: Task[];

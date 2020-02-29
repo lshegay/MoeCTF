@@ -3,16 +3,15 @@ import {
   Response,
   NextFunction
 } from 'express';
-import moment, { Moment } from 'moment';
 
-import User from '../../src/models/user';
-import config from '../config/config';
+import User from '../models/user';
+import config from '../settings/config';
 
 export const isNotMatchEnded = (req: Request, res: Response, next: NextFunction): void => {
-  const currentDate: Moment = moment();
+  const currentDate: Date = new Date(Date.now());
 
   if (!config.timer
-    || (config.timer && currentDate.isBefore(config.endMatchDate))
+    || (config.timer && config.endMatchDate && currentDate < new Date(config.endMatchDate))
     || (req.isAuthenticated() && (req.user as User).admin)) {
     return next();
   }
@@ -22,10 +21,10 @@ export const isNotMatchEnded = (req: Request, res: Response, next: NextFunction)
 };
 
 export const isMatchStarted = (req: Request, res: Response, next: NextFunction): void => {
-  const currentDate: Moment = moment();
+  const currentDate: Date = new Date(Date.now());
 
   if (!config.timer
-    || (config.timer && currentDate.isSameOrAfter(config.startMatchDate))
+    || (config.timer && config.startMatchDate && currentDate >= new Date(config.startMatchDate))
     || (req.isAuthenticated() && (req.user as User).admin)) {
     return next();
   }

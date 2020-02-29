@@ -1,5 +1,5 @@
 interface Secret {
-  secret: string;
+  key: string;
   admin: {
     username: string;
     password: string;

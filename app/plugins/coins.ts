@@ -1,10 +1,10 @@
 import urljoin from 'url-join';
-import moment from 'moment';
+import defaultsDeep from 'lodash/defaultsDeep';
 
-import User from '../../src/models/user';
-import Plugin from '../../src/models/plugin';
-import Task from '../../src/models/task';
-import Category from '../../src/models/category';
+import User from '../models/user';
+import Plugin from '../models/plugin';
+import Task from '../models/task';
+import Category from '../models/category';
 
 import { isNotMatchEnded, isMatchStarted } from '../controllers/match';
 import { isAuthenticated, isNotAuthenticated, isAdmin } from '../controllers/user';
@@ -12,18 +12,18 @@ import { isAuthenticated, isNotAuthenticated, isAdmin } from '../controllers/use
 export interface CoinsOptions extends Plugin {
   userCash?: number;
   routes?: {
-    api: string;
-    admin: {
-      hint: string;
-      create: string;
-      update: string;
-      delete: string;
+    api?: string;
+    admin?: {
+      hint?: string;
+      create?: string;
+      update?: string;
+      delete?: string;
     };
-    coins: {
-      hint: string;
-      hints: string;
-      pay: string;
-      wallet: string;
+    coins?: {
+      hint?: string;
+      hints?: string;
+      pay?: string;
+      wallet?: string;
     };
   };
 }
@@ -67,7 +67,7 @@ const coins = (options: CoinsOptions): void => {
     server,
     routes,
     userCash,
-  } = { ...def, ...options };
+  } = defaultsDeep(options, def);
 
   if (!routes) {
     throw Error('routes is undefined');
@@ -94,12 +94,14 @@ const coins = (options: CoinsOptions): void => {
     }
 
     const currentUser = req.user as CoinsUser;
-    db.get('SELECT SUM(h.task_profit), SUM(ht.hint_price) '
+    db.get('SELECT SUM(h.task_profit), m.* '
       + 'FROM user AS u LEFT JOIN stask AS s ON s.user_id = u.user_id '
       + 'LEFT JOIN task AS t ON s.task_id = t.task_id '
       + 'LEFT JOIN hint AS h ON h.task_id = s.task_id '
-      + 'LEFT JOIN uhint AS uh ON uh.hint_id = h.hint_id AND uh.user_id = u.user_id '
-      + 'LEFT JOIN hint AS ht ON ht.hint_id = uh.hint_id AND uh.user_id = u.user_id '
+      + 'LEFT JOIN ('
+      + '  SELECT SUM(ht.hint_price) FROM uhint AS uh LEFT JOIN hint AS ht ON ht.hint_id = uh.hint_id '
+      + '  LEFT JOIN task AS t ON t.task_id = ht.task_id '
+      + ') AS m '
       + 'WHERE u.user_id = (?) '
       + 'GROUP BY u.user_id',
     currentUser.id, (error, nums) => {
@@ -117,12 +119,14 @@ const coins = (options: CoinsOptions): void => {
 
   server.post(urljoin('/', routes.api, 'users'), (_, res) => {
     db.all('SELECT u.user_id, u.user_name, SUM(t.task_points), '
-      + 'SUM(h.task_profit), SUM(ht.hint_price) '
+      + 'SUM(h.task_profit), m.*'
       + 'FROM user AS u LEFT JOIN stask AS s ON s.user_id = u.user_id '
       + 'LEFT JOIN task AS t ON s.task_id = t.task_id '
       + 'LEFT JOIN hint AS h ON h.task_id = s.task_id '
-      + 'LEFT JOIN uhint AS uh ON uh.hint_id = h.hint_id AND uh.user_id = u.user_id '
-      + 'LEFT JOIN hint AS ht ON ht.hint_id = uh.hint_id AND uh.user_id = u.user_id '
+      + 'LEFT JOIN ('
+      + '  SELECT SUM(ht.hint_price) FROM uhint AS uh LEFT JOIN hint AS ht ON ht.hint_id = uh.hint_id '
+      + '  LEFT JOIN task AS t ON t.task_id = ht.task_id '
+      + ') AS m '
       + 'WHERE u.user_admin = 0 '
       + 'GROUP BY u.user_id ORDER BY SUM(t.task_points) DESC, s.stask_date ASC',
     (error, users) => {
@@ -372,7 +376,7 @@ const coins = (options: CoinsOptions): void => {
         });
       }
 
-      const currentDate: number = moment().valueOf();
+      const currentDate: number = Date.now();
 
       if (currentUser.wallet >= hint.hint_price) {
         db.run('INSERT INTO uhint (uhint_date, hint_id, user_id) VALUES(?, ?, ?)',
@@ -399,7 +403,7 @@ const coins = (options: CoinsOptions): void => {
 
   server.post(urljoin('/', routes.api, routes.coins.wallet), isAuthenticated, (req, res) => {
     const currentUser = req.user as CoinsUser;
-    const currentDate: number = moment().valueOf();
+    const currentDate: number = Date.now();
 
     db.all('SELECT * FROM uhint AS uh '
       + 'LEFT JOIN hint AS h ON h.hint_id = uh.hint_id '

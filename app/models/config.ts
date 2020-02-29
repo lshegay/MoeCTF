@@ -1,5 +1,3 @@
-import { Moment } from 'moment';
-
 interface Config {
   siteTitle: string;
   protocol: string;
@@ -12,13 +10,8 @@ interface Config {
   staticDir: string;
   logFileDir: string;
   timer: boolean;
-  startMatchDate?: Moment;
-  endMatchDate?: Moment;
-
-  plugins: {
-    launcher: (options?) => void;
-    params: object;
-  }[];
+  startMatchDate?: number;
+  endMatchDate?: number;
 }
 
 export default Config;

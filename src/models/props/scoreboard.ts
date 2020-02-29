@@ -1,5 +1,5 @@
 import PageProps from './page';
-import User from '../user';
+import User from '../../../app/models/user';
 
 interface ScoreboardProps extends PageProps {
   users: User[];
