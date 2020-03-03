@@ -1,4 +1,4 @@
-interface Config {
+interface MyConfig {
   siteTitle: string;
   protocol: string;
   hostname: string;
@@ -14,4 +14,14 @@ interface Config {
   endMatchDate?: number;
 }
 
-export default Config;
+interface MySecret {
+  key: string;
+  admin: {
+    username: string;
+    password: string;
+    email: string;
+  };
+}
+
+export type Config = Readonly<MyConfig>;
+export type Secret = Readonly<MySecret>;

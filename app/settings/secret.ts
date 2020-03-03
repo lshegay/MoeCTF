@@ -1,6 +1,6 @@
-import Secret from '../models/secret';
+import { Secret } from '../models/config';
 
-const secret: Readonly<Secret> = {
+const secret: Secret = {
   key: 'secret_gay_key',
   admin: {
     username: 'moe_admin',

@@ -1,6 +1,6 @@
-import Config from '../models/config';
+import { Config } from '../models/config';
 
-const config: Readonly<Config> = {
+const config: Config = {
   siteTitle: 'MoeCTF',
   secure: false,
   protocol: 'http:',
@@ -9,7 +9,7 @@ const config: Readonly<Config> = {
   database: 'database.db',
   databaseSessions: 'sessions.db',
   cookiesAge: 1000 * 60 * 60 * 24 * 30,
-  staticDir: 'static',
+  staticDir: 'public/static',
   logFileDir: 'logs.txt',
   timer: true,
   startMatchDate: new Date(2020, 1, 29, 18, 11, 0).getTime(),

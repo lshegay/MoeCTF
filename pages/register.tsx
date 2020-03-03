@@ -45,11 +45,9 @@ const Page: NextPage<PageProps> = ({ message }) => (
   </>
 );
 
-Page.getInitialProps = async ({ req }: Context): Promise<PageProps> => (
-  {
-    user: null,
-    message: req.flash('error'),
-  }
-);
+Page.getInitialProps = async ({ req }: Context): Promise<PageProps> => ({
+  user: null,
+  message: req.flash('error'),
+});
 
 export default Page;

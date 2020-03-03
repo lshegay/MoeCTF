@@ -12,18 +12,15 @@ import {
   Badge,
 } from 'reactstrap';
 import fetch from 'isomorphic-fetch';
-import { IoIosCash } from 'react-icons/io';
 
 import Context from '../../app/models/context';
-import Navigation from '../../src/components/navigation';
-import Footer from '../../src/components/footer';
-import Panel from '../../src/components/admin';
-import PageProps from '../../src/models/props/tasks';
+import { Navigation, Footer, Panel } from '../../src/components';
+import TasksProps from '../../src/models/props/tasks';
 import config from '../../app/settings/config';
 
 import '../../src/resources/stylesheet/main.scss';
 
-const Page: NextPage<PageProps> = ({
+const Page: NextPage<TasksProps> = ({
   tasks,
   categories,
   message,
@@ -190,7 +187,7 @@ const Page: NextPage<PageProps> = ({
   );
 };
 
-Page.getInitialProps = async ({ req, query }: Context): Promise<PageProps> => {
+Page.getInitialProps = async ({ req, query }: Context): Promise<TasksProps> => {
   const {
     protocol,
     hostname,
@@ -209,7 +206,7 @@ Page.getInitialProps = async ({ req, query }: Context): Promise<PageProps> => {
   });
   const json = await res.json();
 
-  const pageProps: PageProps = {
+  const pageProps: TasksProps = {
     tasks: [json.task],
     categories: json.categories,
     user: req.user,

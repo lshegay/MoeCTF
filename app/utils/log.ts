@@ -10,7 +10,7 @@ const log = async (path: string, message: string, object?: object): Promise<bool
     `[${currentDate.toLocaleString()}] ${message}${dumpedObject}\n`,
     (error) => {
       if (error) {
-        console.error(error);
+        if (error) throw error;
       } else {
         success = true;
       }

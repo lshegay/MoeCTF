@@ -1,6 +1,8 @@
 node_modules
 .next
-/logs/log.txt
 database.db
 database.db-journal
 sessions.db
+export.json
+tasks.json
+logs.txt

@@ -60,6 +60,7 @@
     "no-console": "off",
     "no-shadow": "off",
     "no-undef": "off",
+    "object-curly-newline": "off",
     "react/jsx-filename-extension": [
       1,
       {

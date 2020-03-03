@@ -11,35 +11,31 @@ import sqlite3Original from 'sqlite3';
 import connectSQLite3 from 'connect-sqlite3';
 import crypto from 'crypto';
 
+import { DBUser } from './models/db';
 import routes from './routes';
 import config from './settings/config';
 import secret from './settings/secret';
-import { DBUser } from './models/db';
+
+const dev = process.env.NODE_ENV !== 'production';
+const host = config.hostname + (config.port ? `:${config.port}` : '');
+const domain = `${config.protocol}//${host}`;
 
 const sqlite3 = sqlite3Original.verbose();
 const SQLiteStore = connectSQLite3(session);
-const dev = process.env.NODE_ENV !== 'production';
 const app = nextjs({ dev });
-const handle = app.getRequestHandler();
-const db = new sqlite3.Database(
-  path.resolve('./', config.database),
-  (error): void => { if (error) throw error; }
-);
-
-const host = config.hostname + (config.port ? `:${config.port}` : '');
-const domain = `${config.protocol}//${host}`;
+const nextHandler = app.getRequestHandler();
+const db = new sqlite3.Database(path.resolve('./', config.database));
+const server = express();
 
 if (config.timer
   && config.endMatchDate
   && config.startMatchDate
   && config.endMatchDate <= config.startMatchDate) {
-  throw new Error('Change endMatchDate and startMatchDate in config file.');
+  throw new Error('Change endMatchDate and startMatchDate in config file');
 }
 
 app.prepare()
   .then(() => {
-    const server = express();
-
     server.use(express.static(path.resolve('./', config.staticDir)))
       .use(bodyParser.urlencoded({ extended: true }))
       .use(bodyParser.json())
@@ -47,9 +43,7 @@ app.prepare()
         secret: secret.key,
         resave: false,
         saveUninitialized: true,
-        store: new SQLiteStore({
-          db: path.join('./', config.databaseSessions),
-        }),
+        store: new SQLiteStore({ db: path.join('./', config.databaseSessions) }),
         cookie: {
           secure: config.secure,
           maxAge: config.cookiesAge,
@@ -108,7 +102,7 @@ app.prepare()
       });
     });
 
-    routes(server, db, handle);
+    routes({ server, db, nextHandler });
 
     server.listen(config.port, (error) => {
       if (error) throw error;

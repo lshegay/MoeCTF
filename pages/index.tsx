@@ -13,12 +13,14 @@ import {
 import fetch from 'isomorphic-fetch';
 
 import Context from '../app/models/context';
-import Navigation from '../src/components/navigation';
-import Footer from '../src/components/footer';
-import Dashboard from '../src/components/dashboard';
-import Panel from '../src/components/admin';
 import PageProps from '../src/models/props/posts';
-import Post from '../app/models/post';
+import {
+  Panel,
+  Navigation,
+  Footer,
+  Dashboard,
+} from '../src/components';
+import { Post } from '../app/models';
 
 import config from '../app/settings/config';
 

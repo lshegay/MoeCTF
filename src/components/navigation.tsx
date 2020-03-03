@@ -15,8 +15,7 @@ import {
 } from 'reactstrap';
 import { IoIosCash } from 'react-icons/io';
 
-import User from '../../app/models/user';
-import { CoinsUser } from '../../app/plugins/coins';
+import { User } from '../../app/models';
 import config from '../../app/settings/config';
 
 interface NavigationProps extends HTMLAttributes<HTMLElement> {
@@ -68,7 +67,7 @@ const Navigation: FunctionComponent<NavigationProps> = ({
         </NavItem>
         <NavItem>
           <NavLink>
-            {`${(user as CoinsUser).wallet} `}
+            {/* {`${(user as CoinsUser).wallet} `} */}
             <IoIosCash style={{ width: '1.3em', height: '1.3em', marginBottom: '2px' }} />
           </NavLink>
         </NavItem>

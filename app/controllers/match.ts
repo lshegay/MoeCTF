@@ -1,13 +1,9 @@
-import {
-  Request,
-  Response,
-  NextFunction
-} from 'express';
+import { RequestHandler } from 'express';
 
-import User from '../models/user';
+import { User } from '../models';
 import config from '../settings/config';
 
-export const isNotMatchEnded = (req: Request, res: Response, next: NextFunction): void => {
+const isNotEnded: RequestHandler = (req, res, next): void => {
   const currentDate: Date = new Date(Date.now());
 
   if (!config.timer
@@ -20,7 +16,7 @@ export const isNotMatchEnded = (req: Request, res: Response, next: NextFunction)
   return res.redirect(req.headers.referer || '/');
 };
 
-export const isMatchStarted = (req: Request, res: Response, next: NextFunction): void => {
+const isStarted: RequestHandler = (req, res, next): void => {
   const currentDate: Date = new Date(Date.now());
 
   if (!config.timer
@@ -29,4 +25,9 @@ export const isMatchStarted = (req: Request, res: Response, next: NextFunction):
     return next();
   }
   res.status(403).redirect('/');
+};
+
+export default {
+  isNotEnded,
+  isStarted,
 };

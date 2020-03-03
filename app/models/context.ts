@@ -1,6 +1,6 @@
 import { NextPageContext } from 'next';
 import { Request } from 'express';
-import User from './user';
+import { User } from '.';
 
 interface CRequest extends Request {
   user: User;
