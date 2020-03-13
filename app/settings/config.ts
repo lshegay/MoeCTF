@@ -6,8 +6,14 @@ const config: Config = {
   protocol: 'http:',
   hostname: 'localhost',
   port: 3000,
-  database: 'database.db',
-  databaseSessions: 'sessions.db',
+  databaseDir: 'database',
+  databaseNames: {
+    users: 'users.db',
+    posts: 'posts.db',
+    tasks: 'tasks.db',
+    categories: 'categories.db',
+    sessions: 'sessions.db'
+  },
   cookiesAge: 1000 * 60 * 60 * 24 * 30,
   staticDir: 'public/static',
   logFileDir: 'logs.txt',

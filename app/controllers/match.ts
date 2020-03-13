@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
-
-import { User } from '../models';
+import { User } from '../models/units';
 import config from '../settings/config';
+import response from '../utils/response';
 
 const isNotEnded: RequestHandler = (req, res, next): void => {
   const currentDate: Date = new Date(Date.now());
@@ -12,8 +12,7 @@ const isNotEnded: RequestHandler = (req, res, next): void => {
     return next();
   }
 
-  req.flash('error', 'Match has been already finished');
-  return res.redirect(req.headers.referer || '/');
+  res.status(403).json(response.fail({}, 'Game has already finished'));
 };
 
 const isStarted: RequestHandler = (req, res, next): void => {
@@ -24,10 +23,14 @@ const isStarted: RequestHandler = (req, res, next): void => {
     || (req.isAuthenticated() && (req.user as User).admin)) {
     return next();
   }
-  res.status(403).redirect('/');
+  res.status(403).json(response.fail({}, 'Game has not started yet'));
 };
 
 export default {
-  isNotEnded,
-  isStarted,
+  is: {
+    started: isStarted,
+    not: {
+      ended: isNotEnded,
+    }
+  },
 };

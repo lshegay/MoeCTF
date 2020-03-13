@@ -1,158 +1,246 @@
-import { RequestHandler } from 'express';
 import { UploadedFile } from 'express-fileupload';
-import { Database } from 'sqlite3';
-
+import fs from 'fs';
+import pickBy from 'lodash/pickBy';
+import identity from 'lodash/identity';
+import { Controller } from '../models/database';
 import config from '../settings/config';
+import response, { projection } from '../utils/response';
 
-const createCategory = (db: Database): RequestHandler => (req, res): void => {
+const createCategory: Controller = (db) => (req, res): void => {
   const { name } = req.body;
 
-  db.run('INSERT INTO category (category_name) VALUES (?)', name, (error: Error) => {
-    if (error) throw error;
-
-    res.redirect('/tasks');
-  });
-};
-
-const deleteCategory = (db: Database): RequestHandler => (req, res): void => {
-  const { id } = req.body;
-
-  db.serialize(() => {
-    db.run('DELETE FROM stask WHERE stask_id IN '
-      + '(SELECT s.stask_id FROM stask AS s JOIN task AS t ON t.task_id = s.task_id '
-      + 'WHERE t.category_id=(?))', id);
-    db.run('DELETE FROM task WHERE category_id=(?)', id);
-    db.run('DELETE FROM category WHERE category_id=(?)', id, (error: Error) => {
-      if (error) throw error;
-
-      res.redirect('/tasks');
-    });
-  });
-};
-
-const createPost = (db: Database): RequestHandler => (req, res): void => {
-  const { title, content } = req.body;
-
-  db.run('INSERT INTO post (post_title, post_content, post_date) VALUES (?, ?, ?)',
-    title, content, Date.now(), (error: Error) => {
-      if (error) throw error;
-
-      res.redirect('/');
-    });
-};
-
-const deletePost = (db: Database): RequestHandler => (req, res): void => {
-  const { id } = req.body;
-
-  db.serialize(() => {
-    db.run('DELETE FROM post WHERE post_id=(?)', id, (error: Error) => {
-      if (error) throw error;
-
-      res.redirect('/');
-    });
-  });
-};
-
-const createTask = (db: Database): RequestHandler => (req, res): void => {
-  const {
-    name,
-    category,
-    content,
-    points,
-    flag,
-  } = req.body;
-
-  if (Number.isNaN(parseInt(points, 10)) || Number.isNaN(parseInt(category, 10))) {
-    req.flash('error', 'Points should be number');
-    return res.redirect('/tasks');
+  if (!name) {
+    res.status(400).json(response.fail({
+      name: 'A name is required',
+    }));
+    return;
   }
 
-  const statement = db.prepare('INSERT INTO task (task_name, category_id, '
-    + 'task_content, task_points, task_file, task_flag) VALUES (?, ?, ?, ?, ?, ?)',
-  (error): void => {
-    if (error) throw error;
+  db.categories.insert({ name }, (error: Error, category: any) => {
+    if (error) {
+      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+      throw error;
+    }
 
-    return res.status(200).redirect('/tasks');
+    res.status(201).json(response.success({ category }));
   });
-
-  if (req.files?.file) {
-    const file = req.files.file as UploadedFile;
-
-    file.mv(`./${config.staticDir}/${file.name.split(' ').join('_')}`, (error: Error) => {
-      if (error) throw error;
-
-      statement.run(name, category, content, points, file.name.split(' ').join('_'), flag.trim().replace('\n', ''));
-    });
-  } else {
-    statement.run(name, category, content, points, null, flag.trim().replace('\n', ''));
-  }
 };
 
-const updateTask = (db: Database): RequestHandler => (req, res): void => {
-  const {
-    id,
-    name,
-    category,
-    content,
-    points,
-    flag,
-  } = req.body;
+const deleteCategory: Controller = (db) => (req, res): void => {
+  const { _id } = req.params;
 
-  if (Number.isNaN(parseInt(points, 10)) || Number.isNaN(parseInt(category, 10))) {
-    req.flash('error', 'Points should be number');
-    return res.redirect('/tasks');
+  if (!_id) {
+    res.status(400).json(response.fail({ _id: 'A query is required' }));
+    return;
   }
 
-  const vars = [name, category, content, points];
-  if (req.files?.file) vars.push((req.files.file as UploadedFile).name.replace(' ', '_'));
-  if (flag) vars.push(flag.trim().replace('\n', ''));
-  vars.push(id);
+  db.tasks.remove({ categoryId: _id }, { multi: true }, (error: Error) => {
+    if (error) {
+      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+      throw error;
+    }
 
-  const statement = db.prepare('UPDATE task SET task_name = (?), category_id = (?), '
-    + 'task_content = (?), task_points = (?) '
-    + `${req.files?.file ? ', task_file = (?) ' : ''}`
-    + `${flag ? ', task_flag = (?) ' : ''}`
-    + 'WHERE task_id = (?)',
-  (error: Error): void => {
-    if (error) throw error;
-
-    return res.status(200).redirect(`/tasks/${id}`);
-  });
-
-  if (req.files?.file) {
-    const file = req.files.file as UploadedFile;
-
-    file.mv(`./${config.staticDir}/${file.name.split(' ').join('_')}`, (error: Error) => {
+    db.categories.remove({ _id }, {}, (error: Error, numRemoved: number) => {
       if (error) {
-        return res.status(500).send(error);
+        res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+        throw error;
       }
 
-      statement.run(vars);
+      res.status(200).json(response.success({ numRemoved }));
+    });
+  });
+};
+
+const createPost: Controller = (db) => (req, res): void => {
+  const { name, content } = req.body;
+
+  db.posts.insert({ name, content, date: Date.now() }, (error: Error, post: any) => {
+    if (error) {
+      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+      throw error;
+    }
+
+    res.status(201).json(response.success({ post }));
+  });
+};
+
+const deletePost: Controller = (db) => (req, res): void => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(400).json(response.fail({ _id: 'A query is required' }));
+    return;
+  }
+
+  db.posts.remove({ _id }, {}, (error: Error, numRemoved: number) => {
+    if (error) {
+      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+      throw error;
+    }
+
+    res.status(200).json(response.success({ numRemoved }));
+  });
+};
+
+const createTask: Controller = (db) => (req, res): void => {
+  const {
+    name,
+    content,
+    flag,
+    categoryId,
+  } = req.body;
+  const uploadedFile = req.files?.file as UploadedFile;
+
+  if (!name || !req.body.points || !categoryId) {
+    res.status(400).json(response.fail(projection({
+      name: 'A name is required',
+      points: 'Points is required',
+      categoryId: 'A categoryId is required',
+    }, { name, points: req.body.points, categoryId })));
+    return;
+  }
+
+  const points = Number.parseInt(req.body.points, 10);
+
+  if (!points) {
+    res.status(400).json(response.fail({
+      points: 'Points have to be number',
+    }));
+    return;
+  }
+
+  if (uploadedFile) {
+    const file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
+    if (!fs.existsSync(`./${config.staticDir}`)) {
+      fs.mkdirSync(`./${config.staticDir}`);
+    }
+    uploadedFile.mv(file, (error: Error) => {
+      if (error) {
+        res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+        throw error;
+      }
+
+      db.tasks.insert({ name, categoryId, content, points, flag, file },
+        (error: Error, task: any) => {
+          if (error) {
+            res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+            throw error;
+          }
+
+          res.status(201).json(response.success({ task }));
+        });
     });
   } else {
-    statement.run(vars);
+    db.tasks.insert({ name, categoryId, content, points, flag },
+      (error: Error, task: any) => {
+        if (error) {
+          res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+          throw error;
+        }
+
+        res.status(201).json(response.success({ task }));
+      });
   }
 };
 
-const deleteTask = (db: Database): RequestHandler => (req, res): void => {
-  const { id } = req.body;
+const updateTask: Controller = (db) => (req, res): void => {
+  const { _id } = req.params;
 
-  db.serialize(() => {
-    db.run('DELETE FROM stask WHERE task_id=(?)', id);
-    db.run('DELETE FROM task WHERE task_id=(?)', id, (error: Error) => {
-      if (error) throw error;
+  if (!_id) {
+    res.status(400).json(response.fail({ _id: 'A query is required' }));
+    return;
+  }
 
-      res.redirect('/tasks');
+  const {
+    name,
+    content,
+    flag,
+    categoryId,
+  } = req.body;
+  const uploadedFile = req.files?.file as UploadedFile;
+  const points = req.body.points
+    ? Number.parseInt(req.body.points, 10)
+    : null;
+
+  if (points != null && !Number.isInteger(points)) {
+    res.status(400).json(response.fail({
+      points: 'Points have to be number',
+    }));
+    return;
+  }
+
+  if (uploadedFile) {
+    const file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
+    if (!fs.existsSync(`./${config.staticDir}`)) {
+      fs.mkdirSync(`./${config.staticDir}`);
+    }
+    uploadedFile.mv(file, (error: Error) => {
+      if (error) {
+        res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+        throw error;
+      }
+
+      db.tasks.update(
+        { _id },
+        { $set: pickBy({ name, categoryId, content, points, flag, file }, identity) },
+        { returnUpdatedDocs: true, multi: false },
+        (error: Error, _, task: any) => {
+          if (error) {
+            res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+            throw error;
+          }
+
+          res.status(200).json(response.success({ task }));
+        }
+      );
     });
+  } else {
+    db.tasks.update(
+      { _id },
+      { $set: pickBy({ name, categoryId, content, points, flag }, identity) },
+      { returnUpdatedDocs: true, multi: false },
+      (error: Error, _, task: any) => {
+        if (error) {
+          res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+          throw error;
+        }
+
+        res.status(200).json(response.success({ task }));
+      }
+    );
+  }
+};
+
+const deleteTask: Controller = (db) => (req, res): void => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(400).json(response.fail({ _id: 'A query is required' }));
+    return;
+  }
+
+  db.tasks.remove({ _id }, {}, (error: Error, numRemoved: number) => {
+    if (error) {
+      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+      throw error;
+    }
+
+    res.status(200).json(response.success({ numRemoved }));
   });
 };
 
 export default {
-  createCategory,
-  deleteCategory,
-  createPost,
-  deletePost,
-  createTask,
-  updateTask,
-  deleteTask,
+  creates: {
+    category: createCategory,
+    post: createPost,
+    task: createTask,
+  },
+  deletes: {
+    category: deleteCategory,
+    post: deletePost,
+    task: deleteTask,
+  },
+  updates: {
+    task: updateTask,
+  }
 };

@@ -58,8 +58,10 @@
       "windows"
     ],
     "no-console": "off",
+    "no-nested-ternary": "off",
     "no-shadow": "off",
     "no-undef": "off",
+    "no-underscore-dangle": "off",
     "object-curly-newline": "off",
     "react/jsx-filename-extension": [
       1,

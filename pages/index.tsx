@@ -20,7 +20,7 @@ import {
   Footer,
   Dashboard,
 } from '../src/components';
-import { Post } from '../app/models';
+import { Post } from '../app/models/units';
 
 import config from '../app/settings/config';
 

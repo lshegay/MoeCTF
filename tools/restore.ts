@@ -1,16 +1,22 @@
 import path from 'path';
-import sqlite3 from 'sqlite3';
 import crypto from 'crypto';
 import readline from 'readline';
 import fs from 'fs';
+import Datastore from 'nedb';
 
+import { Database } from '../app/models/database';
 import config from '../app/settings/config';
 import secret from '../app/settings/secret';
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-const databasePath = path.resolve('./', config.database);
-const sessionsPath = path.resolve('./', config.databaseSessions);
+const databasePath = {
+  users: path.join('./', config.databaseDir, config.databaseNames.users),
+  posts: path.join('./', config.databaseDir, config.databaseNames.posts),
+  tasks: path.join('./', config.databaseDir, config.databaseNames.tasks),
+  categories: path.join('./', config.databaseDir, config.databaseNames.categories),
+};
+const sessionsPath = path.join('./', config.databaseDir, config.databaseNames.sessions);
 const logsPath = path.resolve('./', config.logFileDir);
 
 const main = async (): Promise<void> => {
@@ -29,53 +35,40 @@ const main = async (): Promise<void> => {
   console.log('We are restoring database now. Please wait a second.');
 
   if (fs.existsSync(logsPath)) fs.unlinkSync(logsPath);
-  if (fs.existsSync(databasePath)) fs.unlinkSync(databasePath);
+  Object.keys(databasePath).forEach((key) => {
+    if (fs.existsSync(databasePath[key])) fs.unlinkSync(databasePath[key]);
+  });
   if (fs.existsSync(sessionsPath)) fs.unlinkSync(sessionsPath);
 
-  const sq = sqlite3.verbose();
-  const db = new sq.Database(
-    databasePath,
-    (error): void => {
-      if (error) console.error(error);
-    }
-  );
+  const db: Database = {
+    users: new Datastore({ filename: databasePath.users, autoload: true }),
+    posts: new Datastore({ filename: databasePath.posts, autoload: true }),
+    tasks: new Datastore({ filename: databasePath.tasks, autoload: true }),
+    categories: new Datastore({ filename: path.join('./', databasePath.categories), autoload: true }),
+  };
 
-  db.serialize(() => {
-    db.run('CREATE TABLE IF NOT EXISTS post ( '
-      + 'post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
-      + 'post_title TEXT NOT NULL, '
-      + 'post_content TEXT NOT NULL, '
-      + 'post_date INTEGER NOT NULL)');
-    db.run('CREATE TABLE IF NOT EXISTS stask ( '
-      + 'stask_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
-      + 'stask_date INTEGER NOT NULL, '
-      + 'task_id INTEGER NOT NULL, '
-      + 'user_id INTEGER NOT NULL)');
-    db.run('CREATE TABLE IF NOT EXISTS task ( '
-      + 'task_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
-      + 'task_name TEXT NOT NULL, '
-      + 'task_content TEXT, '
-      + 'task_flag TEXT NOT NULL, '
-      + 'task_points INTEGER NOT NULL, '
-      + 'task_file TEXT, '
-      + 'category_id INTEGER NOT NULL)');
-    db.run('CREATE TABLE IF NOT EXISTS user ( '
-      + 'user_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
-      + 'user_name TEXT NOT NULL UNIQUE, '
-      + 'user_content TEXT, '
-      + 'user_password TEXT NOT NULL, '
-      + 'user_email TEXT UNIQUE, '
-      + 'user_admin BLOB NOT NULL DEFAULT 0, '
-      + 'user_avatar TEXT)');
-    db.run('CREATE TABLE IF NOT EXISTS category ( '
-      + 'category_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, '
-      + 'category_name TEXT NOT NULL)');
-    db.run('INSERT OR IGNORE INTO user '
-      + '(user_name, user_email, user_password, user_admin) VALUES (?, ?, ?, ?)',
-    secret.admin.username,
-    secret.admin.email,
-    crypto.pbkdf2Sync(secret.admin.password, secret.key, 1, 32, 'sha512').toString('hex'),
-    1);
+  db.posts.insert({
+    name: 'Welcome to CTF!',
+    content: 'This is another super-puper CTF with moe moe content and much more sweet love and care',
+    date: Date.now(),
+  });
+  db.categories.insert([{ name: 'Joy' }, { name: 'Web' }, { name: 'Crypto' }], (_, categories: any[]) => {
+    db.tasks.insert({
+      name: 'Who is this?',
+      content: 'Literally the question in the title',
+      flag: 'MoeCTF{OwO}',
+      points: 10,
+      solved: [],
+      categoryID: categories[0]._id,
+    });
+  });
+  db.users.insert({
+    name: secret.admin.username,
+    password: crypto.pbkdf2Sync(secret.admin.password, secret.key, 1, 32, 'sha512').toString('hex'),
+    email: secret.admin.email,
+    admin: true,
+    avatar: null,
+    content: null,
   });
 };
 

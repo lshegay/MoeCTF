@@ -1,8 +1,7 @@
 node_modules
 .next
-database.db
-database.db-journal
-sessions.db
+database
+public/static
 export.json
 tasks.json
 logs.txt

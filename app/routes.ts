@@ -1,78 +1,74 @@
-
-import { Express } from 'express';
-import { IncomingMessage, ServerResponse } from 'http';
-import { UrlWithParsedQuery } from 'url';
-import { Database } from 'sqlite3';
-
+import { RoutesParams } from './models/database';
 import match from './controllers/match';
 import user from './controllers/user';
-import post from './controllers/post';
-import task from './controllers/task';
+import get from './controllers/get';
 import admin from './controllers/admin';
-import { logout, register, login } from './controllers/auth';
-
-interface RoutesParams {
-  server: Express;
-  db: Database;
-  nextHandler:
-    (req: IncomingMessage, res: ServerResponse, parsedUrl?: UrlWithParsedQuery) => Promise<void>;
-}
 
 const routes = ({ server, db, nextHandler }: RoutesParams): void => {
   /** PAGES RULES start */
-  server.get('/tasks', user.isAuthenticated, match.isStarted);
-  server.get('/scoreboard', user.isAuthenticated);
-  server.get('/profile', user.isAuthenticated);
-  server.get('/logout', user.isAuthenticated, logout);
-  server.get('/login', user.isNotAuthenticated);
-  server.get('/register', user.isNotAuthenticated);
+  server.get('/tasks', user.is.authenticated, match.is.started);
+  server.get('/tasks/:taskId', user.is.authenticated, match.is.started);
+  server.get('/scoreboard', user.is.authenticated);
+  server.get('/profile', user.is.authenticated);
+  server.get('/login', user.is.not.authenticated);
+  server.get('/register', user.is.not.authenticated);
   /** PAGES RULES end */
 
-  server.get('*', (req, res) => nextHandler(req, res));
-
   /** routes start */
-  server.route('/api/admin/create/category')
-    .post(user.isAdmin, admin.createCategory(db));
+  server.route('/api/admin/categories')
+    .all(user.is.authenticated, user.is.admin)
+    .post(admin.creates.category(db));
 
-  server.route('/api/admin/delete/category')
-    .post(user.isAdmin, admin.deleteCategory(db));
+  server.route('/api/admin/categories/:_id')
+    .all(user.is.authenticated, user.is.admin)
+    .delete(admin.deletes.category(db));
 
-  server.route('/api/admin/create/post')
-    .post(user.isAdmin, admin.createPost(db));
+  server.route('/api/admin/posts')
+    .all(user.is.authenticated, user.is.admin)
+    .post(admin.creates.post(db));
 
-  server.route('/api/admin/delete/post')
-    .post(user.isAdmin, admin.deletePost(db));
+  server.route('/api/admin/posts/:_id')
+    .all(user.is.authenticated, user.is.admin)
+    .delete(admin.deletes.post(db));
 
-  server.route('/api/admin/create')
-    .post(user.isAdmin, admin.createTask(db));
+  server.route('/api/admin/tasks')
+    .all(user.is.authenticated, user.is.admin)
+    .post(admin.creates.task(db));
 
-  server.route('/api/admin/update')
-    .post(user.isAdmin, admin.updateTask(db));
-
-  server.route('/api/admin/delete')
-    .post(user.isAdmin, admin.deleteTask(db));
-
-  server.route('/api/submit')
-    .post(user.isAuthenticated, match.isStarted, match.isNotEnded, user.submit(db));
-
-  server.route('/api/posts')
-    .post(post.getAll(db));
+  server.route('/api/admin/tasks/:_id')
+    .all(user.is.authenticated, user.is.admin)
+    .put(admin.updates.task(db))
+    .delete(admin.deletes.task(db));
 
   server.route('/api/users')
-    .post(user.getAll(db));
+    .get(user.is.authenticated, get.users(db));
+
+  server.route('/api/posts')
+    .get(get.posts(db));
+
+  server.route('/api/categories')
+    .get(user.is.authenticated, match.is.started, get.categories(db));
 
   server.route('/api/tasks')
-    .post(user.isAuthenticated, match.isStarted, task.getAll(db));
+    .get(user.is.authenticated, match.is.started, get.tasks(db));
 
-  server.route('/api/tasks/:taskId')
-    .post(user.isAuthenticated, match.isStarted, task.getOne(db));
+  server.route('/api/tasks/:_id')
+    .get(user.is.authenticated, match.is.started, get.task(db));
 
-  server.route('/login')
-    .post(user.isNotAuthenticated, login());
+  server.route('/api/submit')
+    .post(user.is.authenticated, match.is.started, match.is.not.ended, user.submits(db));
 
-  server.route('/register')
-    .post(user.isNotAuthenticated, register(db));
+  server.route('/api/login')
+    .post(user.is.not.authenticated, user.logins(db));
+
+  server.route('/api/logout')
+    .get(user.is.authenticated, user.logouts);
+
+  server.route('/api/register')
+    .post(user.is.not.authenticated, user.registers(db));
   /** routes end */
+
+  server.get('*', (req, res) => nextHandler(req, res));
 };
 
 export default routes;

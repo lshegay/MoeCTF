@@ -15,7 +15,7 @@ import {
 } from 'reactstrap';
 import { IoIosCash } from 'react-icons/io';
 
-import { User } from '../../app/models';
+import { User } from '../../app/models/units';
 import config from '../../app/settings/config';
 
 interface NavigationProps extends HTMLAttributes<HTMLElement> {

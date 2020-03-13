@@ -1,5 +1,5 @@
 import PageProps from './page';
-import { Post } from '../../../app/models';
+import { Post } from '../../../app/models/units';
 
 interface PostsProps extends PageProps {
   posts: Post[];
