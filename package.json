@@ -2,6 +2,7 @@
   "name": "moectf-base",
   "version": "0.0.1",
   "description": "MoeCTF embedded server base",
+  "repository": { "url": "https://github.com/Noramire/MoeCTF/tree/base" },
   "main": "build/server.js",
   "author": "noramire",
   "license": "MIT",
