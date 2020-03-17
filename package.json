@@ -1,10 +1,10 @@
 {
-  "name": "hello-next",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "author": "",
-  "license": "ISC",
+  "name": "moectf-base",
+  "version": "0.0.1",
+  "description": "MoeCTF embedded server base",
+  "main": "build/server.js",
+  "author": "noramire",
+  "license": "MIT",
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "restore": "ts-node --project tsconfig.json test/restore.ts",
