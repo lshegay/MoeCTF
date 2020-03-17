@@ -1,3 +1,3 @@
 /** TSNODE VARIABLES FOR MOCHA */
 
-process.env.TS_NODE_PROJECT = 'tsconfig.server.json';
+process.env.TS_NODE_PROJECT = 'tsconfig.json';

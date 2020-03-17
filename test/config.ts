@@ -1,4 +1,4 @@
-import { Config } from '../app/models/config';
+import { Config } from '../src/models/config';
 
 const config: Config = {
   siteTitle: 'MoeCTF',

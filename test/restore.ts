@@ -3,7 +3,7 @@ import fs from 'fs';
 import Datastore from 'nedb';
 import path from 'path';
 import readline from 'readline';
-import { Database } from '../app/models/database';
+import { Database } from '../src/models/database';
 import config from './config';
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

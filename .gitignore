@@ -1,7 +1,4 @@
 node_modules
-.next
 database
 public/static
-export.json
-tasks.json
 logs.txt

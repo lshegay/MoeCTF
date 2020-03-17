@@ -5,7 +5,7 @@
     "node": true
   },
   "extends": [
-    "airbnb",
+    "airbnb-base",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/errors",
     "plugin:import/warnings",
@@ -18,23 +18,18 @@
   "overrides": [
     {
       "files": [
-        "*.js",
-        "*.jsx"
+        "*.js"
       ],
       "parser": "espree"
     }
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaFeatures": {
-      "jsx": true
-    },
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
   "plugins": [
-    "@typescript-eslint",
-    "react"
+    "@typescript-eslint"
   ],
   "rules": {
     "@typescript-eslint/no-var-requires": "off",
@@ -47,13 +42,9 @@
       "ignorePackages",
       {
         "js": "never",
-        "jsx": "never",
-        "ts": "never",
-        "tsx": "never"
+        "ts": "never"
       }
     ],
-    "jsx-a11y/anchor-is-valid": "off",
-    "jsx-a11y/anchor-has-content": "off",
     "linebreak-style": [
       "warn",
       "windows"
@@ -63,24 +54,6 @@
     "no-shadow": "off",
     "no-undef": "off",
     "no-underscore-dangle": "off",
-    "object-curly-newline": "off",
-    "react/jsx-filename-extension": [
-      1,
-      {
-        "extensions": [
-          ".jsx",
-          "tsx"
-        ]
-      }
-    ],
-    "react/jsx-props-no-spreading": "off",
-    "react/prop-types": "off"
-  },
-  "settings": {
-    "import/resolver": {
-      "node": {
-        "extensions": [".js", ".jsx", ".ts", ".tsx"]
-      }
-    }
+    "object-curly-newline": "off"
   }
 }

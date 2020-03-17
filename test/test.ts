@@ -1,11 +1,12 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
+import crypto from 'crypto';
 import fs from 'fs';
-import path from 'path';
 import { Server } from 'http';
-import start from '../app/server';
+import path from 'path';
+import start from '../src/server';
+import { parse, Response } from '../src/utils/response';
 import config from './config';
-import { parse, Response } from '../app/utils/response';
 
 chai.use(chaiHttp);
 const should = chai.should();
@@ -35,15 +36,30 @@ const test = (response: Response, callback?: (r: Response) => void): Error | nul
 };
 
 let server: Server;
-let mainCategoryId: string;
 
 describe('Basic MoeAPI testing', () => {
+  let mainCategoryId: string;
+
   before((done) => {
     server = moe.server.listen({
       host: config.hostname,
       port: config.port,
       exclusive: true,
     }, done);
+
+    db.users.findOne({ name: config.adminCreditals.username }, (err, user) => {
+      if (err) return done(err);
+      if (!user) {
+        db.users.insert({
+          name: config.adminCreditals.username,
+          password: crypto.pbkdf2Sync(config.adminCreditals.password, config.secret, 1, 32, 'sha512').toString('hex'),
+          email: config.adminCreditals.email,
+          admin: true,
+          avatar: null,
+          content: null,
+        });
+      }
+    });
   });
 
   after((done) => {
