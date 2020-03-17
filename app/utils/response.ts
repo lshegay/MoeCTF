@@ -58,7 +58,7 @@ export const parse = (text: string): Response => {
 
   try {
     obj = JSON.parse(text);
-  } catch (error) { return error('text is not JSON'); }
+  } catch (er) { return error('text is not JSON'); }
 
   if (!isValid(obj)) return error('JSON response is not valid for JSend API');
 

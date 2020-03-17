@@ -20,11 +20,9 @@ export type Config = Readonly<{
   timer: boolean;
   startMatchDate?: number;
   endMatchDate?: number;
-}>;
 
-export type Secret = Readonly<{
-  key: string;
-  admin: {
+  secret: string;
+  adminCreditals: {
     username: string;
     password: string;
     email: string;

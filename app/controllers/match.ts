@@ -1,9 +1,8 @@
-import { RequestHandler } from 'express';
 import { User } from '../models/units';
-import config from '../settings/config';
 import response from '../utils/response';
+import { Controller } from '../models/database';
 
-const isNotEnded: RequestHandler = (req, res, next): void => {
+const isNotEnded: Controller = (_, config) => (req, res, next): void => {
   const currentDate: Date = new Date(Date.now());
 
   if (!config.timer
@@ -15,7 +14,7 @@ const isNotEnded: RequestHandler = (req, res, next): void => {
   res.status(403).json(response.fail({}, 'Game has already finished'));
 };
 
-const isStarted: RequestHandler = (req, res, next): void => {
+const isStarted: Controller = (_, config) => (req, res, next): void => {
   const currentDate: Date = new Date(Date.now());
 
   if (!config.timer

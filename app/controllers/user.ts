@@ -3,8 +3,6 @@ import { RequestHandler } from 'express';
 import path from 'path';
 import { Controller } from '../models/database';
 import { User } from '../models/units';
-import config from '../settings/config';
-import secret from '../settings/secret';
 import log from '../utils/log';
 import response, { projection } from '../utils/response';
 
@@ -30,7 +28,7 @@ const isAdmin: RequestHandler = (req, res, next): void => {
 };
 
 /** AUTHORIZATION HANDLERS START */
-const login: Controller = (db) => async (req, res): Promise<void> => {
+const login: Controller = (db, config) => async (req, res): Promise<void> => {
   const {
     name,
     password,
@@ -51,7 +49,7 @@ const login: Controller = (db) => async (req, res): Promise<void> => {
     }
 
     if (user) {
-      const passHash = crypto.pbkdf2Sync(password, secret.key, 1, 32, 'sha512').toString('hex');
+      const passHash = crypto.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
       if (user?.password == passHash) {
         req.login(user, (error) => { // TODO: clean user from password
           if (error) {
@@ -78,7 +76,7 @@ const logout: RequestHandler = (req, res): void => {
   res.status(200).json(response.success());
 };
 
-const register: Controller = (db) => async (req, res): Promise<void> => {
+const register: Controller = (db, config) => async (req, res): Promise<void> => {
   const {
     name,
     email,
@@ -112,7 +110,7 @@ const register: Controller = (db) => async (req, res): Promise<void> => {
       return;
     }
 
-    const derviedKey = crypto.pbkdf2Sync(password, secret.key, 1, 32, 'sha512').toString('hex');
+    const derviedKey = crypto.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
     db.users.insert({ name, email, password: derviedKey },
       (error: Error, user: any) => {
         if (error) {
@@ -136,7 +134,7 @@ const register: Controller = (db) => async (req, res): Promise<void> => {
 };
 /** AUTHORIZATION HANDLERS END */
 
-const taskSubmit: Controller = (db) => (req, res): void => {
+const taskSubmit: Controller = (db, config) => (req, res): void => {
   const { taskId } = req.body;
   const flag = req.body.flag.trim().replace('\n', '');
   const user = req.user as User;

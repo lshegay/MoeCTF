@@ -1,7 +1,6 @@
-import { Express, RequestHandler } from 'express';
-import { IncomingMessage, ServerResponse } from 'http';
-import { UrlWithParsedQuery } from 'url';
+import { RequestHandler } from 'express';
 import Datastore from 'nedb';
+import { Config } from './config';
 
 export type Database = {
   users: Datastore;
@@ -10,11 +9,4 @@ export type Database = {
   categories: Datastore;
 };
 
-export interface RoutesParams {
-  server: Express;
-  db: Database;
-  nextHandler:
-    (req: IncomingMessage, res: ServerResponse, parsedUrl?: UrlWithParsedQuery) => Promise<void>;
-}
-
-export type Controller = (db: Database) => RequestHandler;
+export type Controller = (db: Database, config: Config) => RequestHandler;

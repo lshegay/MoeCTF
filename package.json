@@ -9,10 +9,8 @@
     "dev": "nodemon -w app/**/*.ts -e ts --exec \"ts-node --project tsconfig.server.json app/server.ts\"",
     "build": "next build & tsc --project tsconfig.server.json",
     "start": "cross-env NODE_ENV=production node .next/app/server.js",
-    "restore": "ts-node --project tsconfig.server.json tools/restore.ts",
-    "import": "npm run restore && ts-node --project tsconfig.server.json tools/importer.ts --import",
-    "export": "ts-node --project tsconfig.server.json tools/importer.ts --export",
-    "test": "mocha -r test/mocha.env.js -r ts-node/register test/test.ts"
+    "restore": "ts-node --project tsconfig.server.json test/restore.ts",
+    "test": "mocha --exit -r test/mocha.env.js -r ts-node/register test/test.ts"
   },
   "dependencies": {
     "@zeit/next-css": "^1.0.1",

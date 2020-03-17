@@ -2,7 +2,6 @@ import { UploadedFile } from 'express-fileupload';
 import fs from 'fs';
 import pickBy from 'lodash/pickBy';
 import { Controller } from '../models/database';
-import config from '../settings/config';
 import response, { projection } from '../utils/response';
 
 const createCategory: Controller = (db) => (req, res): void => {
@@ -81,7 +80,7 @@ const deletePost: Controller = (db) => (req, res): void => {
   });
 };
 
-const createTask: Controller = (db) => (req, res): void => {
+const createTask: Controller = (db, config) => (req, res): void => {
   const {
     name,
     content,
@@ -111,7 +110,7 @@ const createTask: Controller = (db) => (req, res): void => {
   if (uploadedFile) {
     const file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
     if (!fs.existsSync(`./${config.staticDir}`)) {
-      fs.mkdirSync(`./${config.staticDir}`);
+      fs.mkdirSync(`./${config.staticDir}`, { recursive: true });
     }
     uploadedFile.mv(file, (error: Error) => {
       if (error) {
@@ -142,7 +141,7 @@ const createTask: Controller = (db) => (req, res): void => {
   }
 };
 
-const updateTask: Controller = (db) => (req, res): void => {
+const updateTask: Controller = (db, config) => (req, res): void => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -171,7 +170,7 @@ const updateTask: Controller = (db) => (req, res): void => {
   if (uploadedFile) {
     const file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
     if (!fs.existsSync(`./${config.staticDir}`)) {
-      fs.mkdirSync(`./${config.staticDir}`);
+      fs.mkdirSync(`./${config.staticDir}`, { recursive: true });
     }
     uploadedFile.mv(file, (error: Error) => {
       if (error) {

@@ -1,12 +1,10 @@
-import path from 'path';
 import crypto from 'crypto';
-import readline from 'readline';
 import fs from 'fs';
 import Datastore from 'nedb';
-
+import path from 'path';
+import readline from 'readline';
 import { Database } from '../app/models/database';
-import config from '../app/settings/config';
-import secret from '../app/settings/secret';
+import config from './config';
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
@@ -65,9 +63,9 @@ const main = async (): Promise<void> => {
     });
   });
   db.users.insert({
-    name: secret.admin.username,
-    password: crypto.pbkdf2Sync(secret.admin.password, secret.key, 1, 32, 'sha512').toString('hex'),
-    email: secret.admin.email,
+    name: config.adminCreditals.username,
+    password: crypto.pbkdf2Sync(config.adminCreditals.password, config.secret, 1, 32, 'sha512').toString('hex'),
+    email: config.adminCreditals.email,
     admin: true,
     avatar: null,
     content: null,
