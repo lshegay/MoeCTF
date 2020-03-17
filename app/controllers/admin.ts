@@ -1,7 +1,6 @@
 import { UploadedFile } from 'express-fileupload';
 import fs from 'fs';
 import pickBy from 'lodash/pickBy';
-import identity from 'lodash/identity';
 import { Controller } from '../models/database';
 import config from '../settings/config';
 import response, { projection } from '../utils/response';
@@ -120,7 +119,7 @@ const createTask: Controller = (db) => (req, res): void => {
         throw error;
       }
 
-      db.tasks.insert({ name, categoryId, content, points, flag, file },
+      db.tasks.insert({ name, categoryId, content, points, flag, file, solved: [] },
         (error: Error, task: any) => {
           if (error) {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
@@ -131,7 +130,7 @@ const createTask: Controller = (db) => (req, res): void => {
         });
     });
   } else {
-    db.tasks.insert({ name, categoryId, content, points, flag },
+    db.tasks.insert({ name, categoryId, content, points, flag, solved: [] },
       (error: Error, task: any) => {
         if (error) {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
@@ -182,7 +181,7 @@ const updateTask: Controller = (db) => (req, res): void => {
 
       db.tasks.update(
         { _id },
-        { $set: pickBy({ name, categoryId, content, points, flag, file }, identity) },
+        { $set: pickBy({ name, categoryId, content, points, flag, file }) },
         { returnUpdatedDocs: true, multi: false },
         (error: Error, _, task: any) => {
           if (error) {
@@ -197,7 +196,7 @@ const updateTask: Controller = (db) => (req, res): void => {
   } else {
     db.tasks.update(
       { _id },
-      { $set: pickBy({ name, categoryId, content, points, flag }, identity) },
+      { $set: pickBy({ name, categoryId, content, points, flag }) },
       { returnUpdatedDocs: true, multi: false },
       (error: Error, _, task: any) => {
         if (error) {

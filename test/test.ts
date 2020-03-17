@@ -7,7 +7,7 @@ import Server from 'next/dist/next-server/server/next-server';
 import { db, prepared } from '../app/server';
 import config from '../app/settings/config';
 import secret from '../app/settings/secret';
-import { Response } from '../app/utils/response';
+import { Response, parse } from '../app/utils/response';
 
 const should = chai.should();
 const host = config.hostname + (config.port ? `:${config.port}` : '');
@@ -18,13 +18,30 @@ chai.use(chaiHttp);
 let httpServer: HttpServer;
 let nextServer: Server;
 
-describe('User Authorization', () => {
-  const userCreditals = {
-    name: 'test_username',
-    email: 'test_username@gmail.com',
-    password: 'user_password_test',
-    password2: 'user_password_test',
-  };
+let mainCategoryId: string;
+
+const userCreditals = {
+  name: 'test_username',
+  email: 'test_username@gmail.com',
+  password: 'user_password_test',
+  password2: 'user_password_test',
+};
+
+const test = (response: Response, callback?: (r: Response) => void) => {
+  switch (response.status) {
+    case 'success': {
+      return callback ? callback(response) : null;
+    }
+    case 'fail': {
+      return new Error(JSON.stringify(response.data));
+    }
+    case 'error': {
+      return new Error(response.message);
+    }
+  }
+};
+
+describe('User Authorization API', () => {
   let agent: ChaiHttp.Agent;
 
   before(function b(done) {
@@ -34,7 +51,7 @@ describe('User Authorization', () => {
       httpServer = http;
       nextServer = app;
       agent = chai.request.agent(domain).keepOpen();
-      db.users.remove({ name: userCreditals.name }, {}, done);
+      done();
     });
   });
 
@@ -51,35 +68,10 @@ describe('User Authorization', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.user);
-              should.equal(res.status, 201);
-              done();
-              break;
-            }
-            case 'fail': {
-              should.exist(json.data.message);
-              done(new Error(json.data.message));
-              break;
-            }
-            case 'error': {
-              should.exist(json.message);
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.user);
+          should.equal(res.status, 201);
+        }));
       });
   });
 
@@ -91,16 +83,9 @@ describe('User Authorization', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          should.equal(json.status, 'success');
+        done(test(parse(res.text), (r) => {
           should.equal(res.status, 200);
-          done();
-        }
+        }));
       });
   });
 
@@ -114,35 +99,10 @@ describe('User Authorization', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.user);
-              should.equal(res.status, 200);
-              done();
-              break;
-            }
-            case 'fail': {
-              should.exist(json.data.message);
-              done(new Error(json.data.message));
-              break;
-            }
-            case 'error': {
-              should.exist(json.message);
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.user);
+          should.equal(res.status, 200);
+        }));
       });
   });
 });
@@ -153,42 +113,21 @@ describe('Admin Api', () => {
     name: secret.admin.username,
     password: secret.admin.password,
   };
-  let mainCategoryId: string;
 
   before((done) => {
-    agent
-      .post('/api/login')
-      .type('form')
-      .send(userCreditals)
-      .end((error, res) => {
-        if (error) return done(error);
+    db.categories.insert({ name: 'Something upon for testing' }, (err, category: any) => {
+      mainCategoryId = category._id;
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(json.data.message));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
-      });
+      agent
+        .post('/api/login')
+        .type('form')
+        .send(userCreditals)
+        .end((error, res) => {
+          if (error) return done(error);
+
+          done(test(parse(res.text)));
+        });
+    });
   });
 
   after((done) => {
@@ -207,37 +146,14 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.category);
-              should.exist(json.data.category._id);
-              should.exist(json.data.category.name);
-              should.equal(json.data.category.name, 'New Category');
-              should.equal(res.status, 201);
-              categoryId = json.data.category._id;
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.category);
+          should.exist(r.data.category._id);
+          should.exist(r.data.category.name);
+          should.equal(r.data.category.name, 'New Category');
+          should.equal(res.status, 201);
+          categoryId = r.data.category._id;
+        }));
       });
   });
 
@@ -247,34 +163,11 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.numRemoved);
-              should.equal(json.data.numRemoved, 1);
-              should.equal(res.status, 200);
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.numRemoved);
+          should.equal(r.data.numRemoved, 1);
+          should.equal(res.status, 200);
+        }));
       });
   });
 
@@ -290,37 +183,14 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.post);
-              should.exist(json.data.post._id);
-              should.exist(json.data.post.name);
-              should.equal(json.data.post.name, 'New Post');
-              should.equal(res.status, 201);
-              postId = json.data.post._id;
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.post);
+          should.exist(r.data.post._id);
+          should.exist(r.data.post.name);
+          should.equal(r.data.post.name, 'New Post');
+          should.equal(res.status, 201);
+          postId = r.data.post._id;
+        }));
       });
   });
 
@@ -329,103 +199,38 @@ describe('Admin Api', () => {
       .delete(`/api/admin/posts/${postId}`)
       .end((error, res) => {
         if (error) return done(error);
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.numRemoved);
-              should.equal(json.data.numRemoved, 1);
-              should.equal(res.status, 200);
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(json.data.message));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.numRemoved);
+          should.equal(r.data.numRemoved, 1);
+          should.equal(res.status, 200);
+        }));
       });
   });
 
   let taskId: string;
   it('should create a new task', (done) => {
     agent
-      .post('/api/admin/categories')
+      .post('/api/admin/tasks')
       .type('form')
       .send({
-        name: 'New Category',
+        name: 'New Task',
+        content: 'Task Content',
+        flag: 'MoeCTF{Borb Borb}',
+        points: 10,
+        categoryId: mainCategoryId,
       })
       .end((error, res) => {
-        if (error) done(error);
+        if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          mainCategoryId = json.data.category._id;
-        }
-
-        agent
-          .post('/api/admin/tasks')
-          .type('form')
-          .send({
-            name: 'New Task',
-            content: 'Task Content',
-            flag: 'MoeCTF{Borb Borb}',
-            points: 10,
-            categoryId: mainCategoryId,
-          })
-          .end((error, res) => {
-            if (error) return done(error);
-
-            let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-            try {
-              json = JSON.parse(res.text);
-            } catch (error) {
-              done(error);
-            } finally {
-              switch (json.status) {
-                case 'success': {
-                  should.exist(json.data);
-                  should.exist(json.data.task);
-                  should.exist(json.data.task._id);
-                  should.exist(json.data.task.name);
-                  should.equal(json.data.task.name, 'New Task');
-                  should.equal(res.status, 201);
-                  taskId = json.data.task._id;
-                  done();
-                  break;
-                }
-                case 'fail': {
-                  done(new Error(JSON.stringify(json.data)));
-                  break;
-                }
-                case 'error': {
-                  done(new Error(json.message));
-                  break;
-                }
-                default: {
-                  done(new Error('json.status expected to be success | fail | error'));
-                  break;
-                }
-              }
-            }
-          });
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.task);
+          should.exist(r.data.task._id);
+          should.exist(r.data.task.name);
+          should.equal(r.data.task.name, 'New Task');
+          should.equal(res.status, 201);
+          taskId = r.data.task._id;
+        }));
       });
   });
 
@@ -441,41 +246,17 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data);
-              should.exist(json.data.task);
-              should.exist(json.data.task._id);
-              should.not.equal(json.data.task.name, 'New Task');
-              should.equal(json.data.task.content, 'Task Content');
-              should.not.equal(json.data.task.flag, 'MoeCTF{Borb Borb}');
-              should.not.equal(json.data.task.points, 10);
-              should.equal(json.data.task.categoryId, mainCategoryId);
-              should.equal(res.status, 200);
-              taskId = json.data.task._id;
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.task);
+          should.exist(r.data.task._id);
+          should.not.equal(r.data.task.name, 'New Task');
+          should.equal(r.data.task.content, 'Task Content');
+          should.not.equal(r.data.task.flag, 'MoeCTF{Borb Borb}');
+          should.not.equal(r.data.task.points, 10);
+          should.equal(r.data.task.categoryId, mainCategoryId);
+          should.equal(res.status, 200);
+          taskId = r.data.task._id;
+        }));
       });
   });
 
@@ -487,43 +268,18 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data);
-              should.exist(json.data.task);
-              should.exist(json.data.task._id);
-              should.not.equal(json.data.task.name, 'New Task');
-              should.equal(json.data.task.content, 'Task Content');
-              should.not.equal(json.data.task.flag, 'MoeCTF{Borb Borb}');
-              should.not.equal(json.data.task.points, 10);
-              should.not.equal(json.data.task.points, 10);
-              should.exist(json.data.task.file);
-              should.equal(json.data.task.categoryId, mainCategoryId);
-              should.equal(res.status, 200);
-              taskId = json.data.task._id;
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.task);
+          should.exist(r.data.task._id);
+          should.not.equal(r.data.task.name, 'New Task');
+          should.equal(r.data.task.content, 'Task Content');
+          should.not.equal(r.data.task.flag, 'MoeCTF{Borb Borb}');
+          should.not.equal(r.data.task.points, 10);
+          should.exist(r.data.task.file);
+          should.equal(r.data.task.categoryId, mainCategoryId);
+          should.equal(res.status, 200);
+          taskId = r.data.task._id;
+        }));
       });
   });
 
@@ -535,43 +291,18 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data);
-              should.exist(json.data.task);
-              should.exist(json.data.task._id);
-              should.not.equal(json.data.task.name, 'New Task');
-              should.equal(json.data.task.content, 'Task Content');
-              should.not.equal(json.data.task.flag, 'MoeCTF{Borb Borb}');
-              should.not.equal(json.data.task.points, 10);
-              should.not.equal(json.data.task.points, 10);
-              should.not.equal(json.data.task.file, `./${config.staticDir}/${'nyan.png'.split(' ').join('_')}`);
-              should.equal(json.data.task.categoryId, mainCategoryId);
-              should.equal(res.status, 200);
-              taskId = json.data.task._id;
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.task);
+          should.exist(r.data.task._id);
+          should.not.equal(r.data.task.name, 'New Task');
+          should.equal(r.data.task.content, 'Task Content');
+          should.not.equal(r.data.task.flag, 'MoeCTF{Borb Borb}');
+          should.not.equal(r.data.task.points, 10);
+          should.not.equal(r.data.task.file, `./${config.staticDir}/${'nyan.png'.split(' ').join('_')}`);
+          should.equal(r.data.task.categoryId, mainCategoryId);
+          should.equal(res.status, 200);
+          taskId = r.data.task._id;
+        }));
       });
   });
 
@@ -581,216 +312,147 @@ describe('Admin Api', () => {
       .end((error, res) => {
         if (error) return done(error);
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data.numRemoved);
-              should.equal(json.data.numRemoved, 1);
-              should.equal(res.status, 200);
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.numRemoved);
+          should.equal(r.data.numRemoved, 1);
+          should.equal(res.status, 200);
+        }));
       });
   });
 });
 
-/* describe('User Api', () => {
+describe('User Api', () => {
   const agent = chai.request.agent(domain);
-  const userCreditals = {
-    name: secret.admin.username,
-    password: secret.admin.password,
-  };
-  let mainCategoryId: string;
-  let mainTaskId: string;
+  let taskId: string;
 
   before((done) => {
-    agent
-      .post('/api/login')
-      .type('form')
-      .send(userCreditals)
-      .end((error, res) => {
-        if (error) return done(error);
+    db.tasks.insert({
+      name: 'New Task',
+      content: 'Task Content',
+      flag: 'MoeCTF{Borb Borb}',
+      points: 10,
+      categoryId: mainCategoryId,
+      solved: [],
+    }, (err, task: any) => {
+      if (err) throw err;
 
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              agent
-                .post('/api/admin/categories')
-                .type('form')
-                .send({
-                  name: 'New Category',
-                })
-                .end((error, res) => {
-                  if (error) done(error);
+      taskId = task._id;
 
-                  let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-                  try {
-                    json = JSON.parse(res.text);
-                  } catch (error) {
-                    done(error);
-                  } finally {
-                    mainCategoryId = json.data.category._id;
-                    agent
-                      .post('/api/admin/categories')
-                      .type('form')
-                      .send({
-                        name: 'New Category',
-                      })
-                      .end((error, res) => {
-                        if (error) done(error);
+      agent
+        .post('/api/login')
+        .type('form')
+        .send(userCreditals)
+        .end((error, res) => {
+          if (error) return done(error);
 
-                        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-                        try {
-                          json = JSON.parse(res.text);
-                        } catch (error) {
-                          done(error);
-                        } finally {
-                          mainCategoryId = json.data.category._id;
-                        }
-
-                        agent
-                          .post('/api/admin/tasks')
-                          .type('form')
-                          .send({
-                            name: 'New Task',
-                            content: 'Task Content',
-                            flag: 'MoeCTF{Borb Borb}',
-                            points: 10,
-                            categoryId: mainCategoryId,
-                          })
-                          .end((error, res) => {
-                            if (error) return done(error);
-
-                            let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-                            try {
-                              json = JSON.parse(res.text);
-                            } catch (error) {
-                              done(error);
-                            } finally {
-                              switch (json.status) {
-                                case 'success': {
-                                  mainTaskId = json.data.task._id;
-                                  done();
-                                  break;
-                                }
-                                case 'fail': {
-                                  done(new Error(JSON.stringify(json.data)));
-                                  break;
-                                }
-                                case 'error': {
-                                  done(new Error(json.message));
-                                  break;
-                                }
-                                default: {
-                                  done(new Error('json.status expected to be success | fail | error'));
-                                  break;
-                                }
-                              }
-                            }
-                          });
-                      });
-                  }
-                });
-              break;
-            }
-            case 'fail': {
-              done(new Error(json.data.message));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
-      });
+          done(test(parse(res.text)));
+        });
+    });
   });
 
   after((done) => {
     agent.close();
-    db.categories.remove({ _id: mainCategoryId }, {}, () => {
-      db.tasks.remove({ _id: mainTaskId }, {}, done);
+    db.users.remove({ name: userCreditals.name }, {}, (err) => {
+      if (err) done(err);
+
+      db.tasks.remove({ _id: taskId }, {}, done);
     });
   });
 
-  it('should submits the flag', (done) => {
+  it('should get a list of tasks', (done) => {
+    agent
+      .get('/api/tasks')
+      .end((error, res) => {
+        if (error) throw error;
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.tasks);
+          should.equal(res.status, 200);
+        }));
+      });
+  });
+
+  it('should get a list of users', (done) => {
+    agent
+      .get('/api/users')
+      .end((error, res) => {
+        if (error) throw error;
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.users);
+          should.equal(res.status, 200);
+        }));
+      });
+  });
+
+  it('should get a list of posts', (done) => {
+    agent
+      .get('/api/posts')
+      .end((error, res) => {
+        if (error) throw error;
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.posts);
+          should.equal(res.status, 200);
+        }));
+      });
+  });
+
+  it('should get a list of categories', (done) => {
+    agent
+      .get('/api/categories')
+      .end((error, res) => {
+        if (error) throw error;
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.categories);
+          should.equal(res.status, 200);
+        }));
+      });
+  });
+
+  it('should get a task', (done) => {
+    agent
+      .get(`/api/tasks/${taskId}`)
+      .end((error, res) => {
+        if (error) throw error;
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.task);
+          should.exist(r.data.task._id);
+          should.equal(r.data.task._id, taskId);
+          should.equal(res.status, 200);
+        }));
+      });
+  });
+
+  it('should submit a wrong flag on task', (done) => {
     agent
       .post('/api/submit')
       .type('form')
       .send({
-        name: 'New Task',
-        content: 'Task Content',
-        flag: 'MoeCTF{Borb Borb}',
-        points: 10,
-        categoryId: mainCategoryId,
+        taskId,
+        flag: 'MoeCTF{Wrong Flag lol}',
       })
       .end((error, res) => {
-        if (error) return done(error);
-
-        let json: Response = { data: null, status: 'error', message: 'Unknown error has happened' };
-        try {
-          json = JSON.parse(res.text);
-        } catch (error) {
-          done(error);
-        } finally {
-          switch (json.status) {
-            case 'success': {
-              should.exist(json.data);
-              should.exist(json.data.task);
-              should.exist(json.data.task._id);
-              should.exist(json.data.task.name);
-              should.equal(json.data.task.name, 'New Task');
-              should.equal(res.status, 201);
-              done();
-              break;
-            }
-            case 'fail': {
-              done(new Error(JSON.stringify(json.data)));
-              break;
-            }
-            case 'error': {
-              done(new Error(json.message));
-              break;
-            }
-            default: {
-              done(new Error('json.status expected to be success | fail | error'));
-              break;
-            }
-          }
-        }
+        if (error) throw error;
+        done(test(parse(res.text), (r) => {
+          should.exist(r.data.message);
+          should.equal(res.status, 200);
+        }));
       });
   });
-}); */
 
-/* // eslint-disable-next-line dot-notation
-nextServer['close']().then(() => {
-  httpServer.close(done);
-}); */
+  it('should submit a right flag on task', (done) => {
+    agent
+      .post('/api/submit')
+      .type('form')
+      .send({
+        taskId,
+        flag: 'MoeCTF{Borb Borb}',
+      })
+      .end((err, res) => {
+        if (err) throw err;
+        done(test(parse(res.text), (r) => {
+          should.not.exist(r.data.message);
+          should.exist(r.data.date);
+          should.equal(res.status, 200);
+        }));
+      });
+  });
+});

@@ -94,7 +94,7 @@ const nextApp = app.prepare()
 
 /**
  * This was made for tests
- * @returns           A promise which calls callback after Next App is ready to go
+ * @returns a promise which calls callback after Next App is ready to go
  */
 const prepared: Promise<{ http: HttpServer; app: Server }> = new Promise((resolve) => {
   nextApp.then(() => {

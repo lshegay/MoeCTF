@@ -58,8 +58,11 @@ const login: Controller = (db) => async (req, res): Promise<void> => {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
             throw error;
           }
-
-          res.status(200).json(response.success({ user }));
+          const resUser: User = {
+            ...user,
+            password,
+          };
+          res.status(200).json(response.success({ user: resUser }));
         });
       } else {
         res.status(401).json(response.fail({}, 'Incorrect Creditals'));
@@ -122,8 +125,11 @@ const register: Controller = (db) => async (req, res): Promise<void> => {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
             throw error;
           }
-
-          res.status(201).json(response.success({ user }));
+          const resUser: User = {
+            ...user,
+            password,
+          };
+          res.status(201).json(response.success({ user: resUser }));
         });
       });
   });
@@ -131,11 +137,19 @@ const register: Controller = (db) => async (req, res): Promise<void> => {
 /** AUTHORIZATION HANDLERS END */
 
 const taskSubmit: Controller = (db) => (req, res): void => {
-  const taskId = parseInt(req.body.task_id, 10);
-  const flag = req.body.task_flag.trim().replace('\n', '');
-
+  const { taskId } = req.body;
+  const flag = req.body.flag.trim().replace('\n', '');
   const user = req.user as User;
   const userId = user._id;
+
+  if (!taskId || !flag) {
+    console.log(flag);
+    res.status(400).json(response.fail(projection({
+      taskId: 'A taskId is required',
+      flag: 'An flag is required',
+    }, { taskId, flag })));
+    return;
+  }
 
   db.tasks.findOne({ _id: taskId }, (error: Error, task: any) => {
     if (error) {
@@ -148,14 +162,14 @@ const taskSubmit: Controller = (db) => (req, res): void => {
       return;
     }
 
-    if (task.solved.find((solved) => solved.userId == userId)) {
+    if (task.solved?.find((solved) => solved.userId == userId)) {
       res.status(409).json(response.error(`Task with ${taskId} id already has been solved`));
       log(path.resolve('./', config.logFileDir), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
       return;
     }
 
     if (task.flag != flag) {
-      res.status(200).json(response.error('Flag is invalid'));
+      res.status(200).json(response.success({ message: 'Flag is invalid' }));
       log(path.resolve('./', config.logFileDir), `${user.name} has submitted a WRONG flag`, { userId, taskId, flag });
       return;
     }
@@ -165,14 +179,14 @@ const taskSubmit: Controller = (db) => (req, res): void => {
       { _id: task.id },
       { $push: { solved: { userId, date } } },
       { returnUpdatedDocs: true, multi: false },
-      (error: Error, _, task: any) => {
+      (error: Error) => {
         if (error) {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
           throw error;
         }
 
         log(path.resolve('./', config.logFileDir), `${user.name} has solved a task!`, { userId, taskId });
-        res.status(200).json(response.success({ task }));
+        res.status(200).json(response.success({ date }));
       }
     );
   });

@@ -17,6 +17,7 @@ const databasePath = {
   categories: path.join('./', config.databaseDir, config.databaseNames.categories),
 };
 const sessionsPath = path.join('./', config.databaseDir, config.databaseNames.sessions);
+const staticPath = path.join('./', config.staticDir);
 const logsPath = path.resolve('./', config.logFileDir);
 
 const main = async (): Promise<void> => {
@@ -39,6 +40,7 @@ const main = async (): Promise<void> => {
     if (fs.existsSync(databasePath[key])) fs.unlinkSync(databasePath[key]);
   });
   if (fs.existsSync(sessionsPath)) fs.unlinkSync(sessionsPath);
+  if (fs.existsSync(staticPath)) fs.unlinkSync(staticPath);
 
   const db: Database = {
     users: new Datastore({ filename: databasePath.users, autoload: true }),

@@ -1,9 +1,8 @@
 import { Controller } from '../models/database';
-import { Task } from '../models/units';
 import response from '../utils/response';
 
 const users: Controller = (db) => (_, res): void => {
-  db.users.find({}, (error: Error, users: any[]) => {
+  db.users.find({}, { password: 0, email: 0 }, (error: Error, users: any[]) => {
     if (error) {
       res.status(500).json(response.error('Server shutdowns due to internal critical error'));
       throw error;
@@ -36,7 +35,7 @@ const categories: Controller = (db) => (_, res): void => {
 };
 
 const tasks: Controller = (db) => (_, res): void => {
-  db.tasks.find({}, (error: Error, tasks: Task[]) => {
+  db.tasks.find({}, { flag: 0 }, (error: Error, tasks: any[]) => {
     if (error) {
       res.status(500).json(response.error('Server shutdowns due to internal critical error'));
       throw error;
@@ -49,7 +48,7 @@ const tasks: Controller = (db) => (_, res): void => {
 const task: Controller = (db) => (req, res): void => {
   const { _id } = req.params;
 
-  db.tasks.findOne({ _id }, (error: Error, task: any) => {
+  db.tasks.findOne({ _id }, { flag: 0 }, (error: Error, task: any) => {
     if (error) {
       res.status(500).json(response.error('Server shutdowns due to internal critical error'));
       throw error;
