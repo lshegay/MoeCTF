@@ -7,15 +7,15 @@ const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const body_parser_1 = __importDefault(require("body-parser"));
-const connect_flash_1 = __importDefault(require("connect-flash"));
 const passport_1 = __importDefault(require("passport"));
 const path_1 = __importDefault(require("path"));
 const nedb_1 = __importDefault(require("nedb"));
 const nedb_session_store_1 = __importDefault(require("nedb-session-store"));
 const routes_1 = __importDefault(require("./routes"));
 const NedbSessionStore = nedb_session_store_1.default(express_session_1.default);
-const start = (config) => {
-    const server = express_1.default();
+const start = (server, config) => {
+    if (!server)
+        throw new Error('server has to be not null or undefined');
     const db = {
         users: new nedb_1.default({ filename: path_1.default.join('./', config.databaseDir, config.databaseNames.users), autoload: true }),
         posts: new nedb_1.default({ filename: path_1.default.join('./', config.databaseDir, config.databaseNames.posts), autoload: true }),
@@ -29,7 +29,8 @@ const start = (config) => {
         && config.endMatchDate <= config.startMatchDate) {
         throw new Error('Change endMatchDate and startMatchDate in config file');
     }
-    server.use(express_1.default.static(path_1.default.resolve('./', config.staticDir)))
+    server
+        .use(express_1.default.static(path_1.default.resolve('./', config.staticDir)))
         .use(body_parser_1.default.urlencoded({ extended: true }))
         .use(body_parser_1.default.json())
         .use(express_session_1.default({
@@ -43,18 +44,15 @@ const start = (config) => {
         },
     }))
         .use(express_fileupload_1.default())
-        .use(connect_flash_1.default())
         .use(passport_1.default.initialize())
         .use(passport_1.default.session());
     passport_1.default.serializeUser((user, done) => done(null, user._id));
     passport_1.default.deserializeUser((_id, done) => {
         db.users.findOne({ _id }, { password: 0 }, (error, user) => {
-            if (error) {
+            if (error)
                 return done(error);
-            }
-            if (user) {
+            if (user)
                 return done(null, user);
-            }
             return done(null, false);
         });
     });
@@ -62,3 +60,4 @@ const start = (config) => {
     return moe;
 };
 exports.default = start;
+//# sourceMappingURL=server.js.map

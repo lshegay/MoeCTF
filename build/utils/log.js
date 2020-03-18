@@ -21,3 +21,4 @@ const log = async (path, message, object) => {
     return success;
 };
 exports.default = log;
+//# sourceMappingURL=log.js.map

@@ -177,3 +177,4 @@ exports.default = {
     logouts: logout,
     registers: register,
 };
+//# sourceMappingURL=user.js.map

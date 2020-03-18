@@ -1,13 +1,11 @@
-import express from 'express';
+import express, { Express } from 'express';
 import session from 'express-session';
 import fileUpload from 'express-fileupload';
 import bodyParser from 'body-parser';
-import flash from 'connect-flash';
 import passport from 'passport';
 import path from 'path';
 import Datastore from 'nedb';
 import nedbSession from 'nedb-session-store';
-
 import { User } from './models/units';
 import { MoeParams } from './models/moe';
 import routes from './routes';
@@ -16,8 +14,9 @@ import { Config } from './models/config';
 
 const NedbSessionStore = nedbSession(session);
 
-const start = (config: Config): MoeParams => {
-  const server = express();
+const start = (server: Express, config: Config): MoeParams => {
+  if (!server) throw new Error('server has to be not null or undefined');
+
   const db: Database = {
     users: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.users), autoload: true }),
     posts: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.posts), autoload: true }),
@@ -33,7 +32,8 @@ const start = (config: Config): MoeParams => {
     throw new Error('Change endMatchDate and startMatchDate in config file');
   }
 
-  server.use(express.static(path.resolve('./', config.staticDir)))
+  server
+    .use(express.static(path.resolve('./', config.staticDir)))
     .use(bodyParser.urlencoded({ extended: true }))
     .use(bodyParser.json())
     .use(session({
@@ -47,21 +47,14 @@ const start = (config: Config): MoeParams => {
       },
     }))
     .use(fileUpload())
-    .use(flash())
     .use(passport.initialize())
     .use(passport.session());
 
   passport.serializeUser((user: User, done) => done(null, user._id));
   passport.deserializeUser((_id, done) => {
     db.users.findOne({ _id }, { password: 0 }, (error: Error, user: any) => {
-      if (error) {
-        return done(error);
-      }
-
-      if (user) {
-        return done(null, user);
-      }
-
+      if (error) return done(error);
+      if (user) return done(null, user);
       return done(null, false);
     });
   });

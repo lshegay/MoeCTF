@@ -1,3 +1,4 @@
+import express from 'express';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 import crypto from 'crypto';
@@ -12,7 +13,7 @@ chai.use(chaiHttp);
 const should = chai.should();
 const host = config.hostname + (config.port ? `:${config.port}` : '');
 const domain = `${config.protocol}//${host}`;
-const moe = start(config);
+const moe = start(express(), config);
 const { db } = moe;
 const userCreditals = {
   name: 'test_username',

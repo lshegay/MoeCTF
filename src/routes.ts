@@ -1,8 +1,5 @@
 import { MoeParams } from './models/moe';
-import match from './controllers/match';
-import user from './controllers/user';
-import get from './controllers/get';
-import admin from './controllers/admin';
+import { match, user, get, admin } from './controllers';
 
 const routes = ({ server, db, config }: MoeParams): void => {
   /** PAGES RULES start */

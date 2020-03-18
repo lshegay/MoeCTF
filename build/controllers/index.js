@@ -11,3 +11,4 @@ const get_1 = __importDefault(require("./get"));
 exports.get = get_1.default;
 const admin_1 = __importDefault(require("./admin"));
 exports.admin = admin_1.default;
+//# sourceMappingURL=index.js.map

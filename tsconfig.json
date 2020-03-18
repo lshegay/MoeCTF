@@ -12,7 +12,8 @@
     "noEmit": false,
     "outDir": "build",
     "isolatedModules": false,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "sourceMap": true
   },
   "compileOnSave": true,
   "include": ["src/**/*.ts"],
