@@ -1,7 +1,7 @@
-import { MoeParams } from './models/moe';
+import { Moe } from './models/moe';
 import { match, user, get, admin } from './controllers';
 
-const routes = ({ server, db, config }: MoeParams): void => {
+const routes = ({ server, db, config }: Moe): void => {
   /** PAGES RULES start */
   /* server.get('/tasks', user.is.authenticated, match.is.started);
   server.get('/tasks/:taskId', user.is.authenticated, match.is.started);
@@ -53,10 +53,12 @@ const routes = ({ server, db, config }: MoeParams): void => {
     .get(user.is.authenticated, match.is.started(db, config), get.task(db, config));
 
   server.route('/api/submit')
-    .post(user.is.authenticated,
+    .post(
+      user.is.authenticated,
       match.is.started(db, config),
       match.is.not.ended(db, config),
-      user.submits(db, config));
+      user.submits(db, config)
+    );
 
   server.route('/api/login')
     .post(user.is.not.authenticated, user.logins(db, config));

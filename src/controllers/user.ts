@@ -141,7 +141,6 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
   const userId = user._id;
 
   if (!taskId || !flag) {
-    console.log(flag);
     res.status(400).json(response.fail(projection({
       taskId: 'A taskId is required',
       flag: 'An flag is required',
@@ -162,13 +161,13 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
 
     if (task.solved?.find((solved) => solved.userId == userId)) {
       res.status(409).json(response.error(`Task with ${taskId} id already has been solved`));
-      log(path.resolve('./', config.logFileDir), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
+      log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
       return;
     }
 
     if (task.flag != flag) {
       res.status(200).json(response.success({ message: 'Flag is invalid' }));
-      log(path.resolve('./', config.logFileDir), `${user.name} has submitted a WRONG flag`, { userId, taskId, flag });
+      log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has submitted a WRONG flag`, { userId, taskId, flag });
       return;
     }
 
@@ -183,7 +182,7 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
           throw error;
         }
 
-        log(path.resolve('./', config.logFileDir), `${user.name} has solved a task!`, { userId, taskId });
+        log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has solved a task!`, { userId, taskId });
         res.status(200).json(response.success({ date }));
       }
     );

@@ -5,16 +5,15 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { Server } from 'http';
 import path from 'path';
-import start from '../src/server';
+import start from '../src/app';
 import { parse, Response } from '../src/utils/response';
-import config from './config';
 
 chai.use(chaiHttp);
 const should = chai.should();
+const moe = start(express());
+const { config, db } = moe;
 const host = config.hostname + (config.port ? `:${config.port}` : '');
 const domain = `${config.protocol}//${host}`;
-const moe = start(express(), config);
-const { db } = moe;
 const userCreditals = {
   name: 'test_username',
   email: 'test_username@gmail.com',

@@ -1,8 +1,8 @@
 import { Express } from 'express';
-import { Database } from './database';
 import { Config } from './config';
+import { Database } from './database';
 
-export interface MoeParams {
+export type Moe = {
   server: Express;
   db: Database;
   config: Config;

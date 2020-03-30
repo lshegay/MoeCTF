@@ -126,7 +126,6 @@ const taskSubmit = (db, config) => (req, res) => {
     const user = req.user;
     const userId = user._id;
     if (!taskId || !flag) {
-        console.log(flag);
         res.status(400).json(response_1.default.fail(response_1.projection({
             taskId: 'A taskId is required',
             flag: 'An flag is required',
@@ -145,12 +144,12 @@ const taskSubmit = (db, config) => (req, res) => {
         }
         if ((_a = task.solved) === null || _a === void 0 ? void 0 : _a.find((solved) => solved.userId == userId)) {
             res.status(409).json(response_1.default.error(`Task with ${taskId} id already has been solved`));
-            log_1.default(path_1.default.resolve('./', config.logFileDir), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
+            log_1.default(path_1.default.resolve('./', config.logFileDir, config.logFileName), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
             return;
         }
         if (task.flag != flag) {
             res.status(200).json(response_1.default.success({ message: 'Flag is invalid' }));
-            log_1.default(path_1.default.resolve('./', config.logFileDir), `${user.name} has submitted a WRONG flag`, { userId, taskId, flag });
+            log_1.default(path_1.default.resolve('./', config.logFileDir, config.logFileName), `${user.name} has submitted a WRONG flag`, { userId, taskId, flag });
             return;
         }
         const date = Date.now();
@@ -159,7 +158,7 @@ const taskSubmit = (db, config) => (req, res) => {
                 res.status(500).json(response_1.default.error('Server shutdowns due to internal critical error'));
                 throw error;
             }
-            log_1.default(path_1.default.resolve('./', config.logFileDir), `${user.name} has solved a task!`, { userId, taskId });
+            log_1.default(path_1.default.resolve('./', config.logFileDir, config.logFileName), `${user.name} has solved a task!`, { userId, taskId });
             res.status(200).json(response_1.default.success({ date }));
         });
     });

@@ -1,7 +1,7 @@
 {
-  "name": "moectf-base",
+  "name": "moectf",
   "version": "0.0.1",
-  "description": "MoeCTF embedded server base",
+  "description": "MoeCTF embedded server base built on top Express",
   "repository": {
     "url": "https://github.com/Noramire/MoeCTF/tree/base"
   },

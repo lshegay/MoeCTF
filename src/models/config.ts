@@ -7,7 +7,6 @@ export interface DatabaseNames {
 }
 
 export type Config = Readonly<{
-  siteTitle: string;
   protocol: string;
   hostname: string;
   port: number;
@@ -17,6 +16,7 @@ export type Config = Readonly<{
   cookiesAge: number;
   staticDir: string;
   logFileDir: string;
+  logFileName: string;
   timer: boolean;
   startMatchDate?: number;
   endMatchDate?: number;
@@ -27,4 +27,5 @@ export type Config = Readonly<{
     password: string;
     email: string;
   };
+  createAdminUser?: boolean;
 }>;

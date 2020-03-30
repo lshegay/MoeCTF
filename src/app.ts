@@ -1,29 +1,74 @@
-import express, { Express } from 'express';
-import session from 'express-session';
-import fileUpload from 'express-fileupload';
 import bodyParser from 'body-parser';
-import passport from 'passport';
-import path from 'path';
+import crypto from 'crypto';
+import express, { Express } from 'express';
+import fileUpload from 'express-fileupload';
+import session from 'express-session';
+import defaultsDeep from 'lodash/defaultsDeep';
 import Datastore from 'nedb';
 import nedbSession from 'nedb-session-store';
-import { User } from './models/units';
-import { MoeParams } from './models/moe';
+import passport from 'passport';
+import path from 'path';
+import { Category, Config, Database, DatabaseNames, Moe, Post, Task, Unit, User } from './models';
 import routes from './routes';
-import { Database } from './models/database';
-import { Config } from './models/config';
+import request from './utils/request';
+import response from './utils/response';
 
-const NedbSessionStore = nedbSession(session);
+const CONFIG_DEFAULTS: Config = {
+  protocol: 'http:',
+  hostname: 'localhost',
+  port: 3000,
+  secure: false,
+  databaseDir: 'database',
+  databaseNames: {
+    users: 'users.db',
+    posts: 'posts.db',
+    tasks: 'tasks.db',
+    categories: 'categories.db',
+    sessions: 'sessions.db',
+  },
+  cookiesAge: 1000 * 60 * 60 * 24 * 30,
+  staticDir: 'public/static',
+  logFileName: 'logs.txt',
+  logFileDir: '',
+  timer: false,
 
-const start = (server: Express, config: Config): MoeParams => {
+  secret: 'secret_moe_moe_key',
+  adminCreditals: {
+    username: 'moe_admin',
+    password: 'moe_moe_password',
+    email: '',
+  },
+  createAdminUser: true,
+};
+
+const start = (server: Express, _db?: Database, options: any = {}): Moe => {
   if (!server) throw new Error('server has to be not null or undefined');
-
-  const db: Database = {
+  const config: Config = defaultsDeep(options, CONFIG_DEFAULTS);
+  const NedbSessionStore = nedbSession(session);
+  const db: Database = _db ?? {
     users: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.users), autoload: true }),
     posts: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.posts), autoload: true }),
     tasks: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.tasks), autoload: true }),
     categories: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.categories), autoload: true }),
   };
-  const moe: MoeParams = { server, db, config };
+  const moe: Moe = { server, db, config };
+
+  if (config.createAdminUser) {
+    db.users.findOne({ name: config.adminCreditals.username }, (error, user) => {
+      if (error) throw error;
+
+      if (!user) {
+        db.users.insert({
+          name: config.adminCreditals.username,
+          password: crypto.pbkdf2Sync(config.adminCreditals.password, config.secret, 1, 32, 'sha512').toString('hex'),
+          email: config.adminCreditals.email,
+          admin: true,
+          avatar: null,
+          content: null,
+        });
+      }
+    });
+  }
 
   if (config.timer
     && config.endMatchDate
@@ -64,3 +109,19 @@ const start = (server: Express, config: Config): MoeParams => {
 };
 
 export default start;
+
+export {
+  Config,
+  DatabaseNames,
+  Database,
+  Moe,
+  Category,
+  Post,
+  Task,
+  User,
+  Unit,
+  CONFIG_DEFAULTS,
+
+  request,
+  response,
+};
