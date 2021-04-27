@@ -1,52 +1,12 @@
 {
   "name": "moectf",
-  "version": "0.0.1",
-  "description": "MoeCTF embedded server base built on top Express",
-  "repository": {
-    "url": "https://github.com/Noramire/MoeCTF/tree/base"
-  },
-  "main": "build/server.js",
-  "author": "noramire",
+  "version": "1.0.0",
+  "description": "MoeCTF - the Capture The Flag framework based on NodeJS and next.js",
+  "author": "Noramire",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "restore": "ts-node --project tsconfig.json test/restore.ts",
-    "test": "mocha -r test/mocha.env.js -r ts-node/register test/test.ts --exit"
-  },
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "connect-sqlite3": "^0.9.11",
-    "cross-env": "^7.0.0",
-    "express": "^4.17.1",
-    "express-fileupload": "^1.1.6",
-    "express-session": "^1.17.0",
-    "fs-extra": "^8.1.0",
-    "lodash": "^4.17.15",
-    "nedb": "^1.8.0",
-    "passport": "^0.4.1",
-    "typescript": "^3.8.2"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.2.10",
-    "@types/express": "^4.17.2",
-    "@types/express-fileupload": "^1.1.2",
-    "@types/express-session": "^1.17.0",
-    "@types/fs-extra": "^8.1.0",
-    "@types/lodash": "^4.14.149",
-    "@types/mocha": "^7.0.1",
-    "@types/nedb": "^1.8.9",
-    "@types/node": "^13.7.6",
-    "@types/passport": "^1.0.2",
-    "@typescript-eslint/eslint-plugin": "^2.21.0",
-    "@typescript-eslint/parser": "^2.21.0",
-    "chai": "^4.2.0",
-    "chai-http": "^4.3.0",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
-    "mocha": "^7.1.0",
-    "nedb-session-store": "^1.1.2",
-    "nodemon": "^2.0.2",
-    "ts-node": "^8.6.2"
+    "dev": "cd packages/moectf-front & npm run dev --stream",
+    "build": "cd packages/moectf-front & npm run build --stream",
+    "start": "cd packages/moectf-front & npm run start --stream"
   }
 }

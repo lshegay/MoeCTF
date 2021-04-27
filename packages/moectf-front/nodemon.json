@@ -1,0 +1,8 @@
+{
+  "watch": [
+    "app",
+    "../moectf-core/src"
+  ],
+  "ext": "js, jsx, ts, tsx",
+  "exec": "cd ../moectf-core/ & npm run build & cd ../moectf-front/ & npx tsc --p tsconfig.server.json & node .build/server.js"
+}

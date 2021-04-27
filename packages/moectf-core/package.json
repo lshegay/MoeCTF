@@ -1,0 +1,51 @@
+{
+  "name": "moectf-core",
+  "version": "0.1.0",
+  "description": "MoeCTF embedded server base built on top Express",
+  "repository": {
+    "url": "https://github.com/Noramire/MoeCTF/tree/base"
+  },
+  "main": ".build/app.js",
+  "author": "noramire",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "restore": "ts-node --project tsconfig.json test/restore.ts",
+    "test": "mocha -r test/mocha.env.js -r ts-node/register test/index.ts --exit"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cross-env": "^7.0.3",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.2.1",
+    "express-session": "^1.17.1",
+    "fs-extra": "^8.1.0",
+    "lodash": "^4.17.15",
+    "nedb": "^1.8.0",
+    "passport": "^0.4.1",
+    "typescript": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.10",
+    "@types/express": "^4.17.2",
+    "@types/express-fileupload": "^1.1.2",
+    "@types/express-session": "^1.17.0",
+    "@types/fs-extra": "^8.1.0",
+    "@types/lodash": "^4.14.149",
+    "@types/mocha": "^7.0.1",
+    "@types/nedb": "^1.8.9",
+    "@types/node": "^13.7.6",
+    "@types/passport": "^1.0.2",
+    "@typescript-eslint/eslint-plugin": "^2.21.0",
+    "@typescript-eslint/parser": "^2.21.0",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "mocha": "^8.3.2",
+    "nedb-session-store": "^1.1.2",
+    "nodemon": "^2.0.2",
+    "ts-node": "^9.1.1"
+  }
+}
