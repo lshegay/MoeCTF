@@ -136,7 +136,7 @@ const Page: NextPage<PageProps> = ({
                     marginRight: '10px',
                   })}
                 >
-                  {{ 'ru-RU': 'Прикрепленный файл:', 'en-US': 'Attached file' }[locale]}
+                  {{ 'ru-RU': 'Прикрепленный файл:', 'en-US': 'Attached file:' }[locale]}
                 </span>
                 <StyledLink
                   href={new URL(task.file.split('./public')[1], domain).toString()}
