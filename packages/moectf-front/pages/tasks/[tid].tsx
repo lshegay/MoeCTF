@@ -38,6 +38,7 @@ type PageProps = {
   category: Category,
   users: User[],
   locale: string,
+  domain: string,
 };
 
 const Page: NextPage<PageProps> = ({
@@ -47,6 +48,7 @@ const Page: NextPage<PageProps> = ({
   endMatchDate,
   startMatchDate,
   locale,
+  domain,
 }) => {
   const router = useRouter();
   const [solved, setSolved] = useState(task.solved.findIndex(((t) => t.userId == user._id)) > -1);
@@ -137,7 +139,7 @@ const Page: NextPage<PageProps> = ({
                   {{ 'ru-RU': 'Прикрепленный файл:', 'en-US': 'Attached file' }[locale]}
                 </span>
                 <StyledLink
-                  href={new URL(task.file.split('./public')[1], 'http://localhost:3000').toString()}
+                  href={new URL(task.file.split('./public')[1], domain).toString()}
                   target="_blank"
                 >
                   {task.file.split('/').reverse()[0]}
@@ -147,7 +149,7 @@ const Page: NextPage<PageProps> = ({
             <Formik
               initialValues={{ flag: '' }}
               onSubmit={async (values, { setSubmitting, setErrors }) => {
-                const response = await fetch(new URL('/api/submit', 'http://localhost:3000').toString(), {
+                const response = await fetch(new URL('/api/submit', domain).toString(), {
                   method: 'POST',
                   body: JSON.stringify({
                     flag: values.flag.trim(),
@@ -237,6 +239,7 @@ const Page: NextPage<PageProps> = ({
         </FlexGridItem>
       </FlexGrid>
       <Menu
+        domain={domain}
         list={menuButtons}
         user={user}
         endMatchDate={endMatchDate}
@@ -258,7 +261,7 @@ const Page: NextPage<PageProps> = ({
                 Object.keys(values).forEach((key) => form.append(key, values[key]));
                 form.append('categoryId', category._id);
 
-                const response = await fetch(new URL(`/api/admin/tasks/${task._id}`, 'http://localhost:3000').toString(), {
+                const response = await fetch(new URL(`/api/admin/tasks/${task._id}`, domain).toString(), {
                   method: 'PUT',
                   body: form,
                   headers: {
@@ -358,7 +361,7 @@ const Page: NextPage<PageProps> = ({
                     </ModalButton>
                     <ModalButton
                       onClick={async () => {
-                        const response = await fetch(new URL(`/api/admin/tasks/${task._id}`, 'http://localhost:3000').toString(), {
+                        const response = await fetch(new URL(`/api/admin/tasks/${task._id}`, domain).toString(), {
                           method: 'DELETE',
                           headers: {
                             Accept: 'application/json',
@@ -393,7 +396,7 @@ const Page: NextPage<PageProps> = ({
 
 export const getServerSideProps: GetServerSideProps = async ({ req, query, locale }) => {
   const { config, user, db } = req as any;
-  const { startMatchDate, endMatchDate } = config;
+  const { startMatchDate, endMatchDate, domain } = config;
 
   if (!user) {
     return ({
@@ -449,6 +452,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
     },
     users: usersList,
     locale,
+    domain,
   };
 
   return ({ props });

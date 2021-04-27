@@ -28,6 +28,7 @@ type Props = {
   endMatchDate?: number,
   startMatchDate?: number,
   locale: string,
+  domain: string,
 };
 
 const Menu = ({
@@ -37,6 +38,7 @@ const Menu = ({
   endMatchDate,
   startMatchDate,
   locale,
+  domain,
   ...rest
 }: Props) => {
   const [css] = useStyletron();
@@ -205,7 +207,7 @@ const Menu = ({
             >
               <Button
                 onClick={() => {
-                  if (button.onClick) button.onClick(router);
+                  if (button.onClick) button.onClick(router, domain);
                   if (button.url) router.push(button.url);
                 }}
                 overrides={{

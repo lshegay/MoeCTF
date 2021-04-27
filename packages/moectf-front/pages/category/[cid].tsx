@@ -30,6 +30,7 @@ type PageProps = {
   tasks: Task[],
   category: Category,
   locale: string,
+  domain: string,
 };
 
 const Page: NextPage<PageProps> = ({
@@ -39,6 +40,7 @@ const Page: NextPage<PageProps> = ({
   startMatchDate,
   endMatchDate,
   locale,
+  domain,
 }) => {
   const router = useRouter();
 
@@ -67,6 +69,7 @@ const Page: NextPage<PageProps> = ({
         ))}
       </FlexGrid>
       <Menu
+        domain={domain}
         list={menuButtons}
         user={user}
         endMatchDate={endMatchDate}
@@ -93,7 +96,7 @@ const Page: NextPage<PageProps> = ({
                   'en-US': values.contentEn,
                 }));
 
-                const response = await fetch(new URL('/api/admin/tasks', 'http://localhost:3000').toString(), {
+                const response = await fetch(new URL('/api/admin/tasks', domain).toString(), {
                   method: 'POST',
                   body: form,
                   headers: {
@@ -204,7 +207,7 @@ const Page: NextPage<PageProps> = ({
                     </ModalButton>
                     <ModalButton
                       onClick={async () => {
-                        const response = await fetch(new URL(`/api/admin/categories/${category._id}`, 'http://localhost:3000').toString(), {
+                        const response = await fetch(new URL(`/api/admin/categories/${category._id}`, domain).toString(), {
                           method: 'DELETE',
                           headers: {
                             Accept: 'application/json',
@@ -239,7 +242,7 @@ const Page: NextPage<PageProps> = ({
 
 export const getServerSideProps: GetServerSideProps = async ({ req, query, locale }) => {
   const { config, user, db } = req as any;
-  const { startMatchDate, endMatchDate } = config;
+  const { startMatchDate, endMatchDate, domain } = config;
 
   if (!user) {
     return ({
@@ -276,6 +279,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
       solvedByUser: task.solved.findIndex((s) => s.userId == user._id) > -1,
     })),
     locale,
+    domain,
   };
 
   return ({ props });

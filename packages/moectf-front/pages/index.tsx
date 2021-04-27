@@ -23,6 +23,7 @@ type PageProps = {
   user: User,
   categories: Category[],
   locale: string,
+  domain: string,
 };
 
 const Page: NextPage<PageProps> = ({
@@ -31,6 +32,7 @@ const Page: NextPage<PageProps> = ({
   startMatchDate,
   endMatchDate,
   locale,
+  domain,
 }) => {
   const router = useRouter();
 
@@ -55,6 +57,7 @@ const Page: NextPage<PageProps> = ({
         ))}
       </FlexGrid>
       <Menu
+        domain={domain}
         list={menuButtons}
         user={user}
         endMatchDate={endMatchDate}
@@ -67,7 +70,7 @@ const Page: NextPage<PageProps> = ({
               <Formik
                 initialValues={{ name: '' }}
                 onSubmit={async (values, { setSubmitting, setErrors }) => {
-                  const response = await fetch(new URL('/api/admin/categories', 'http://localhost:3000').toString(), {
+                  const response = await fetch(new URL('/api/admin/categories', domain).toString(), {
                     method: 'POST',
                     body: JSON.stringify(values),
                     headers: {
@@ -130,7 +133,7 @@ const Page: NextPage<PageProps> = ({
 
 export const getServerSideProps: GetServerSideProps = async ({ req, locale }) => {
   const { config, user, db } = req as any;
-  const { startMatchDate, endMatchDate } = config;
+  const { startMatchDate, endMatchDate, domain } = config;
 
   if (!user) {
     return ({
@@ -153,6 +156,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
     user: user ?? null,
     categories: categories.data?.categories,
     locale,
+    domain,
   };
 
   return ({ props });

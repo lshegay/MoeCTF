@@ -14,9 +14,10 @@ type PageProps = {
   startMatchDate: number,
   endMatchDate: number,
   user: User,
+  domain: string,
 };
 
-const Page: NextPage<PageProps> = ({ startMatchDate, endMatchDate }) => {
+const Page: NextPage<PageProps> = ({ domain }) => {
   const router = useRouter();
 
   return (
@@ -50,7 +51,7 @@ const Page: NextPage<PageProps> = ({ startMatchDate, endMatchDate }) => {
         <Formik
           initialValues={{ name: '', password: '' }}
           onSubmit={async (values, { setSubmitting, setErrors }) => {
-            const response = await fetch(new URL('/api/login', 'http://localhost:3000').toString(), {
+            const response = await fetch(new URL('/api/login', domain).toString(), {
               method: 'POST',
               body: JSON.stringify(values),
               headers: {
@@ -138,11 +139,12 @@ const Page: NextPage<PageProps> = ({ startMatchDate, endMatchDate }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const { config: { startMatchDate, endMatchDate, timer }, user } = req as any;
+  const { config: { startMatchDate, endMatchDate, domain }, user } = req as any;
   const props: PageProps = {
     startMatchDate: startMatchDate ?? null,
     endMatchDate: endMatchDate ?? null,
     user: user ?? null,
+    domain,
   };
 
   if (user) {

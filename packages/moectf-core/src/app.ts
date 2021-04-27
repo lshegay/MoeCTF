@@ -33,6 +33,7 @@ const CONFIG_DEFAULTS: Config = {
   logFileDir: '',
   timer: false,
   serveStaticDir: true,
+  domain: 'http://localhost:3000',
 
   secret: 'secret_moe_moe_key',
   adminCreditals: {

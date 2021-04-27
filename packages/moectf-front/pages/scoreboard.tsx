@@ -14,6 +14,7 @@ type PageProps = {
   user: User,
   users: any[],
   locale: string,
+  domain: string,
 };
 
 const Page: NextPage<PageProps> = ({
@@ -22,6 +23,7 @@ const Page: NextPage<PageProps> = ({
   startMatchDate,
   endMatchDate,
   locale,
+  domain,
 }) => (
   <>
     <Header title="FarEastCTF_" subtitle="Таблица результатов" hrefSubtitle="/scoreboard" />
@@ -42,6 +44,7 @@ const Page: NextPage<PageProps> = ({
       />
     </Block>
     <Menu
+      domain={domain}
       list={menuButtons}
       user={user}
       startMatchDate={startMatchDate}
@@ -54,7 +57,7 @@ const Page: NextPage<PageProps> = ({
 
 export const getServerSideProps: GetServerSideProps = async ({ req, locale }) => {
   const { config, user, db } = req as any;
-  const { startMatchDate, endMatchDate } = config;
+  const { startMatchDate, endMatchDate, domain } = config;
 
   if (!user) {
     return ({
@@ -112,6 +115,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
     user: user ?? null,
     users: usersList,
     locale,
+    domain,
   };
 
   return ({ props });

@@ -19,7 +19,7 @@ class MyDocument extends Document {
       ...context,
       renderPage,
     });
-    const stylesheets = styletron.getStylesheets() || [];
+    const stylesheets = (styletron as any).getStylesheets() || [];
     return { ...initialProps, stylesheets };
   }
 
@@ -27,7 +27,7 @@ class MyDocument extends Document {
     return (
       <Html>
         <Head>
-          {this.props.stylesheets.map((sheet, i) => (
+          {(this.props as any).stylesheets.map((sheet, i) => (
             <style
               className="_styletron_hydrate_"
               dangerouslySetInnerHTML={{ __html: sheet.css }}

@@ -18,8 +18,8 @@ const menuButtons = [
   { icon: faTable, url: '/scoreboard', tooltip: { 'ru-RU': 'Таблица рекордов', 'en-US': 'Scoreboaqrd' } },
   {
     icon: faDoorOpen,
-    onClick: async (router) => {
-      await fetch(new URL('/api/logout', 'http://localhost:3000').toString());
+    onClick: async (router, domain) => {
+      await fetch(new URL('/api/logout', domain).toString());
 
       router.push('/login');
     },
