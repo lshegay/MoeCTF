@@ -8,5 +8,8 @@
     "dev": "cd packages/moectf-front & npm run dev --stream",
     "build": "cd packages/moectf-front & npm run build --stream",
     "start": "cd packages/moectf-front & npm run start --stream"
+  },
+  "devDependencies": {
+    "lerna": "^4.0.0"
   }
 }

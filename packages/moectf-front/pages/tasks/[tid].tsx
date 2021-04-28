@@ -226,7 +226,11 @@ const Page: NextPage<PageProps> = ({
           <Block>
             <Table
               columns={{ 'ru-RU': ['Команда', 'Время', 'Очки'], 'en-US': ['Team', 'Time', 'Points'] }[locale]}
-              data={task.solved.map((s: any) => [s.user.name, s.date, s.points])}
+              data={task.solved.map((s: any) => [
+                s.user.name,
+                new Date(s.date).toLocaleTimeString(),
+                s.points,
+              ])}
               overrides={{
                 Root: {
                   style: {

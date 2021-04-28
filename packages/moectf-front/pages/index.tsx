@@ -41,7 +41,7 @@ const Page: NextPage<PageProps> = ({
       <Header title="FarEastCTF_" />
       <FlexGrid
         padding="180px 60px"
-        flexGridColumnCount={4}
+        flexGridColumnCount={[1, 1, 2, 3]}
         flexGridColumnGap="40px"
         flexGridRowGap="40px"
         height="100%"
