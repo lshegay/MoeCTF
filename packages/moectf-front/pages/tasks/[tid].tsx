@@ -172,6 +172,8 @@ const Page: NextPage<PageProps> = ({
                   setSolved(true);
                 }
 
+                router.push(`/tasks/${task._id}`);
+
                 setSubmitting(false);
               }}
             >
@@ -228,7 +230,7 @@ const Page: NextPage<PageProps> = ({
               columns={{ 'ru-RU': ['Команда', 'Время', 'Очки'], 'en-US': ['Team', 'Time', 'Points'] }[locale]}
               data={task.solved.map((s: any) => [
                 s.user.name,
-                new Date(s.date).toLocaleTimeString(),
+                new Date(s.date).toLocaleString(),
                 s.points,
               ])}
               overrides={{
@@ -434,7 +436,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
     throw users.data?.message;
   }
 
-  const usersList = users.data.users.filter((u) => !u.admin);
+  const usersList = users.data.users;
 
   const props: PageProps = {
     startMatchDate: startMatchDate ?? null,
@@ -451,8 +453,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
           ...s,
           user: usersList.find((u) => (u._id == s.userId)),
           points: task.data.task.points - task.data.task.points * index * 0.01,
-        }))
-        .filter((s) => s.user),
+        })),
     },
     users: usersList,
     locale,

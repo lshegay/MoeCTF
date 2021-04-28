@@ -48,6 +48,8 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
       throw error;
     }
 
+    const date = Date.now();
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     if (user) {
       const passHash = crypto.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
       if (user?.password == passHash) {
@@ -61,12 +63,33 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
             password,
           };
           res.status(200).json(response.success({ user: resUser }));
+          log(path.resolve('./', config.logFileDir, 'authorization.txt'), '', {
+            userId: resUser._id,
+            userName: resUser.name,
+            date,
+            success: true,
+            ip,
+          });
         });
       } else {
         res.status(401).json(response.fail({}, 'Incorrect Creditals'));
+        log(path.resolve('./', config.logFileDir, 'authorization.txt'), '', {
+          userName: user.name,
+          date,
+          success: false,
+          message: 'Неправльный пароль',
+          ip,
+        });
       }
     } else {
       res.status(401).json(response.fail({}, 'Incorrect Creditals'));
+      log(path.resolve('./', config.logFileDir, 'authorization.txt'), '', {
+        userName: name,
+        date,
+        success: false,
+        message: 'Неправльный логин',
+        ip,
+      });
     }
   });
 };
@@ -161,17 +184,30 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
 
     if (task.solved?.find((solved) => solved.userId == userId)) {
       res.status(409).json(response.error(`Task with ${taskId} id already has been solved`));
-      log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
-      return;
-    }
-
-    if (task.flag != flag) {
-      res.status(200).json(response.success({ message: 'Flag is invalid' }));
-      log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has submitted a WRONG flag`, { userId, taskId, flag });
+      // FAREASTCTF MODIFICATION
+      // log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
       return;
     }
 
     const date = Date.now();
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    if (task.flag != flag) {
+      res.status(200).json(response.success({ message: 'Flag is invalid' }));
+      // FAREASTCTF MODIFICATION
+      log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has submitted a WRONG flag`, {
+        userId,
+        userName: user.name,
+        taskId,
+        taskName: task.name,
+        flag,
+        date,
+        success: false,
+        points: task.points - task.points * task.solved.length * 0.01,
+        ip,
+      });
+      return;
+    }
+
     db.tasks.update(
       { _id: task._id },
       { $push: { solved: { userId, date } } },
@@ -181,8 +217,18 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
           throw error;
         }
-
-        log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has solved a task!`, { userId, taskId });
+        // FAREASTCTF MODIFICATION
+        log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has solved a task!`, {
+          userId,
+          userName: user.name,
+          taskName: task.name,
+          taskId,
+          flag,
+          date,
+          success: true,
+          points: task.points - task.points * task.solved.length * 0.01,
+          ip,
+        });
         res.status(200).json(response.success({ date }));
       }
     );

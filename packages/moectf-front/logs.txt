@@ -26,3 +26,13 @@
 [27.04.2021, 23:50:07] moe_admin tries to submit a flag on completed task | <{"userId":"kqhgmA1w5iFUByLW","taskId":"SCz45YD6Im3K8JLk"}>
 [27.04.2021, 23:50:11] moe_admin tries to submit a flag on completed task | <{"userId":"kqhgmA1w5iFUByLW","taskId":"SCz45YD6Im3K8JLk"}>
 [27.04.2021, 23:50:14] moe_admin tries to submit a flag on completed task | <{"userId":"kqhgmA1w5iFUByLW","taskId":"SCz45YD6Im3K8JLk"}>
+{"date":"28.04.2021, 14:13:49","timestamp":1619583229233,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"SCz45YD6Im3K8JLk","taskName":"dwadwaawdawd","flag":"123","success":false,"points":1219.68}
+{"date":"28.04.2021, 14:13:51","timestamp":1619583231063,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"SCz45YD6Im3K8JLk","taskName":"dwadwaawdawd","flag":"1234","success":false,"points":1219.68}
+{"date":"28.04.2021, 14:14:03","timestamp":1619583243249,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskName":"dwadwaawdawd","taskId":"SCz45YD6Im3K8JLk","flag":"123","success":true,"points":1219.68}
+{"date":1619585064154,"timestamp":1619585064155,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskName":"awdawd","taskId":"xQBiPY0DJIvFgS91","flag":"123","success":true,"points":33,"ip":"::1"}
+{"date":1619585158591,"timestamp":1619585158591,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"8DlvKYQM0o90eR4b","taskName":"adw","flag":"wad","success":false,"points":11,"ip":"::1"}
+{"date":1619585159678,"timestamp":1619585159678,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"8DlvKYQM0o90eR4b","taskName":"adw","flag":"11","success":false,"points":11,"ip":"::1"}
+{"date":1619585161703,"timestamp":1619585161704,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"8DlvKYQM0o90eR4b","taskName":"adw","flag":"111","success":false,"points":11,"ip":"::1"}
+{"date":1619585163159,"timestamp":1619585163159,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"8DlvKYQM0o90eR4b","taskName":"adw","flag":"12","success":false,"points":11,"ip":"::1"}
+{"date":1619585164384,"timestamp":1619585164385,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskId":"8DlvKYQM0o90eR4b","taskName":"adw","flag":"111","success":false,"points":11,"ip":"::1"}
+{"date":1619585172060,"timestamp":1619585172061,"userId":"26LPd1zUMUSinVep","userName":"test_username","taskName":"adw","taskId":"8DlvKYQM0o90eR4b","flag":"123","success":true,"points":11,"ip":"::1"}

@@ -69,8 +69,9 @@ const routes = ({ server, db, config }: Moe): void => {
   server.route('/api/logout')
     .get(user.is.authenticated, user.logouts);
 
-  server.route('/api/register')
-    .post(user.is.not.authenticated, user.registers(db, config));
+  // FAREASTCTF MODIFICATION
+  // server.route('/api/register')
+  //   .post(user.is.not.authenticated, user.registers(db, config));
   /** routes end */
 };
 

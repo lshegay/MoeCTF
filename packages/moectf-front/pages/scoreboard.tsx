@@ -3,6 +3,12 @@ import { GetServerSideProps, NextPage } from 'next';
 import { Block } from 'baseui/block';
 import { workers, User } from 'moectf-core';
 import { Table } from 'baseui/table-semantic';
+import {
+  ModalHeader,
+  ModalBody,
+} from 'baseui/modal';
+import { FormControl } from 'baseui/form-control';
+import { Textarea } from 'baseui/textarea';
 import { menuButtons } from '../vars/global';
 import Background from '../components/Background';
 import Menu from '../components/Menu';
@@ -15,6 +21,7 @@ type PageProps = {
   users: any[],
   locale: string,
   domain: string,
+  ctfTime: any,
 };
 
 const Page: NextPage<PageProps> = ({
@@ -24,6 +31,7 @@ const Page: NextPage<PageProps> = ({
   endMatchDate,
   locale,
   domain,
+  ctfTime,
 }) => (
   <>
     <Header title="FarEastCTF_" subtitle="Таблица результатов" hrefSubtitle="/scoreboard" />
@@ -50,6 +58,22 @@ const Page: NextPage<PageProps> = ({
       startMatchDate={startMatchDate}
       endMatchDate={endMatchDate}
       locale={locale}
+      modalContent={(
+        <>
+          <ModalHeader>Добавление категорий</ModalHeader>
+          <ModalBody>
+            <FormControl
+              label="CTFTime инфа"
+            >
+              <Textarea
+                value={JSON.stringify(ctfTime)}
+                size="large"
+
+              />
+            </FormControl>
+          </ModalBody>
+        </>
+      )}
     />
     <Background />
   </>
@@ -79,7 +103,6 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
   }
 
   const usersList = users.data.users
-    .filter((u) => !u.admin)
     .map((u) => {
       const userTasks = tasks.data.tasks
         .map((t) => {
@@ -91,7 +114,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
             solvedIndex: index,
           });
         })
-        .filter((t) => t.solved);
+        .filter((t) => t.solved)
+        .sort((t1, t2) => t1.solved.date - t2.solved.date);
 
       return ({
         ...u,
@@ -101,6 +125,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
           ), 0),
         dateTime: userTasks
           .reduce((accumulator, t) => accumulator + t.solved.date, 0),
+        tasks: userTasks,
       });
     })
     .sort((user1, user2) => (
@@ -116,6 +141,27 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
     users: usersList,
     locale,
     domain,
+    ctfTime: {
+      tasks: tasks.data.tasks.map((t) => t.name),
+      standings: usersList.map((u, index) => {
+        const taskStats = {};
+        u.tasks
+          .forEach((t) => {
+            taskStats[t.name] = {
+              time: t.solved.date,
+              points: t.points - t.points * t.solvedIndex * 0.01,
+            };
+          });
+
+        return ({
+          pos: index + 1,
+          team: u.name,
+          score: u.points,
+          taskStats,
+          lastAccept: u.tasks[u.tasks.length - 1].solved.date,
+        });
+      }),
+    },
   };
 
   return ({ props });
