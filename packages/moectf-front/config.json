@@ -4,5 +4,6 @@
   "timer": true,
   "startMatchDate": 1619539380000,
   "endMatchDate": 1619663584000,
-  "domain": "http://localhost:3000"
+  "domain": "http://localhost:3000",
+  "dynamicPoints": 0.01
 }

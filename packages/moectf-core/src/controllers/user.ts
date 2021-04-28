@@ -202,7 +202,7 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
         flag,
         date,
         success: false,
-        points: task.points - task.points * task.solved.length * 0.01,
+        points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 0),
         ip,
       });
       return;
@@ -226,7 +226,7 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
           flag,
           date,
           success: true,
-          points: task.points - task.points * task.solved.length * 0.01,
+          points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 1),
           ip,
         });
         res.status(200).json(response.success({ date }));

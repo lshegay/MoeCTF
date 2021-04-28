@@ -22,6 +22,7 @@ export type Config = Readonly<{
   endMatchDate?: number;
   serveStaticDir: boolean;
   domain?: string;
+  dynamicPoints?: number;
 
   secret: string;
   adminCreditals: {

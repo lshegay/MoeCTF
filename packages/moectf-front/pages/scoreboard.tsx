@@ -3,16 +3,11 @@ import { GetServerSideProps, NextPage } from 'next';
 import { Block } from 'baseui/block';
 import { workers, User } from 'moectf-core';
 import { Table } from 'baseui/table-semantic';
-import {
-  ModalHeader,
-  ModalBody,
-} from 'baseui/modal';
-import { FormControl } from 'baseui/form-control';
-import { Textarea } from 'baseui/textarea';
 import { menuButtons } from '../vars/global';
 import Background from '../components/Background';
 import Menu from '../components/Menu';
 import Header from '../components/Header';
+import Scoreboard from '../components/modal/Scoreboard';
 
 type PageProps = {
   startMatchDate: number,
@@ -59,20 +54,7 @@ const Page: NextPage<PageProps> = ({
       endMatchDate={endMatchDate}
       locale={locale}
       modalContent={(
-        <>
-          <ModalHeader>Добавление категорий</ModalHeader>
-          <ModalBody>
-            <FormControl
-              label="CTFTime инфа"
-            >
-              <Textarea
-                value={JSON.stringify(ctfTime)}
-                size="large"
-
-              />
-            </FormControl>
-          </ModalBody>
-        </>
+        <Scoreboard ctfTime={ctfTime} />
       )}
     />
     <Background />
@@ -121,7 +103,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
         ...u,
         points: userTasks
           .reduce((accumulator, t) => (
-            accumulator + (t.points - t.points * t.solvedIndex * 0.01)
+            accumulator + (t.points - t.points * t.solvedIndex * (config.dynamicPoints ?? 0))
           ), 0),
         dateTime: userTasks
           .reduce((accumulator, t) => accumulator + t.solved.date, 0),
@@ -132,7 +114,8 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
       user2.points == user1.points
         ? user1.dateTime - user2.dateTime
         : user2.points - user1.points
-    ));
+    ))
+    .filter((u) => !(u.admin && u.points == 0));
 
   const props: PageProps = {
     startMatchDate: startMatchDate ?? null,
@@ -149,7 +132,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
           .forEach((t) => {
             taskStats[t.name] = {
               time: t.solved.date,
-              points: t.points - t.points * t.solvedIndex * 0.01,
+              points: t.points - t.points * t.solvedIndex * (config.dynamicPoints ?? 0),
             };
           });
 

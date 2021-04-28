@@ -47,7 +47,7 @@ const Menu = ({
 
   return (
     <>
-      {modalContent && (
+      {modalContent && user.admin && (
         <Modal
           onClose={() => setIsOpen(false)}
           closeable

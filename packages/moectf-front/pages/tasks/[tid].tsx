@@ -15,13 +15,6 @@ import { Tag, KIND, VARIANT } from 'baseui/tag';
 import { Table } from 'baseui/table-semantic';
 import { StyledLink } from 'baseui/link';
 import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
-import {
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalButton,
-} from 'baseui/modal';
-import { Input as ModalInput } from 'baseui/input';
 import { useRouter } from 'next/router';
 import { menuButtons } from '../../vars/global';
 import Input from '../../components/Input';
@@ -29,6 +22,7 @@ import Button from '../../components/Button';
 import Background from '../../components/Background';
 import Menu from '../../components/Menu';
 import Header from '../../components/Header';
+import Taskedit from '../../components/modal/Taskedit';
 
 type PageProps = {
   startMatchDate: number,
@@ -252,147 +246,11 @@ const Page: NextPage<PageProps> = ({
         startMatchDate={startMatchDate}
         locale={locale}
         modalContent={(
-          <>
-            <ModalHeader>Изменение таска</ModalHeader>
-            <Formik
-              initialValues={{
-                name: task.name,
-                content: task.content,
-                flag: null,
-                points: task.points,
-                file: null,
-              }}
-              onSubmit={async (values, { setSubmitting, setErrors }) => {
-                const form = new FormData();
-                Object.keys(values).forEach((key) => form.append(key, values[key]));
-                form.append('categoryId', category._id);
-
-                const response = await fetch(new URL(`/api/admin/tasks/${task._id}`, domain).toString(), {
-                  method: 'PUT',
-                  body: form,
-                  headers: {
-                    Accept: 'application/json',
-                  },
-                });
-
-                const res = await response.json();
-
-                if (res.status == 'fail') {
-                  setErrors({
-                    file: res.data.message,
-                    ...res.data,
-                  });
-                } else {
-                  router.push(`/tasks/${task._id}`);
-                }
-
-                setSubmitting(false);
-              }}
-            >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                setFieldValue,
-                isSubmitting,
-              }) => (
-                <>
-                  <ModalBody>
-                    <FormControl
-                      label="Имя"
-                      error={errors.name}
-                    >
-                      <ModalInput
-                        onChange={(e) => handleChange(e)}
-                        onBlur={(e) => handleBlur(e)}
-                        name="name"
-                        value={values.name}
-                      />
-                    </FormControl>
-                    <FormControl
-                      label="Контент"
-                      error={errors.flag}
-                    >
-                      <ModalInput
-                        onChange={(e) => handleChange(e)}
-                        onBlur={(e) => handleBlur(e)}
-                        name="content"
-                        value={values.content}
-                      />
-                    </FormControl>
-                    <FormControl
-                      label="Флаг"
-                      error={errors.flag}
-                    >
-                      <ModalInput
-                        onChange={(e) => handleChange(e)}
-                        onBlur={(e) => handleBlur(e)}
-                        name="flag"
-                      />
-                    </FormControl>
-                    <FormControl
-                      label="Очки"
-                      error={errors.points}
-                    >
-                      <ModalInput
-                        onChange={(e) => handleChange(e)}
-                        onBlur={(e) => handleBlur(e)}
-                        name="points"
-                        type="number"
-                        value={values.points}
-                      />
-                    </FormControl>
-                    <FormControl
-                      label="Файл"
-                      error={errors.file}
-                    >
-                      <input
-                        name="file"
-                        type="file"
-                        onChange={(event) => {
-                          setFieldValue('file', event.currentTarget.files[0]);
-                        }}
-                      />
-                    </FormControl>
-                  </ModalBody>
-                  <ModalFooter>
-                    <ModalButton
-                      type="submit"
-                      onClick={() => handleSubmit()}
-                      isLoading={isSubmitting}
-                    >
-                      Изменить таск
-                    </ModalButton>
-                    <ModalButton
-                      onClick={async () => {
-                        const response = await fetch(new URL(`/api/admin/tasks/${task._id}`, domain).toString(), {
-                          method: 'DELETE',
-                          headers: {
-                            Accept: 'application/json',
-                          },
-                        });
-
-                        await response.json();
-                        await router.push(`/category/${category._id}`);
-                      }}
-                      isLoading={isSubmitting}
-                      overrides={{
-                        BaseButton: {
-                          style: {
-                            backgroundColor: 'red',
-                          },
-                        },
-                      }}
-                    >
-                      Удалить таск
-                    </ModalButton>
-                  </ModalFooter>
-                </>
-              )}
-            </Formik>
-          </>
+          <Taskedit
+            category={category}
+            task={task}
+            domain={domain}
+          />
         )}
       />
       <Background />
@@ -452,7 +310,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
         .map((s, index) => ({
           ...s,
           user: usersList.find((u) => (u._id == s.userId)),
-          points: task.data.task.points - task.data.task.points * index * 0.01,
+          points: task.data.task.points - task.data.task.points * index * (config.dynamicPoints ?? 0),
         })),
     },
     users: usersList,
