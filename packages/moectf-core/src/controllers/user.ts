@@ -53,43 +53,49 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
     if (user) {
       const passHash = crypto.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
       if (user?.password == passHash) {
-        req.login(user, (error) => { // TODO: clean user from password
+        req.login(user, (error) => {
           if (error) {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
             throw error;
           }
-          const resUser: User = {
-            ...user,
-            password,
-          };
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { password, ...resUser } = user;
           res.status(200).json(response.success({ user: resUser }));
-          log(path.resolve('./', config.logFileDir, 'authorization.txt'), '', {
-            userId: resUser._id,
-            userName: resUser.name,
-            date,
-            success: true,
-            ip,
-          });
+
+          if (config.logAuthFileName) {
+            log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
+              userId: resUser._id,
+              userName: resUser.name,
+              date,
+              success: true,
+              ip,
+            });
+          }
         });
       } else {
         res.status(401).json(response.fail({}, 'Incorrect Creditals'));
-        log(path.resolve('./', config.logFileDir, 'authorization.txt'), '', {
-          userName: user.name,
-          date,
-          success: false,
-          message: 'Неправльный пароль',
-          ip,
-        });
+
+        if (config.logAuthFileName) {
+          log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
+            userName: user.name,
+            date,
+            success: false,
+            message: 'Wrong password',
+            ip,
+          });
+        }
       }
     } else {
       res.status(401).json(response.fail({}, 'Incorrect Creditals'));
-      log(path.resolve('./', config.logFileDir, 'authorization.txt'), '', {
-        userName: name,
-        date,
-        success: false,
-        message: 'Неправльный логин',
-        ip,
-      });
+      if (config.logAuthFileName) {
+        log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
+          userName: name,
+          date,
+          success: false,
+          message: 'Wrong login',
+          ip,
+        });
+      }
     }
   });
 };
@@ -135,21 +141,19 @@ const register: Controller = (db, config) => async (req, res): Promise<void> => 
 
     const derviedKey = crypto.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
     db.users.insert({ name, email, password: derviedKey },
-      (error: Error, user: any) => {
+      (error: Error, user: Partial<User>) => {
         if (error) {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
           throw error;
         }
 
-        req.login(user, (error: Error) => { // TODO: clean user from password
+        req.login(user, (error: Error) => {
           if (error) {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
             throw error;
           }
-          const resUser: User = {
-            ...user,
-            password,
-          };
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { password, ...resUser } = user;
           res.status(201).json(response.success({ user: resUser }));
         });
       });
@@ -184,23 +188,23 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
 
     if (task.solved?.find((solved) => solved.userId == userId)) {
       res.status(409).json(response.error(`Task with ${taskId} id already has been solved`));
-      // FAREASTCTF MODIFICATION
-      // log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} tries to submit a flag on completed task`, { userId, taskId });
       return;
     }
 
-    const date = Date.now();
+    const date = new Date();
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     if (task.flag != flag) {
       res.status(200).json(response.success({ message: 'Flag is invalid' }));
+
       // FAREASTCTF MODIFICATION
-      log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has submitted a WRONG flag`, {
+      log(path.resolve('./', config.logFileDir, config.logFileName), {
         userId,
         userName: user.name,
         taskId,
         taskName: task.name,
         flag,
-        date,
+        date: date.toLocaleString(),
+        timestamp: date.getTime(),
         success: false,
         points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 0),
         ip,
@@ -217,14 +221,16 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
           throw error;
         }
+
         // FAREASTCTF MODIFICATION
-        log(path.resolve('./', config.logFileDir, config.logFileName), `${user.name} has solved a task!`, {
+        log(path.resolve('./', config.logFileDir, config.logFileName), {
           userId,
           userName: user.name,
-          taskName: task.name,
           taskId,
+          taskName: task.name,
           flag,
-          date,
+          date: date.toLocaleString(),
+          timestamp: date.getTime(),
           success: true,
           points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 1),
           ip,

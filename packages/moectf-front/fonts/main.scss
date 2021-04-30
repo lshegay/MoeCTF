@@ -17,3 +17,7 @@
 ::selection {
   background: #B5715A;
 }
+
+html, body {
+  user-select: none;
+}

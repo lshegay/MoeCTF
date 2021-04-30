@@ -1,3 +1,5 @@
+/* eslint-disable prefer-destructuring */
+
 import React, { useState } from 'react';
 import { GetServerSideProps, NextPage } from 'next';
 import { Block } from 'baseui/block';
@@ -28,9 +30,8 @@ type PageProps = {
   startMatchDate: number,
   endMatchDate: number,
   user: User,
-  task: Task,
+  task: Task & { solved: ({ date: number, user: User, points: number }[]) },
   category: Category,
-  users: User[],
   locale: string,
   domain: string,
 };
@@ -100,6 +101,7 @@ const Page: NextPage<PageProps> = ({
                     color: '#ffffff',
                     fontFamily: 'Roboto Condensed',
                     marginBottom: '20px',
+                    userSelect: 'text',
                   },
                 },
               }}
@@ -280,40 +282,45 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
     });
   }
 
-  const task = await workers.get.task(db)({ ...req, params: { _id: query.tid } });
-  const categories = await workers.get.categories(db)();
-  const users = await workers.get.users(db)();
+  const taskRes = await workers.get.task(db)({ ...req, params: { _id: query.tid } });
+  const categoriesRes = await workers.get.categories(db)();
+  const usersRes = await workers.get.users(db)();
 
-  if (task.status == 'fail') {
-    throw task.data?.message;
+  if (taskRes.status == 'fail') {
+    throw taskRes.data?.message;
   }
-  if (categories.status == 'fail') {
-    throw categories.data?.message;
+  if (categoriesRes.status == 'fail') {
+    throw categoriesRes.data?.message;
   }
-  if (users.status == 'fail') {
-    throw users.data?.message;
+  if (usersRes.status == 'fail') {
+    throw usersRes.data?.message;
   }
 
-  const usersList = users.data.users;
+  const task: Task = taskRes.data.task;
+  const categories: Category[] = categoriesRes.data.categories;
+  const users: User[] = usersRes.data.users;
+
+  const usersMap = {};
+  users.forEach((u) => {
+    usersMap[u._id] = u;
+  });
 
   const props: PageProps = {
     startMatchDate: startMatchDate ?? null,
     endMatchDate: endMatchDate ?? null,
     user: user ?? null,
-    category: categories.data?.categories?.filter((category) => (
-      category._id == task.data?.task.categoryId
-    ))[0],
+    category: categories.find((category) => (category._id == task.categoryId)),
     task: {
-      ...task.data.task,
-      solved: task.data.task.solved
+      ...task,
+      solved: task.solved
         .sort((s1, s2) => s1.date - s2.date)
-        .map((s, index) => ({
-          ...s,
-          user: usersList.find((u) => (u._id == s.userId)),
-          points: task.data.task.points - task.data.task.points * index * (config.dynamicPoints ?? 0),
+        .map(({ date, userId }, index) => ({
+          userId,
+          date,
+          user: usersMap[userId],
+          points: task.points - task.points * index * (config.dynamicPoints ?? 0),
         })),
     },
-    users: usersList,
     locale,
     domain,
   };

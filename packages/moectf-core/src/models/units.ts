@@ -19,6 +19,7 @@ export interface Task extends Unit {
   file?: string;
   flag?: string;
   points: number;
+  // TODO: turn from array into map
   solved: Solved[];
 }
 

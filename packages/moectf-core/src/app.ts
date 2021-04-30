@@ -42,6 +42,26 @@ const CONFIG_DEFAULTS: Config = {
     email: '',
   },
   createAdminUser: true,
+
+  routes: {
+    categoriesPost: '/api/admin/categories',
+    categoryDelete: '/api/admin/categories/:_id',
+    postsPost: '/api/admin/posts',
+    postDelete: '/api/admin/posts/:_id',
+    tasksPost: '/api/admin/tasks',
+    taskPut: '/api/admin/tasks/:_id',
+    taskDelete: '/api/admin/tasks/:_id',
+    usersGet: '/api/users',
+    profileGet: '/api/profile',
+    postsGet: '/api/posts',
+    categoriesGet: '/api/categories',
+    tasksGet: '/api/tasks',
+    taskGet: '/api/tasks/:_id',
+    taskSubmit: '/api/submit',
+    login: '/api/login',
+    logout: '/api/logout',
+    register: '/api/register',
+  }
 };
 
 const start = (server: Express, _db?: Database, options: Partial<Config> = {}): Moe => {

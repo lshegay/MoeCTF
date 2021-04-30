@@ -1,25 +1,23 @@
 // FAREASTCTF MODIFICATION
 import fs from 'fs-extra';
 
-const log = async (path: string, message: string, object?: Record<string, any>): Promise<boolean> => {
-  const currentDate: Date = new Date(Date.now());
-  const realObject = object as Record<string, any>;
-  let success = false;
-
+const log = async (
+  path: string,
+  info: Record<string, any>
+): Promise<boolean> => {
   await fs.ensureFile(path);
-  fs.appendFile(path,
-    `${JSON.stringify({
-      date: currentDate.toLocaleString(),
-      timestamp: currentDate.getTime(),
-      ...realObject,
-    })}\n`,
-    (error) => {
-      if (error) {
-        if (error) throw error;
-      } else {
-        success = true;
-      }
-    });
+  const success = await new Promise<boolean>((resolve) => {
+    fs.appendFile(path,
+      `${JSON.stringify(info)}\n`,
+      (error) => {
+        if (error) {
+          console.error(error);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+  });
 
   return success;
 };

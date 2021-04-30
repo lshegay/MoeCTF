@@ -1,6 +1,8 @@
 import { UploadedFile } from 'express-fileupload';
 import fs from 'fs';
+import { identity } from 'lodash';
 import pickBy from 'lodash/pickBy';
+import { Category, Post, Task } from '../models';
 import { Controller } from '../models/database';
 import response, { projection } from '../utils/response';
 
@@ -14,7 +16,7 @@ const createCategory: Controller = (db) => (req, res): void => {
     return;
   }
 
-  db.categories.insert({ name }, (error: Error, category: any) => {
+  db.categories.insert({ name }, (error: Error, category: Partial<Category>) => {
     if (error) {
       res.status(500).json(response.error('Server shutdowns due to internal critical error'));
       throw error;
@@ -52,7 +54,7 @@ const deleteCategory: Controller = (db) => (req, res): void => {
 const createPost: Controller = (db) => (req, res): void => {
   const { name, content } = req.body;
 
-  db.posts.insert({ name, content, date: Date.now() }, (error: Error, post: any) => {
+  db.posts.insert({ name, content, date: Date.now() }, (error: Error, post: Partial<Post>) => {
     if (error) {
       res.status(500).json(response.error('Server shutdowns due to internal critical error'));
       throw error;
@@ -119,7 +121,7 @@ const createTask: Controller = (db, config) => (req, res): void => {
       }
 
       db.tasks.insert({ name, categoryId, content, points, flag, file, solved: [] },
-        (error: Error, task: any) => {
+        (error: Error, task: Partial<Task>) => {
           if (error) {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
             throw error;
@@ -130,7 +132,7 @@ const createTask: Controller = (db, config) => (req, res): void => {
     });
   } else {
     db.tasks.insert({ name, categoryId, content, points, flag, solved: [] },
-      (error: Error, task: any) => {
+      (error: Error, task: Partial<Task>) => {
         if (error) {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
           throw error;
@@ -180,9 +182,9 @@ const updateTask: Controller = (db, config) => (req, res): void => {
 
       db.tasks.update(
         { _id },
-        { $set: pickBy({ name, categoryId, content, points, flag, file }) },
+        { $set: pickBy({ name, categoryId, content, points, flag, file }, identity) },
         { returnUpdatedDocs: true, multi: false },
-        (error: Error, _, task: any) => {
+        (error: Error, _, task: Task) => {
           if (error) {
             res.status(500).json(response.error('Server shutdowns due to internal critical error'));
             throw error;
@@ -197,7 +199,7 @@ const updateTask: Controller = (db, config) => (req, res): void => {
       { _id },
       { $set: pickBy({ name, categoryId, content, points, flag }) },
       { returnUpdatedDocs: true, multi: false },
-      (error: Error, _, task: any) => {
+      (error: Error, _, task: Task) => {
         if (error) {
           res.status(500).json(response.error('Server shutdowns due to internal critical error'));
           throw error;

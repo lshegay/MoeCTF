@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 import React, { useState } from 'react';
 import { Button } from 'baseui/button';
 import { Block } from 'baseui/block';
@@ -15,6 +16,7 @@ import {
 import { User } from 'moectf-core';
 import Countdown from 'react-countdown';
 import { faStopwatch } from '@fortawesome/free-solid-svg-icons';
+import Userrules from './modal/Userrules';
 
 type Props = {
   list: {
@@ -44,25 +46,27 @@ const Menu = ({
   const [css] = useStyletron();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [counterEE, setCounterEE] = useState(0);
 
   return (
     <>
-      {modalContent && user.admin && (
-        <Modal
-          onClose={() => setIsOpen(false)}
-          closeable
-          isOpen={isOpen}
-          animate
-          autoFocus
-          size={SIZE.default}
-          role={ROLE.dialog}
-        >
-          {modalContent}
-        </Modal>
-      )}
+      <Modal
+        onClose={() => setIsOpen(false)}
+        closeable
+        isOpen={isOpen}
+        animate
+        autoFocus
+        size={user.admin ? SIZE.default : SIZE.auto}
+        role={ROLE.dialog}
+      >
+        {user.admin
+          ? modalContent
+          : <Userrules locale={locale} />}
+      </Modal>
       <Block
         display="flex"
         position="fixed"
+        backgroundColor="rgba(0, 0, 0, 0.3)"
         bottom="0"
         width="100%"
         height="60px"
@@ -105,20 +109,69 @@ const Menu = ({
                     display: 'flex',
                   })}
                 >
-                  <Countdown date={startMatchDate}>
-                    <>
-                      <Countdown date={endMatchDate}>
-                        <Block>
-                          {{ 'ru-RU': 'Игра закончилась', 'en-US': 'Game ended' }[locale]}
-                        </Block>
-                      </Countdown>
-                      <Block
-                        marginLeft="20px"
-                      >
-                        {{ 'ru-RU': 'Игра началась', 'en-US': 'Game started' }[locale]}
-                      </Block>
-                    </>
-                  </Countdown>
+                  <Countdown
+                    date={startMatchDate}
+                    renderer={({
+                      completed,
+                      days: daysValue,
+                      formatted: {
+                        days, hours, minutes, seconds,
+                      },
+                    }) => {
+                      if (completed) {
+                        return (
+                          <Countdown
+                            date={endMatchDate}
+                            renderer={({
+                              completed,
+                              days: daysValue,
+                              formatted: {
+                                days, hours, minutes, seconds,
+                              },
+                            }) => {
+                              if (completed) {
+                                return (
+                                  <>
+                                    <Block>
+                                      {{ 'ru-RU': 'Игра закончилась', 'en-US': 'Game ended' }[locale]}
+                                    </Block>
+                                  </>
+                                );
+                              }
+
+                              return (
+                                <>
+                                  <span>
+                                    {daysValue > 0 ? `${days}:` : ''}
+                                    {`${hours}:${minutes}:${seconds}`}
+                                  </span>
+                                  <Block
+                                    marginLeft="20px"
+                                  >
+                                    {{ 'ru-RU': 'Игра началась', 'en-US': 'Game started' }[locale]}
+                                  </Block>
+                                </>
+                              );
+                            }}
+                          />
+                        );
+                      }
+
+                      return (
+                        <>
+                          <span>
+                            {daysValue > 0 ? `${days}:` : ''}
+                            {`${hours}:${minutes}:${seconds}`}
+                          </span>
+                          <Block
+                            marginLeft="20px"
+                          >
+                            {{ 'ru-RU': 'Игра еще не началась', 'en-US': 'Game has not started yet' }[locale]}
+                          </Block>
+                        </>
+                      );
+                    }}
+                  />
                 </span>
               </Block>
             </StatefulTooltip>
@@ -150,9 +203,7 @@ const Menu = ({
             variants={{
               initial: {},
               hovered: {},
-              tapped: {
-                opacity: 0.6,
-              },
+              tapped: {},
             }}
             whileHover="hovered"
             whileTap="tapped"
@@ -160,7 +211,14 @@ const Menu = ({
               ease: 'easeOut',
               duration: 0.2,
             }}
-            onClick={user.admin && (() => setIsOpen(!isOpen))}
+            onClick={() => {
+              if (user.admin) setIsOpen(!isOpen);
+              else if (counterEE < 10) {
+                setCounterEE(counterEE + 1);
+              } else {
+                setIsOpen(!isOpen);
+              }
+            }}
           >
             <motion.div
               className={css({
@@ -176,6 +234,10 @@ const Menu = ({
                   borderRadius: '90px 90px 90px 90px',
                   height: '40px',
                   margin: '10px 10px',
+                },
+                tapped: {
+                  margin: '20px 10px',
+                  height: '20px',
                 },
               }}
             />

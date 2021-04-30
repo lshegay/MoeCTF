@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import React from 'react';
 import { GetServerSideProps, NextPage } from 'next';
 import {
@@ -93,22 +94,34 @@ export const getServerSideProps: GetServerSideProps = async ({ req, query, local
     });
   }
 
-  const tasks = await workers.get.tasks(db)();
-  const categories = await workers.get.categories(db)();
+  const tasksRes = await workers.get.tasks(db)();
+  const categoriesRes = await workers.get.categories(db)();
 
-  if (tasks.status == 'fail') {
-    throw tasks.data?.message;
+  if (tasksRes.status == 'fail') {
+    throw tasksRes.data?.message;
   }
+
+  if (categoriesRes.status == 'fail') {
+    throw categoriesRes.data?.message;
+  }
+
+  const tasks: Task[] = tasksRes.data.tasks;
+  const categories: Category[] = categoriesRes.data.categories;
 
   const props: PageProps = {
     startMatchDate: startMatchDate ?? null,
     endMatchDate: endMatchDate ?? null,
     user: user ?? null,
-    category: categories.data.categories.filter((category) => category._id == query.cid)[0],
-    tasks: tasks.data.tasks.filter((task) => task.categoryId == query.cid).map((task) => ({
-      ...task,
-      solvedByUser: task.solved.findIndex((s) => s.userId == user._id) > -1,
-    })),
+    category: categories.find((category) => (category._id == query.cid)),
+    tasks: tasks
+      .flatMap((task) => (
+        task.categoryId == query.cid
+          ? [{
+            ...task,
+            solvedByUser: task.solved.findIndex((s) => s.userId == user._id) > -1,
+          }]
+          : []
+      )),
     locale,
     domain,
   };

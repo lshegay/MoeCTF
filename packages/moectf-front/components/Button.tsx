@@ -10,8 +10,7 @@ const Button = (props) => (
           outline: '2px #FFEF04 solid',
           backgroundColor: 'transparent',
           textTransform: 'uppercase',
-          letterSpacing: '4px',
-          color: '#FFF8CF',
+          color: '#FFFFFF',
           fontFamily: 'Roboto Condensed Bold',
           transitionDuration: '0.1s',
           ':hover': {

@@ -1,7 +1,8 @@
+/* eslint-disable prefer-destructuring */
 import React from 'react';
 import { GetServerSideProps, NextPage } from 'next';
 import { Block } from 'baseui/block';
-import { workers, User } from 'moectf-core';
+import { workers, User, Task } from 'moectf-core';
 import { Table } from 'baseui/table-semantic';
 import { menuButtons } from '../vars/global';
 import Background from '../components/Background';
@@ -74,48 +75,67 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
     });
   }
 
-  const tasks = await workers.get.tasks(db)();
-  const users = await workers.get.users(db)();
+  const tasksRes = await workers.get.tasks(db)();
+  const usersRes = await workers.get.users(db)();
 
-  if (tasks.status == 'fail') {
-    throw tasks.data?.message;
+  if (tasksRes.status == 'fail') {
+    throw tasksRes.data?.message;
   }
-  if (users.status == 'fail') {
-    throw users.data?.message;
+  if (usersRes.status == 'fail') {
+    throw usersRes.data?.message;
   }
 
-  const usersList = users.data.users
-    .map((u) => {
-      const userTasks = tasks.data.tasks
-        .map((t) => {
-          const index = t.solved.findIndex((s) => s.userId == u._id);
+  const tasks: Task[] = tasksRes.data.tasks;
+  const users: User[] = usersRes.data.users;
 
-          return ({
-            ...t,
-            solved: index > -1 ? t.solved[index] : null,
-            solvedIndex: index,
-          });
-        })
-        .filter((t) => t.solved)
-        .sort((t1, t2) => t1.solved.date - t2.solved.date);
-
-      return ({
-        ...u,
-        points: userTasks
-          .reduce((accumulator, t) => (
-            accumulator + (t.points - t.points * t.solvedIndex * (config.dynamicPoints ?? 0))
-          ), 0),
-        dateTime: userTasks
-          .reduce((accumulator, t) => accumulator + t.solved.date, 0),
-        tasks: userTasks,
+  const tasksList = tasks.map((task) => {
+    const solvedMap = {};
+    task.solved
+      .sort((s1, s2) => s1.date - s2.date)
+      .forEach((s, index) => {
+        solvedMap[s.userId] = { date: s.date, index };
       });
+
+    return ({
+      ...task,
+      solved: solvedMap,
+    });
+  });
+
+  const usersList = users
+    .flatMap((u) => {
+      const solvedTasks = tasksList
+        .flatMap((task) => {
+          const hasSolved = task.solved[u._id];
+
+          if (!hasSolved) return ([]);
+
+          return ([{
+            ...task,
+            solvedDate: hasSolved.date,
+            solvedPoints: task.points - task.points * hasSolved.index * (config.dynamicPoints ?? 0),
+          }]);
+        });
+
+      const info = solvedTasks.reduce(({ points, dateTime }, task) => ({
+        points: points + task.solvedPoints,
+        dateTime: dateTime + task.solvedDate,
+      }), { points: 0, dateTime: 0 });
+
+      if (u.admin && info.points == 0) return ([]);
+
+      return ([{
+        ...u,
+        points: info.points,
+        dateTime: info.dateTime,
+        tasks: solvedTasks,
+      }]);
     })
     .sort((user1, user2) => (
       user2.points == user1.points
         ? user1.dateTime - user2.dateTime
         : user2.points - user1.points
-    ))
-    .filter((u) => !(u.admin && u.points == 0));
+    ));
 
   const props: PageProps = {
     startMatchDate: startMatchDate ?? null,
@@ -124,15 +144,16 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
     users: usersList,
     locale,
     domain,
+
     ctfTime: {
-      tasks: tasks.data.tasks.map((t) => t.name),
+      tasks: tasks.map((t) => t.name),
       standings: usersList.map((u, index) => {
         const taskStats = {};
         u.tasks
           .forEach((t) => {
             taskStats[t.name] = {
-              time: t.solved.date,
-              points: t.points - t.points * t.solvedIndex * (config.dynamicPoints ?? 0),
+              time: t.solvedDate,
+              points: t.solvedPoints,
             };
           });
 
@@ -141,7 +162,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
           team: u.name,
           score: u.points,
           taskStats,
-          lastAccept: u.tasks[u.tasks.length - 1].solved.date,
+          lastAccept: u.tasks[u.tasks.length - 1].solvedDate,
         });
       }),
     },

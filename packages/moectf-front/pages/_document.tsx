@@ -30,9 +30,11 @@ class MyDocument extends Document {
           {(this.props as any).stylesheets.map((sheet, i) => (
             <style
               className="_styletron_hydrate_"
+              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{ __html: sheet.css }}
               media={sheet.attrs.media}
               data-hydrate={sheet.attrs['data-hydrate']}
+              // eslint-disable-next-line react/no-array-index-key
               key={i}
             />
           ))}

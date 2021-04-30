@@ -3,7 +3,9 @@
   "serveStaticDir": false,
   "timer": true,
   "startMatchDate": 1619539380000,
-  "endMatchDate": 1619663584000,
+  "endMatchDate": 1619818584000,
   "domain": "http://localhost:3000",
-  "dynamicPoints": 0.01
+  "logAuthFileName": "authorization.txt",
+  "dynamicPoints": 0.01,
+  "routes": {}
 }
