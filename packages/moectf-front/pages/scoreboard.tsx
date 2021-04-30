@@ -161,8 +161,10 @@ export const getServerSideProps: GetServerSideProps = async ({ req, locale }) =>
           pos: index + 1,
           team: u.name,
           score: u.points,
-          taskStats,
-          lastAccept: u.tasks[u.tasks.length - 1].solvedDate,
+          ...(u.tasks.length > 0 && {
+            lastAccept: u.tasks[u.tasks.length - 1].solvedDate,
+            taskStats,
+          }),
         });
       }),
     },
