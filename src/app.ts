@@ -4,20 +4,20 @@ import express, { Express } from 'express';
 import fileUpload from 'express-fileupload';
 import session from 'express-session';
 import defaultsDeep from 'lodash/defaultsDeep';
-import Datastore from 'nedb';
-import nedbSession from 'nedb-session-store';
+import Datastore from 'nedb-promises';
 import passport from 'passport';
 import path from 'path';
+import { Server } from 'http';
+import NedbStore from './utils/nedb-session-store';
 import { Category, Config, Database, DatabaseNames, Moe, Post, Task, Unit, User } from './models';
 import routes from './routes';
-import * as workers from './workers';
 import request from './utils/request';
 import response from './utils/response';
 
 const CONFIG_DEFAULTS: Config = {
   protocol: 'http:',
   hostname: 'localhost',
-  port: 3000,
+  port: 4000,
   secure: false,
   databaseDir: 'database',
   databaseNames: {
@@ -26,6 +26,7 @@ const CONFIG_DEFAULTS: Config = {
     tasks: 'tasks.db',
     categories: 'categories.db',
     sessions: 'sessions.db',
+    cache: 'cache.db',
   },
   cookiesAge: 1000 * 60 * 60 * 24 * 30,
   staticDir: 'public/static',
@@ -34,6 +35,8 @@ const CONFIG_DEFAULTS: Config = {
   timer: false,
   serveStaticDir: true,
   domain: 'http://localhost:3000',
+  dynamicPoints: true,
+  minPoints: 50,
 
   secret: 'secret_moe_moe_key',
   adminCreditals: {
@@ -64,23 +67,34 @@ const CONFIG_DEFAULTS: Config = {
   }
 };
 
-const start = (server: Express, _db?: Database, options: Partial<Config> = {}): Moe => {
+const createMoe = (server: Express, db: Database, config: Config): Moe => ({
+  server,
+  db,
+  config,
+  listen: (callback): Server => (
+    server.listen(config.port, config.hostname, () => {
+      if (callback) callback(config);
+      return server;
+    })
+  ),
+});
+
+const start = async (server: Express, _db?: Database, options?: Partial<Config>): Promise<Moe> => {
   if (!server) throw new Error('server has to be not null or undefined');
   const config: Config = defaultsDeep(options, CONFIG_DEFAULTS);
-  const NedbSessionStore = nedbSession(session);
   const db: Database = _db ?? {
-    users: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.users), autoload: true }),
-    posts: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.posts), autoload: true }),
-    tasks: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.tasks), autoload: true }),
-    categories: new Datastore({ filename: path.join('./', config.databaseDir, config.databaseNames.categories), autoload: true }),
+    users: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.users), autoload: true, }),
+    posts: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.posts), autoload: true, }),
+    tasks: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.tasks), autoload: true, }),
+    categories: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.categories), autoload: true, }),
+    cache: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.cache), autoload: true, }),
   };
-  const moe: Moe = { server, db, config };
 
   if (config.createAdminUser) {
-    db.users.findOne({ name: config.adminCreditals.username }, (error, user) => {
-      if (error) throw error;
+    try {
+      const adminUser: User = await db.users.findOne({ name: config.adminCreditals.username });
 
-      if (!user) {
+      if (!adminUser) {
         db.users.insert({
           name: config.adminCreditals.username,
           password: crypto.pbkdf2Sync(config.adminCreditals.password, config.secret, 1, 32, 'sha512').toString('hex'),
@@ -90,7 +104,9 @@ const start = (server: Express, _db?: Database, options: Partial<Config> = {}): 
           content: null,
         });
       }
-    });
+    } catch (error) {
+      console.log(`Admin account was made unsuccefully due to error: "${error}"`);
+    }
   }
 
   if (config.timer
@@ -109,7 +125,9 @@ const start = (server: Express, _db?: Database, options: Partial<Config> = {}): 
       secret: config.secret,
       resave: false,
       saveUninitialized: false,
-      store: new NedbSessionStore({ filename: path.join('./', config.databaseDir, config.databaseNames.sessions) }),
+      store: NedbStore({
+        filename: path.join('./', config.databaseDir, config.databaseNames.sessions),
+      }),
       cookie: {
         secure: config.secure,
         maxAge: config.cookiesAge,
@@ -119,14 +137,19 @@ const start = (server: Express, _db?: Database, options: Partial<Config> = {}): 
     .use(passport.initialize())
     .use(passport.session());
 
-  passport.serializeUser((user: User, done) => done(null, user._id));
-  passport.deserializeUser((_id, done) => {
-    db.users.findOne({ _id }, { password: 0 }, (error: Error, user: any) => {
-      if (error) return done(error);
+  passport.serializeUser((user, done) => done(null, (user as User)._id));
+  passport.deserializeUser(async (_id: string, done) => {
+    try {
+      const user: User = await db.users.findOne({ _id });
+
       if (user) return done(null, user);
-      return done(null, false);
-    });
+      done(null, false);
+    } catch (error) {
+      done(error);
+    }
   });
+
+  const moe: Moe = createMoe(server, db, config);
 
   routes(moe);
   return moe;
@@ -134,7 +157,7 @@ const start = (server: Express, _db?: Database, options: Partial<Config> = {}): 
 
 export default start;
 
-export {
+export type {
   Config,
   DatabaseNames,
   Database,
@@ -144,9 +167,11 @@ export {
   Task,
   User,
   Unit,
+};
+
+export {
   CONFIG_DEFAULTS,
 
-  workers,
   request,
   response,
 };

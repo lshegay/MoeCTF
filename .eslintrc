@@ -5,7 +5,7 @@
     "node": true
   },
   "extends": [
-    "airbnb-base",
+    "airbnb",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/errors",
     "plugin:import/warnings",
@@ -15,21 +15,57 @@
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
   },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "paths": ["src"],
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
   "overrides": [
     {
       "files": [
         "*.js"
       ],
       "parser": "espree"
+    },
+    {
+      "files": ["**/*.tsx"],
+      "rules": {
+        "react/prop-types": "off"
+      }
+    },
+    {
+      "files": [ "app/**/*.ts" ],
+      "env": {
+        "node": true
+      },
+      "rules": {
+        
+      }
+    },
+    {
+      "files": [ "pages/**/*.ts", "pages/**/*.tsx" ],
+      "env": {
+        "browser": true
+      },
+      "rules": {
+
+      }
     }
-  ],
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module"
-  },
-  "plugins": [
-    "@typescript-eslint"
   ],
   "rules": {
     "@typescript-eslint/no-var-requires": "off",
@@ -37,23 +73,29 @@
     "consistent-return": "off",
     "default-case": "off",
     "eqeqeq": "off",
+    "jsx-a11y/anchor-is-valid": "off",
     "import/extensions": [
       "error",
       "ignorePackages",
       {
         "js": "never",
-        "ts": "never"
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
       }
     ],
     "linebreak-style": [
       "warn",
-      "windows"
+      "unix"
     ],
     "no-console": "off",
     "no-nested-ternary": "off",
     "no-shadow": "off",
     "no-undef": "off",
     "no-underscore-dangle": "off",
-    "object-curly-newline": "off"
+    "object-curly-newline": "off",
+    "react/jsx-filename-extension": [1, { "extensions": [".jsx", ".tsx"] }],
+    "react/require-default-props": "off",
+    "react/jsx-props-no-spreading": "off"
   }
 }

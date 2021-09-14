@@ -4,6 +4,7 @@ export interface DatabaseNames {
   tasks: string;
   categories: string;
   sessions: string;
+  cache: string;
 }
 
 export type RouteNames = Readonly<{
@@ -43,7 +44,8 @@ export type Config = Readonly<{
   endMatchDate?: number;
   serveStaticDir: boolean;
   domain?: string;
-  dynamicPoints?: number;
+  dynamicPoints?: boolean;
+  minPoints?: number;
 
   routes: RouteNames;
 

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { RequestHandler } from 'express';
 import path from 'path';
+import update from '../funcs/update';
 import { Controller } from '../models/database';
 import { Task, User } from '../models/units';
 import log from '../utils/log';
@@ -10,21 +11,21 @@ const isAuthenticated: RequestHandler = (req, res, next): void => {
   if (req.isAuthenticated()) {
     return next();
   }
-  res.status(401).json(response.fail({}, 'User should be authenticated'));
+  res.status(401).json(response.fail({ message: 'User should be authenticated' }));
 };
 
 const isNotAuthenticated: RequestHandler = (req, res, next): void => {
   if (!req.isAuthenticated()) {
     return next();
   }
-  res.status(403).json(response.fail({}, 'User is authenticated already'));
+  res.status(403).json(response.fail({ message: 'User is authenticated already' }));
 };
 
 const isAdmin: RequestHandler = (req, res, next): void => {
   if ((req.user as User).admin) {
     return next();
   }
-  res.status(403).json(response.fail({}, 'User does not have enough privileges to do this'));
+  res.status(403).json(response.fail({ message: 'User does not have enough privileges to do this' }));
 };
 
 /** AUTHORIZATION HANDLERS START */
@@ -42,12 +43,8 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
     return;
   }
 
-  db.users.findOne({ name }, (error: Error, user: User) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
+  try {
+    const user: User = await db.users.findOne({ name });
     const date = Date.now();
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     if (user) {
@@ -55,8 +52,8 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
       if (user?.password == passHash) {
         req.login(user, (error) => {
           if (error) {
-            res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-            throw error;
+            res.status(500).json(response.error('Server got an internal critical error'));
+            console.error(error);
           }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { password, ...resUser } = user;
@@ -73,7 +70,7 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
           }
         });
       } else {
-        res.status(401).json(response.fail({}, 'Incorrect Creditals'));
+        res.status(401).json(response.fail({ message: 'Incorrect Creditals' }));
 
         if (config.logAuthFileName) {
           log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
@@ -86,7 +83,7 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
         }
       }
     } else {
-      res.status(401).json(response.fail({}, 'Incorrect Creditals'));
+      res.status(401).json(response.fail({ message: 'Incorrect Creditals' }));
       if (config.logAuthFileName) {
         log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
           userName: name,
@@ -97,7 +94,10 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
         });
       }
     }
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server got an internal critical error'));
+    console.error(error);
+  }
 };
 
 const logout: RequestHandler = (req, res): void => {
@@ -124,44 +124,43 @@ const register: Controller = (db, config) => async (req, res): Promise<void> => 
   }
 
   if (password != password2) {
-    res.status(401).json(response.fail({}, 'Passwords are required to be identical'));
+    res.status(401).json(response.fail({ message: 'Passwords are required to be identical' }));
     return;
   }
 
-  db.users.findOne({ $or: [{ name }, { email }] }, (error: Error, user: User) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
+  try {
+    const user: User = await db.users.findOne({ $or: [{ name }, { email }] });
 
     if (user) {
-      res.status(401).json(response.fail({}, 'User with this creditals already exists'));
+      res.status(401).json(response.fail({ message: 'User with this creditals already exists' }));
       return;
     }
 
     const derviedKey = crypto.pbkdf2Sync(password, config.secret, 1, 32, 'sha512').toString('hex');
-    db.users.insert({ name, email, password: derviedKey },
-      (error: Error, user: Partial<User>) => {
-        if (error) {
-          res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-          throw error;
-        }
+    const regUser: User = await db.users.insert({
+      name,
+      email,
+      password: derviedKey,
+      admin: false
+    });
 
-        req.login(user, (error: Error) => {
-          if (error) {
-            res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-            throw error;
-          }
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { password, ...resUser } = user;
-          res.status(201).json(response.success({ user: resUser }));
-        });
-      });
-  });
+    req.login(regUser, (error: Error) => {
+      if (error) {
+        res.status(500).json(response.error('Server got an internal critical error'));
+        console.log(error);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...resUser } = regUser;
+      res.status(201).json(response.success({ user: resUser }));
+    });
+  } catch (error) {
+    res.status(500).json(response.error('Server got an internal critical error'));
+    console.log(error);
+  }
 };
 /** AUTHORIZATION HANDLERS END */
 
-const taskSubmit: Controller = (db, config) => (req, res): void => {
+const taskSubmit: Controller = (db, config) => async (req, res): Promise<void> => {
   const { taskId } = req.body;
   const flag = req.body.flag.trim().replace('\n', '');
   const user = req.user as User;
@@ -175,18 +174,15 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
     return;
   }
 
-  db.tasks.findOne({ _id: taskId }, (error: Error, task: Task) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
+  try {
+    const task: Task = await db.tasks.findOne({ _id: taskId });
 
     if (!task) {
       res.status(404).json(response.error(`Task with ${taskId} id is not exist`));
       return;
     }
 
-    if (task.solved?.find((solved) => solved.userId == userId)) {
+    if (task.solved[userId]) {
       res.status(409).json(response.error(`Task with ${taskId} id already has been solved`));
       return;
     }
@@ -206,39 +202,40 @@ const taskSubmit: Controller = (db, config) => (req, res): void => {
         date: date.toLocaleString(),
         timestamp: date.getTime(),
         success: false,
-        points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 0),
+        // points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 0),
         ip,
       });
       return;
     }
 
-    db.tasks.update(
+    await db.tasks.update(
       { _id: task._id },
-      { $push: { solved: { userId, date } } },
-      { returnUpdatedDocs: true, multi: false },
-      (error: Error) => {
-        if (error) {
-          res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-          throw error;
-        }
-
-        // FAREASTCTF MODIFICATION
-        log(path.resolve('./', config.logFileDir, config.logFileName), {
-          userId,
-          userName: user.name,
-          taskId,
-          taskName: task.name,
-          flag,
-          date: date.toLocaleString(),
-          timestamp: date.getTime(),
-          success: true,
-          points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 1),
-          ip,
-        });
-        res.status(200).json(response.success({ date }));
-      }
+      { $set: { 'solved.userId': date } },
+      { returnUpdatedDocs: true, multi: false }
     );
-  });
+
+    // update cached scoreboard
+    await update.scoreboard({ db, config });
+
+    // FAREASTCTF MODIFICATION
+    log(path.resolve('./', config.logFileDir, config.logFileName), {
+      userId,
+      userName: user.name,
+      taskId,
+      taskName: task.name,
+      flag,
+      date: date.toLocaleString(),
+      timestamp: date.getTime(),
+      success: true,
+      // points: task.points - task.points * task.solved.length * (config.dynamicPoints ?? 1),
+      ip,
+    });
+
+    res.status(200).json(response.success({ date }));
+  } catch (error) {
+    res.status(500).json(response.error('Server got an internal critical error'));
+    console.error(error);
+  }
 };
 
 export default {

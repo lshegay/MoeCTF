@@ -3,4 +3,5 @@ database
 public/static
 logs.txt
 
+.next
 .build

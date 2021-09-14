@@ -6,7 +6,7 @@ import { Category, Post, Task } from '../models';
 import { Controller } from '../models/database';
 import response, { projection } from '../utils/response';
 
-const createCategory: Controller = (db) => (req, res): void => {
+const createCategory: Controller = (db) => async (req, res): Promise<void> => {
   const { name } = req.body;
 
   if (!name) {
@@ -16,17 +16,16 @@ const createCategory: Controller = (db) => (req, res): void => {
     return;
   }
 
-  db.categories.insert({ name }, (error: Error, category: Partial<Category>) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
+  try {
+    const category: Category = await db.categories.insert({ name });
     res.status(201).json(response.success({ category }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
-const deleteCategory: Controller = (db) => (req, res): void => {
+const deleteCategory: Controller = (db) => async (req, res): Promise<void> => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -34,55 +33,47 @@ const deleteCategory: Controller = (db) => (req, res): void => {
     return;
   }
 
-  db.tasks.remove({ categoryId: _id }, { multi: true }, (error: Error) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
-    db.categories.remove({ _id }, {}, (error: Error, numRemoved: number) => {
-      if (error) {
-        res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-        throw error;
-      }
-
-      res.status(200).json(response.success({ numRemoved }));
-    });
-  });
-};
-
-const createPost: Controller = (db) => (req, res): void => {
-  const { name, content } = req.body;
-
-  db.posts.insert({ name, content, date: Date.now() }, (error: Error, post: Partial<Post>) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
-    res.status(201).json(response.success({ post }));
-  });
-};
-
-const deletePost: Controller = (db) => (req, res): void => {
-  const { _id } = req.params;
-
-  if (!_id) {
-    res.status(400).json(response.fail({ _id: 'A query is required' }));
-    return;
-  }
-
-  db.posts.remove({ _id }, {}, (error: Error, numRemoved: number) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
+  try {
+    await db.tasks.remove({ categoryId: _id }, { multi: true });
+    const numRemoved = await db.categories.remove({ _id }, {});
 
     res.status(200).json(response.success({ numRemoved }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
-const createTask: Controller = (db, config) => (req, res): void => {
+const createPost: Controller = (db) => async (req, res): Promise<void> => {
+  const { name, content } = req.body;
+
+  try {
+    const post: Post = await db.posts.insert({ name, content, date: Date.now() });
+    res.status(201).json(response.success({ post }));
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
+};
+
+const deletePost: Controller = (db) => async (req, res): Promise<void> => {
+  const { _id } = req.params;
+
+  if (!_id) {
+    res.status(400).json(response.fail({ _id: 'A query is required' }));
+    return;
+  }
+
+  try {
+    const numRemoved = await db.posts.remove({ _id }, {});
+    res.status(200).json(response.success({ numRemoved }));
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
+};
+
+const createTask: Controller = (db, config) => async (req, res): Promise<void> => {
   const {
     name,
     content,
@@ -109,41 +100,28 @@ const createTask: Controller = (db, config) => (req, res): void => {
     return;
   }
 
-  if (uploadedFile) {
-    const file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
-    if (!fs.existsSync(`./${config.staticDir}`)) {
-      fs.mkdirSync(`./${config.staticDir}`, { recursive: true });
-    }
-    uploadedFile.mv(file, (error: Error) => {
-      if (error) {
-        res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-        throw error;
+  try {
+    let file = '';
+
+    if (uploadedFile) {
+      file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
+      if (!fs.existsSync(`./${config.staticDir}`)) {
+        fs.mkdirSync(`./${config.staticDir}`, { recursive: true });
       }
+      await uploadedFile.mv(file);
+    }
 
-      db.tasks.insert({ name, categoryId, content, points, flag, file, solved: [] },
-        (error: Error, task: Partial<Task>) => {
-          if (error) {
-            res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-            throw error;
-          }
-
-          res.status(201).json(response.success({ task }));
-        });
+    const task: Task = await db.tasks.insert({
+      name, categoryId, content, points, flag, ...(uploadedFile ? { file } : {}), solved: {},
     });
-  } else {
-    db.tasks.insert({ name, categoryId, content, points, flag, solved: [] },
-      (error: Error, task: Partial<Task>) => {
-        if (error) {
-          res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-          throw error;
-        }
-
-        res.status(201).json(response.success({ task }));
-      });
+    res.status(201).json(response.success({ task }));
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
   }
 };
 
-const updateTask: Controller = (db, config) => (req, res): void => {
+const updateTask: Controller = (db, config) => async (req, res): Promise<void> => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -169,49 +147,32 @@ const updateTask: Controller = (db, config) => (req, res): void => {
     return;
   }
 
-  if (uploadedFile) {
-    const file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
-    if (!fs.existsSync(`./${config.staticDir}`)) {
-      fs.mkdirSync(`./${config.staticDir}`, { recursive: true });
+  try {
+    let file = '';
+
+    if (uploadedFile) {
+      file = `./${config.staticDir}/${uploadedFile.name.split(' ').join('_')}`;
+      if (!fs.existsSync(`./${config.staticDir}`)) {
+        fs.mkdirSync(`./${config.staticDir}`, { recursive: true });
+      }
+      await uploadedFile.mv(file);
     }
-    uploadedFile.mv(file, (error: Error) => {
-      if (error) {
-        res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-        throw error;
-      }
 
-      db.tasks.update(
-        { _id },
-        { $set: pickBy({ name, categoryId, content, points, flag, file }, identity) },
-        { returnUpdatedDocs: true, multi: false },
-        (error: Error, _, task: Task) => {
-          if (error) {
-            res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-            throw error;
-          }
-
-          res.status(200).json(response.success({ task }));
-        }
-      );
-    });
-  } else {
-    db.tasks.update(
+    const task: Task = await db.tasks.update(
       { _id },
-      { $set: pickBy({ name, categoryId, content, points, flag }) },
-      { returnUpdatedDocs: true, multi: false },
-      (error: Error, _, task: Task) => {
-        if (error) {
-          res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-          throw error;
-        }
-
-        res.status(200).json(response.success({ task }));
-      }
+      { $set: pickBy({
+        name, categoryId, content, points, flag, ...(uploadedFile ? { file } : {}),
+      }, uploadedFile ? identity : undefined) },
+      { returnUpdatedDocs: true, multi: false }
     );
+    res.status(201).json(response.success({ task }));
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
   }
 };
 
-const deleteTask: Controller = (db) => (req, res): void => {
+const deleteTask: Controller = (db) => async (req, res): Promise<void> => {
   const { _id } = req.params;
 
   if (!_id) {
@@ -219,14 +180,13 @@ const deleteTask: Controller = (db) => (req, res): void => {
     return;
   }
 
-  db.tasks.remove({ _id }, {}, (error: Error, numRemoved: number) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
+  try {
+    const numRemoved = await db.tasks.remove({ _id }, {});
     res.status(200).json(response.success({ numRemoved }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
 export default {

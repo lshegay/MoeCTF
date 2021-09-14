@@ -8,10 +8,7 @@ export interface Post extends Unit {
   content: string;
 }
 
-interface Solved {
-  userId: string;
-  date: number;
-}
+type Solved = Record<string, number>;
 
 export interface Task extends Unit {
   categoryId: string;
@@ -20,7 +17,7 @@ export interface Task extends Unit {
   flag?: string;
   points: number;
   // TODO: turn from array into map
-  solved: Solved[];
+  solved: Solved;
 }
 
 export interface User extends Unit {
@@ -29,6 +26,17 @@ export interface User extends Unit {
   content?: string;
   email: string;
   password?: string;
+}
+
+export interface CacheData extends Unit {
+  scoreboard: ScoreboardUser[];
+}
+
+export interface ScoreboardUser {
+  name: string;
+  points: number;
+  tasks: Partial<Task>[];
+  dateSum: number;
 }
 
 export type Category = Unit;

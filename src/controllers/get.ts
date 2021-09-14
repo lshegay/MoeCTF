@@ -1,75 +1,76 @@
 import { Controller } from '../models/database';
 import response from '../utils/response';
-import { User } from '../models';
+import get from '../funcs/get';
 
-const users: Controller = (db) => (_, res): void => {
-  db.users.find({}, { password: 0, email: 0 }, (error: Error, users: any[]) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
+const users: Controller = (db) => async (_, res): Promise<void> => {
+  try {
+    const users = await get.users({ db });
     res.status(200).json(response.success({ users }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
-const profile: Controller = (db) => (req, res): void => {
-  const user = req.user as User;
+const profile: Controller = () => (req, res): void => {
+  const user = get.profile({ req });
 
-  db.users.find({ _id: user?._id }, { password: 0, email: 0 }, (error: Error, users: any[]) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
-    res.status(200).json(response.success({ users }));
-  });
+  res.status(200).json(response.success({ user }));
 };
 
-const posts: Controller = (db) => (_, res): void => {
-  db.posts.find({}).sort({ date: 1 }).exec((error: Error, posts: any[]) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
-
+const posts: Controller = (db) => async (_, res): Promise<void> => {
+  try {
+    const posts = await get.posts({ db });
     res.status(200).json(response.success({ posts }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
-const categories: Controller = (db) => (_, res): void => {
-  db.categories.find({}, (error: Error, categories: any[]) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
+const categories: Controller = (db) => async (_, res): Promise<void> => {
+  try {
+    const categories = await get.categories({ db });
 
     res.status(200).json(response.success({ categories }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
-const tasks: Controller = (db) => (_, res): void => {
-  db.tasks.find({}, { flag: 0 }, (error: Error, tasks: any[]) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
+const tasks: Controller = (db) => async (_, res): Promise<void> => {
+  try {
+    const tasks = await get.tasks({ db });
 
     res.status(200).json(response.success({ tasks }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
-const task: Controller = (db) => (req, res): void => {
+const task: Controller = (db) => async (req, res): Promise<void> => {
   const { _id } = req.params;
 
-  db.tasks.findOne({ _id }, { flag: 0 }, (error: Error, task: any) => {
-    if (error) {
-      res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-      throw error;
-    }
+  try {
+    const task = await get.task({ db, _id });
 
     res.status(200).json(response.success({ task }));
-  });
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
+};
+
+const scoreboard: Controller = (db) => async (_, res): Promise<void> => {
+  try {
+    const scoreboard = await get.scoreboard({ db });
+    res.status(200).json(response.success({ scoreboard }));
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.error(error);
+  }
 };
 
 export default {
@@ -79,4 +80,5 @@ export default {
   categories,
   tasks,
   task,
+  scoreboard,
 };

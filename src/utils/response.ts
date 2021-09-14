@@ -3,27 +3,24 @@ import has from 'lodash/has';
 
 export type Status = 'success' | 'fail' | 'error';
 
-export interface Response {
+export interface Response<T> {
   status: Status;
-  data?: any;
+  data?: T;
   code?: number;
   message?: string;
 }
 
-const success = (data: any = null): Response => ({
+const success = <T>(data?: T): Response<T> => ({
   status: 'success',
   data,
 });
 
-const fail = (data?: any, message?: string): Response => ({
+const fail = <T>(data?: T): Response<T> => ({
   status: 'fail',
-  data: {
-    message,
-    ...data,
-  },
+  data,
 });
 
-const error = (message: string, data?: any, code?: number): Response => ({
+const error = <T>(message: string, data?: T, code?: number): Response<T> => ({
   status: 'error',
   message,
   ...(data == undefined ? {} : { data }),
@@ -34,7 +31,7 @@ const error = (message: string, data?: any, code?: number): Response => ({
  * IsValid returns true if obj is valid for JSend API or not
  * @param obj - the JSend response
  */
-const isValid = (obj: any): boolean => (
+const isValid = (obj: Record<string, unknown>): boolean => (
   obj
     ? (has(obj, 'status')
       ? (obj.status == 'success' || obj.status == 'fail'
@@ -51,10 +48,15 @@ const isValid = (obj: any): boolean => (
  * @param proj - a filter object
  * @returns a new filtered object
  */
-export const projection = (obj: any, proj: any): any => pickBy(obj, (_, key) => (!proj[key]));
+export const projection = (
+  obj: Record<string, unknown>,
+  proj: Record<string, unknown>
+): Record<string, unknown> => (
+  pickBy(obj, (_, key) => (!proj[key]))
+);
 
-export const parse = (text: string): Response => {
-  let obj: any;
+export const parse = <T>(text: string): Response<T> => {
+  let obj: Record<string, unknown>;
 
   try {
     obj = JSON.parse(text);
@@ -62,7 +64,7 @@ export const parse = (text: string): Response => {
 
   if (!isValid(obj)) return error('JSON response is not valid for JSend API');
 
-  return obj;
+  return (obj as unknown as Response<T>);
 };
 
 export default {

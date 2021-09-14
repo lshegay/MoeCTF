@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import Datastore from 'nedb';
+import Datastore from 'nedb-promises';
 import { Config } from './config';
 
 export type Database = {
@@ -7,6 +7,7 @@ export type Database = {
   posts: Datastore;
   tasks: Datastore;
   categories: Datastore;
+  cache: Datastore;
 };
 
 export type Controller = (db: Database, config: Config) => RequestHandler;
