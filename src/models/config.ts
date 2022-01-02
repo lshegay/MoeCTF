@@ -2,7 +2,6 @@ export interface DatabaseNames {
   users: string;
   posts: string;
   tasks: string;
-  categories: string;
   sessions: string;
   cache: string;
 }
@@ -11,6 +10,7 @@ export type RouteNames = Readonly<{
   categoriesPost?: string;
   categoryDelete?: string;
   postsPost?: string;
+  postPut?: string;
   postDelete?: string;
   tasksPost?: string;
   taskPut?: string;
@@ -45,6 +45,7 @@ export type Config = Readonly<{
   serveStaticDir: boolean;
   domain?: string;
   dynamicPoints?: boolean;
+  maxPoints?: number;
   minPoints?: number;
 
   routes: RouteNames;

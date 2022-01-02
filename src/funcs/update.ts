@@ -1,5 +1,5 @@
 import { Task } from '../models';
-import { ScoreboardUser } from '../models/units';
+import { ScoreboardUser, SolvedTask } from '../models/units';
 import get from './get';
 
 const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
@@ -11,7 +11,7 @@ const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
 
   const dashUsers: ScoreboardUser[] = _users
     .map(({ name, _id }) => {
-      const solvedTasks: Partial<Task>[] = [];
+      const solvedTasks: Partial<SolvedTask>[] = [];
       let points = 0;
       let dateSum = 0;
 
@@ -20,7 +20,7 @@ const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
         const { length } = Object.keys(task.solved);
 
         if (dateSolved) {
-          const { name, _id, categoryId } = task;
+          const { name, _id: taskId, tags } = task;
           let taskPoints = task.points;
 
           if (config.dynamicPoints) {
@@ -29,7 +29,7 @@ const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
           }
 
           solvedTasks.push({
-            name, _id, categoryId,
+            name, _id: taskId, tags, points: taskPoints, date: dateSolved,
           });
           points += taskPoints;
           dateSum += dateSolved - (config.startMatchDate ?? 0);
@@ -37,6 +37,7 @@ const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
       });
 
       return ({
+        userId: _id,
         name,
         points,
         tasks: solvedTasks,

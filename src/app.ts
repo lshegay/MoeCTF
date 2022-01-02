@@ -4,12 +4,13 @@ import express, { Express } from 'express';
 import fileUpload from 'express-fileupload';
 import session from 'express-session';
 import defaultsDeep from 'lodash/defaultsDeep';
+import trimStart from 'lodash/trimStart';
 import Datastore from 'nedb-promises';
 import passport from 'passport';
 import path from 'path';
 import { Server } from 'http';
-import NedbStore from './utils/nedb-session-store';
-import { Category, Config, Database, DatabaseNames, Moe, Post, Task, Unit, User } from './models';
+import makeStore from 'nedb-promises-session-store';
+import { Config, Database, DatabaseNames, Moe, Post, Task, Unit, User } from './models';
 import routes from './routes';
 import request from './utils/request';
 import response from './utils/response';
@@ -24,18 +25,18 @@ const CONFIG_DEFAULTS: Config = {
     users: 'users.db',
     posts: 'posts.db',
     tasks: 'tasks.db',
-    categories: 'categories.db',
     sessions: 'sessions.db',
     cache: 'cache.db',
   },
   cookiesAge: 1000 * 60 * 60 * 24 * 30,
-  staticDir: 'public/static',
+  staticDir: 'files',
   logFileName: 'logs.txt',
   logFileDir: '',
   timer: false,
   serveStaticDir: true,
-  domain: 'http://localhost:3000',
+  domain: 'http://localhost:4000',
   dynamicPoints: true,
+  maxPoints: 500,
   minPoints: 50,
 
   secret: 'secret_moe_moe_key',
@@ -50,6 +51,7 @@ const CONFIG_DEFAULTS: Config = {
     categoriesPost: '/api/admin/categories',
     categoryDelete: '/api/admin/categories/:_id',
     postsPost: '/api/admin/posts',
+    postPut: '/api/admin/posts/:_id',
     postDelete: '/api/admin/posts/:_id',
     tasksPost: '/api/admin/tasks',
     taskPut: '/api/admin/tasks/:_id',
@@ -86,7 +88,6 @@ const start = async (server: Express, _db?: Database, options?: Partial<Config>)
     users: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.users), autoload: true, }),
     posts: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.posts), autoload: true, }),
     tasks: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.tasks), autoload: true, }),
-    categories: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.categories), autoload: true, }),
     cache: Datastore.create({ filename: path.join('./', config.databaseDir, config.databaseNames.cache), autoload: true, }),
   };
 
@@ -115,8 +116,7 @@ const start = async (server: Express, _db?: Database, options?: Partial<Config>)
     && config.endMatchDate <= config.startMatchDate) {
     throw new Error('Change endMatchDate and startMatchDate in config file');
   }
-
-  if (config.serveStaticDir) server.use(express.static(path.resolve('./', config.staticDir)));
+  if (config.serveStaticDir) server.use(`/${trimStart(config.staticDir, '/')}`, express.static(path.resolve('./', config.staticDir)));
 
   server
     .use(urlencoded({ extended: true }))
@@ -125,8 +125,9 @@ const start = async (server: Express, _db?: Database, options?: Partial<Config>)
       secret: config.secret,
       resave: false,
       saveUninitialized: false,
-      store: NedbStore({
+      store: makeStore({
         filename: path.join('./', config.databaseDir, config.databaseNames.sessions),
+        connect: session,
       }),
       cookie: {
         secure: config.secure,
@@ -135,7 +136,12 @@ const start = async (server: Express, _db?: Database, options?: Partial<Config>)
     }))
     .use(fileUpload())
     .use(passport.initialize())
-    .use(passport.session());
+    .use(passport.session())
+    .use((req: any, res, next) => {
+      req.db = db;
+      req.config = config;
+      next();
+    });
 
   passport.serializeUser((user, done) => done(null, (user as User)._id));
   passport.deserializeUser(async (_id: string, done) => {
@@ -162,7 +168,6 @@ export type {
   DatabaseNames,
   Database,
   Moe,
-  Category,
   Post,
   Task,
   User,

@@ -5,7 +5,7 @@ import next from 'next';
 import start from './app';
 import { Moe, Config } from './models';
 
-const dev = process.env.NODE_ENV !== 'production';
+const dev = process.env.NODE_ENV != 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 

@@ -18,9 +18,10 @@ const profile: Controller = () => (req, res): void => {
   res.status(200).json(response.success({ user }));
 };
 
-const posts: Controller = (db) => async (_, res): Promise<void> => {
+const posts: Controller = (db) => async (req, res): Promise<void> => {
   try {
-    const posts = await get.posts({ db });
+    const { start, limit } = req.query;
+    const posts = await get.posts({ db, start, limit });
     res.status(200).json(response.success({ posts }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
@@ -28,11 +29,13 @@ const posts: Controller = (db) => async (_, res): Promise<void> => {
   }
 };
 
-const categories: Controller = (db) => async (_, res): Promise<void> => {
-  try {
-    const categories = await get.categories({ db });
+const post: Controller = (db) => async (req, res): Promise<void> => {
+  const { _id } = req.params;
 
-    res.status(200).json(response.success({ categories }));
+  try {
+    const post = await get.post({ db, _id });
+
+    res.status(200).json(response.success({ post }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
     console.error(error);
@@ -77,7 +80,7 @@ export default {
   users,
   profile,
   posts,
-  categories,
+  post,
   tasks,
   task,
   scoreboard,

@@ -6,7 +6,6 @@ export type Database = {
   users: Datastore;
   posts: Datastore;
   tasks: Datastore;
-  categories: Datastore;
   cache: Datastore;
 };
 

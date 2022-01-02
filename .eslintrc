@@ -49,21 +49,33 @@
       }
     },
     {
-      "files": [ "app/**/*.ts" ],
-      "env": {
-        "node": true
-      },
-      "rules": {
-        
+      "files": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+      ],
+      "settings": {
+        "import/resolver": {
+          "typescript": {}
+        }
+      }
+    },
+    {
+      "files": [
+        "pages/**/*.ts",
+        "pages/**/*.tsx",
+        "components/**/*.ts",
+        "components/**/*.tsx"
+      ],
+      "settings": {
+        "import/resolver": {
+          "typescript": {}
+        }
       }
     },
     {
       "files": [ "pages/**/*.ts", "pages/**/*.tsx" ],
       "env": {
         "browser": true
-      },
-      "rules": {
-
       }
     }
   ],

@@ -5,18 +5,19 @@ export interface Unit {
 
 export interface Post extends Unit {
   date: number;
+  // dateEdited: number;
+  // authorId: string;
   content: string;
 }
 
-type Solved = Record<string, number>;
+type Solved = Record<string, number>; // taskId, solvedDate
 
 export interface Task extends Unit {
-  categoryId: string;
   content?: string;
   file?: string;
   flag?: string;
   points: number;
-  // TODO: turn from array into map
+  tags?: string[];
   solved: Solved;
 }
 
@@ -28,15 +29,35 @@ export interface User extends Unit {
   password?: string;
 }
 
-export interface CacheData extends Unit {
-  scoreboard: ScoreboardUser[];
+type History = Record<string, ScoreState>; // userId, HistoryUser
+type Scoreboard = Record<string, ScoreboardUser> // userId, ScoreboardUser
+
+export interface CacheData {
+  _id: string;
+  scoreboard: Scoreboard;
+  history: History;
+}
+
+export interface ScoreState {
+  date: number;
+  points: number;
+}
+
+export interface SolvedTask extends Unit {
+  tags: string[];
+  date: number;
+  points: number;
 }
 
 export interface ScoreboardUser {
   name: string;
   points: number;
-  tasks: Partial<Task>[];
+  tasks: Partial<SolvedTask>[];
   dateSum: number;
 }
 
-export type Category = Unit;
+export type {
+  Solved,
+  History,
+  Scoreboard,
+};

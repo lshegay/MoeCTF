@@ -70,7 +70,7 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
           }
         });
       } else {
-        res.status(401).json(response.fail({ message: 'Incorrect Creditals' }));
+        res.status(401).json(response.fail({ password: 'Password is wrong' }));
 
         if (config.logAuthFileName) {
           log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
@@ -83,7 +83,7 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
         }
       }
     } else {
-      res.status(401).json(response.fail({ message: 'Incorrect Creditals' }));
+      res.status(401).json(response.fail({ name: 'No user with this name' }));
       if (config.logAuthFileName) {
         log(path.resolve('./', config.logFileDir, config.logAuthFileName), {
           userName: name,

@@ -4,10 +4,23 @@ import { CssBaseline } from '@geist-ui/react';
 
 const MyDocument = (): JSX.Element => (
   <Html>
-    <Head />
+    <Head>
+      <meta charSet="utf-8" />
+    </Head>
     <body>
       <Main />
       <NextScript />
+      <style>
+        {`
+          #__next {
+            height: 100vh;
+          }
+
+          ul li:before {
+            display: none;
+          }
+        `}
+      </style>
     </body>
   </Html>
 );

@@ -1,14 +1,13 @@
 import { Config, DatabaseNames } from './config';
 import { Database } from './database';
 import { Moe } from './moe';
-import { Category, Post, Task, User, Unit } from './units';
+import { Post, Task, User, Unit } from './units';
 
-export {
+export type {
   Config,
   DatabaseNames,
   Database,
   Moe,
-  Category,
   Post,
   Task,
   User,
