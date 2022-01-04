@@ -1,0 +1,7 @@
+node_modules
+database
+public/static
+logs.txt
+files
+coverage
+.build
