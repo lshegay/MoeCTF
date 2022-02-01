@@ -7,6 +7,11 @@ import clear from '../tools/clear';
 let application: Moe;
 let appServer: Server;
 
+const adminCredentials = {
+  name: 'moe_admin',
+  password: 'moe_moe_password',
+};
+
 beforeAll((done) => {
   clear().then(() => {
     start(express()).then((moe) => {
@@ -26,15 +31,15 @@ it('authenticates in admin account', async () => {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      name: 'moe_admin',
-      password: 'moe_moe_password',
-    }),
+    body: JSON.stringify(adminCredentials),
   });
 
   const response = await fetching.json();
 
-  expect(response).not.toBeUndefined();
+  expect(response).toBeDefined();
   expect(response.status).toBe('success');
-  console.log(response);
+  expect(response.data).toBeDefined();
+  expect(response.data.user).toBeDefined();
+  expect(response.data.user.name).toBe(adminCredentials.name);
+  expect(response.data.user.admin).toBeTruthy();
 });

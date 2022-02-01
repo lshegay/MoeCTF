@@ -28,6 +28,7 @@ export type RouteNames = Readonly<{
 }>;
 
 export type Config = Readonly<{
+  dev: boolean;
   protocol: string;
   hostname: string;
   port: number;

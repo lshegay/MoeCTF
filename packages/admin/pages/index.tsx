@@ -107,7 +107,7 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async ({ req })
   if (!isAdmin({ req })) {
     return {
       redirect: {
-        destination: '/admin/login',
+        destination: '/login',
         permanent: true,
       }
     };

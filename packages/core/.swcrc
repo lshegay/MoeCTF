@@ -14,10 +14,10 @@
   },
   "module": {
     "type": "commonjs",
-    "strict": true,
-    "strictMode": true,
+    "strict": false,
+    "strictMode": false,
     "lazy": false,
-    "noInterop": true
+    "noInterop": false
   },
   "minify": true
 }

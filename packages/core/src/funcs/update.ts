@@ -1,23 +1,23 @@
-import { Task } from '../models';
-import { ScoreboardUser, SolvedTask } from '../models/units';
+import { Scoreboard, SolvedTask, ScoreboardUser, UnitId, CacheData } from '../models/units';
 import get from './get';
 
-const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
+const scoreboard = async ({ db, config }): Promise<Scoreboard> => {
   // be sure that cached scoreboard exists
   await get.scoreboard({ db });
 
-  const _users = await get.users({ db });
-  const _tasks = await get.tasks({ db });
+  const [users, tasks] = await Promise.all([get.users({ db }), get.tasks({ db })]);
 
-  const dashUsers: ScoreboardUser[] = _users
+  const dashUsers: Scoreboard = {};
+
+  users
     .map(({ name, _id }) => {
-      const solvedTasks: Partial<SolvedTask>[] = [];
+      const solvedTasks: Record<UnitId, SolvedTask> = {};
       // sum of all points from completed tasks
       let points = 0;
       // sum of dates (used for sorting)
       let dateSum = 0;
 
-      _tasks.forEach((task) => {
+      tasks.forEach((task) => {
         const dateSolved = task.solved[_id];
         const { length } = Object.keys(task.solved);
 
@@ -31,27 +31,38 @@ const scoreboard = async ({ db, config }): Promise<ScoreboardUser[]> => {
               / (1 + (Math.max(0, length - 1) / 11.92) ** 1.21);
           }
 
-          solvedTasks.push({
-            name, _id: taskId, tags, points: taskPoints, date: dateSolved,
-          });
+          solvedTasks[taskId] = {
+            name, _id: taskId, tags: tags ?? [], points: taskPoints, date: dateSolved,
+          };
           points += taskPoints;
           dateSum += dateSolved - (config.startMatchDate ?? 0);
         }
       });
 
       return ({
-        userId: _id,
+        _id,
         name,
         points,
         tasks: solvedTasks,
         dateSum,
       });
     })
-    .sort((user1, user2) => (
-      user2.points == user1.points
-        ? user1.dateSum - user2.dateSum
-        : user2.points - user1.points
-    ));
+  .sort((user1, user2) => (
+    user2.points == user1.points
+      ? user1.dateSum - user2.dateSum
+      : user2.points - user1.points
+  )).forEach(({ dateSum, _id, ...userProps }, index) => {
+    const user: ScoreboardUser = {
+      ...userProps,
+      _id,
+      place: index,
+    };
+
+    dashUsers[_id] = user;
+  });
+
+  const datastore = (db.cache as Datastore);
+  await datastore.update({}, { $set: { scoreboard: dashUsers } });
 
   return dashUsers;
 };

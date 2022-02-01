@@ -19,12 +19,6 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@funcs/*": [
-        "./src/funcs/*"
-      ],
-      "@controllers/*": [
-        "./src/controllers/*"
-      ],
       "@models/*": [
         "./src/models/*"
       ],

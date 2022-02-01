@@ -117,6 +117,7 @@ const createTask: Controller = (db, config) => async (req, res): Promise<void> =
     let file = '';
 
     if (uploadedFile) {
+      //TODO: split and join is complex more than O(2n). https://stackoverflow.com/questions/7299010/why-is-string-concatenation-faster-than-array-join
       file = `/${trimmedStaticDir}/${uploadedFile.name.split(' ').join('_')}`;
       const filePath = `.${file}`;
       if (!fs.existsSync(`./${trimmedStaticDir}`)) {

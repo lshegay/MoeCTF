@@ -1,0 +1,106 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": false
+  },
+  "extends": [
+    "next/core-web-vitals",
+    "airbnb",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.js"
+      ],
+      "parser": "espree"
+    },
+    {
+      "files": [
+        "**/*.tsx"
+      ],
+      "rules": {
+        "react/prop-types": "off"
+      }
+    },
+    {
+      "files": [
+        "pages/**/*.ts",
+        "pages/**/*.tsx"
+      ],
+      "settings": {
+        "import/resolver": {
+          "typescript": {}
+        }
+      }
+    },
+    {
+      "files": [
+        "pages/**/*.ts",
+        "pages/**/*.tsx"
+      ],
+      "env": {
+        "browser": true
+      }
+    }
+  ],
+  "rules": {
+    "@typescript-eslint/no-var-requires": "off",
+    "comma-dangle": "off",
+    "consistent-return": "off",
+    "default-case": "off",
+    "eqeqeq": "off",
+    "jsx-a11y/anchor-is-valid": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "never",
+        "jsx": "never",
+        "ts": "never",
+        "tsx": "never"
+      }
+    ],
+    "linebreak-style": [
+      "warn",
+      "unix"
+    ],
+    "no-console": "off",
+    "no-nested-ternary": "off",
+    "no-shadow": "off",
+    "no-undef": "off",
+    "no-underscore-dangle": "off",
+    "object-curly-newline": "off",
+    "react/jsx-filename-extension": [
+      1,
+      {
+        "extensions": [
+          ".jsx",
+          ".tsx"
+        ]
+      }
+    ],
+    "react/require-default-props": "off",
+    "react/jsx-props-no-spreading": "off"
+  }
+}

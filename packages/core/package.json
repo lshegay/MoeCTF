@@ -10,29 +10,26 @@
   "scripts": {
     "build": "swc ./src --config-file .swcrc -d ./.build",
     "test": "jest",
-    "dev": "nodemon --watch \"src/**\" --ext \"js,jsx,ts,tsx,json\" --exec \"npx swc ./src --config-file .swcrc -d ./.build\"",
+    "dev": "nodemon --watch \"src/**\" --ext \"js,jsx,ts,tsx,json\" --exec \"npx swc ./src --config-file .swcrc -d ./.build & node .build/server.js\"",
     "start": "NODE_ENV=production node .build/server.js"
   },
   "dependencies": {
+    "@babel/runtime": "^7.16.7",
     "body-parser": "^1.19.0",
-    "class-validator": "^0.13.2",
     "cross-env": "^7.0.3",
     "eslint-import-resolver-typescript": "^2.5.0",
     "express": "^4.17.2",
     "express-fileupload": "^1.2.1",
     "express-session": "^1.17.1",
     "fs-extra": "^8.1.0",
-    "graphql": "^15.8.0",
     "lodash": "^4.17.15",
     "nedb-promises": "^5.0.0",
     "nedb-promises-session-store": "^1.0.4",
-    "passport": "^0.4.1",
-    "reflect-metadata": "^0.1.13",
-    "type-graphql": "^1.1.1"
+    "passport": "^0.4.1"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.55",
-    "@swc/core": "^1.2.124",
+    "@swc/core": "^1.2.135",
     "@types/express": "^4.17.2",
     "@types/express-fileupload": "^1.1.2",
     "@types/express-session": "^1.17.0",

@@ -1,9 +1,11 @@
-export interface Unit {
-  _id: string;
-  name: string;
+type UnitId = string;
+
+type Unit = {
+  _id: UnitId;
 }
 
-export interface Post extends Unit {
+type Post = Unit & {
+  name: string;
   date: number;
   // dateEdited: number;
   // authorId: string;
@@ -12,7 +14,8 @@ export interface Post extends Unit {
 
 type Solved = Record<string, number>; // taskId, solvedDate
 
-export interface Task extends Unit {
+type Task = Unit & {
+  name: string;
   content?: string;
   file?: string;
   flag?: string;
@@ -21,7 +24,8 @@ export interface Task extends Unit {
   solved: Solved;
 }
 
-export interface User extends Unit {
+type User = Unit & {
+  name: string;
   admin: boolean;
   avatar?: string;
   content?: string;
@@ -29,35 +33,44 @@ export interface User extends Unit {
   password?: string;
 }
 
-type History = Record<string, ScoreState>; // userId, HistoryUser
-type Scoreboard = Record<string, ScoreboardUser> // userId, ScoreboardUser
+type History = Record<UnitId, ScoreState>; // userId, HistoryUser
+type Scoreboard = Record<UnitId, ScoreboardUser> // userId, ScoreboardUser
 
-export interface CacheData {
-  _id: string;
+type CacheData = Unit & {
   scoreboard: Scoreboard;
   history: History;
 }
 
-export interface ScoreState {
+type ScoreState = {
   date: number;
   points: number;
 }
 
-export interface SolvedTask extends Unit {
+type SolvedTask = Unit & {
+  name: string;
   tags: string[];
   date: number;
   points: number;
 }
 
-export interface ScoreboardUser {
+type ScoreboardUser = Unit & {
   name: string;
   points: number;
-  tasks: Partial<SolvedTask>[];
-  dateSum: number;
+  tasks: Record<UnitId, SolvedTask>; // taskId, SolvedTask
+  place: number;
 }
 
 export type {
+  UnitId,
   Solved,
   History,
   Scoreboard,
+  Unit,
+  Post,
+  Task,
+  User,
+  CacheData,
+  ScoreState,
+  SolvedTask,
+  ScoreboardUser,
 };

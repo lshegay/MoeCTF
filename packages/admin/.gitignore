@@ -1,7 +1,5 @@
 node_modules
-database
 public/static
-logs.txt
-files
 .next
 .build
+/config.json

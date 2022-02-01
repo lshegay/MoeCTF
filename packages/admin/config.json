@@ -1,3 +1,1 @@
-{
-  
-}
+{"protocol":"http:","hostname":"localhost","port":5000,"secure":false,"domain":"http://localhost:5000","routes":{"categoriesPost":"/admin/categories","categoryDelete":"/admin/categories/:_id","postsPost":"/admin/posts","postPut":"/admin/posts/:_id","postDelete":"/admin/posts/:_id","tasksPost":"/admin/tasks","taskPut":"/admin/tasks/:_id","taskDelete":"/admin/tasks/:_id","usersGet":"/users","profileGet":"/profile","postsGet":"/posts","categoriesGet":"/categories","tasksGet":"/tasks","taskGet":"/tasks/:_id","taskSubmit":"/submit","login":"/login","logout":"/logout","register":"/register"}}

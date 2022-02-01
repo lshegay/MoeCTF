@@ -1,29 +1,18 @@
-/* import express from 'express';
-import fs from 'fs-extra';
-import path from 'path';
-import next from 'next';
+import fs from 'fs';
+import express from 'express';
 import start from './app';
-import { Moe, Config } from './models';
-
-const dev = process.env.NODE_ENV != 'production';
-const app = next({ dev });
-const handle = app.getRequestHandler();
+import { Moe } from './models';
 
 const server = async (): Promise<Moe> => {
-  let config: Partial<Config> = {};
-
+  let CONFIG = {};
+  
   try {
-    config = await fs.readJSON(path.join('./', 'config.json'));
+    CONFIG = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
   } catch (error) {
-    console.log(error);
+    console.log('No custom config was used. "config.json" was not found.');
   }
 
-  await app.prepare();
-
-  const application = await start(express(), undefined, config);
-  application.server.use((req, res) => {
-    handle(req, res);
-  });
+  const application = await start(express(), undefined, CONFIG);
 
   application.listen((config) => {
     console.log(`Server is up at: ${config.protocol}//${config.hostname}:${config.port}`);
@@ -33,4 +22,3 @@ const server = async (): Promise<Moe> => {
 };
 
 export default server();
- */

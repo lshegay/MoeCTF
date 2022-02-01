@@ -15,7 +15,10 @@ import routes from './routes';
 import request from './utils/request';
 import response from './utils/response';
 
+const dev = process.env.NODE_ENV != 'production';
+
 const CONFIG_DEFAULTS: Config = {
+  dev,
   protocol: 'http:',
   hostname: 'localhost',
   port: 4000,
@@ -48,24 +51,24 @@ const CONFIG_DEFAULTS: Config = {
   createAdminUser: true,
 
   routes: {
-    categoriesPost: '/api/admin/categories',
-    categoryDelete: '/api/admin/categories/:_id',
-    postsPost: '/api/admin/posts',
-    postPut: '/api/admin/posts/:_id',
-    postDelete: '/api/admin/posts/:_id',
-    tasksPost: '/api/admin/tasks',
-    taskPut: '/api/admin/tasks/:_id',
-    taskDelete: '/api/admin/tasks/:_id',
-    usersGet: '/api/users',
-    profileGet: '/api/profile',
-    postsGet: '/api/posts',
-    categoriesGet: '/api/categories',
-    tasksGet: '/api/tasks',
-    taskGet: '/api/tasks/:_id',
-    taskSubmit: '/api/submit',
-    login: '/api/login',
-    logout: '/api/logout',
-    register: '/api/register',
+    categoriesPost: '/admin/categories',
+    categoryDelete: '/admin/categories/:_id',
+    postsPost: '/admin/posts',
+    postPut: '/admin/posts/:_id',
+    postDelete: '/admin/posts/:_id',
+    tasksPost: '/admin/tasks',
+    taskPut: '/admin/tasks/:_id',
+    taskDelete: '/admin/tasks/:_id',
+    usersGet: '/users',
+    profileGet: '/profile',
+    postsGet: '/posts',
+    categoriesGet: '/categories',
+    tasksGet: '/tasks',
+    taskGet: '/tasks/:_id',
+    taskSubmit: '/submit',
+    login: '/login',
+    logout: '/logout',
+    register: '/register',
   }
 };
 

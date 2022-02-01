@@ -1,45 +1,60 @@
+/** There are JSend wrapper functions */
+
 import pickBy from 'lodash/pickBy';
 import has from 'lodash/has';
+import isNaN from 'lodash/isNaN';
+import isUndefined from 'lodash/isUndefined';
 
-export type Status = 'success' | 'fail' | 'error';
+export enum Status {
+  SUCCESS ='success',
+  FAIL = 'fail',
+  ERROR = 'error',
+};
 
-export interface Response<T> {
+export type Response<T> = {
   status: Status;
-  data?: T;
+  data?: T | null;
   code?: number;
   message?: string;
-}
+};
 
 const success = <T>(data?: T): Response<T> => ({
-  status: 'success',
-  data,
+  status: Status.SUCCESS,
+  data: isUndefined(data) ? null : data,
 });
 
 const fail = <T>(data?: T): Response<T> => ({
-  status: 'fail',
-  data,
+  status: Status.FAIL,
+  data: isUndefined(data) ? null : data,
 });
 
 const error = <T>(message: string, data?: T, code?: number): Response<T> => ({
-  status: 'error',
+  status: Status.ERROR,
   message,
-  ...(data == undefined ? {} : { data }),
-  ...(code == undefined ? {} : { code }),
+  ...(isUndefined(data) ? {} : { data }),
+  ...(isUndefined(code) ? {} : { code }),
 });
 
 /**
  * IsValid returns true if obj is valid for JSend API or not
  * @param obj - the JSend response
  */
-const isValid = (obj: Record<string, unknown>): boolean => (
-  obj
-    ? (has(obj, 'status')
-      ? (obj.status == 'success' || obj.status == 'fail'
-        ? has(obj, 'data')
-        : has(obj, 'message'))
-      : false)
-    : false
-);
+const isValid = (obj: Record<string, unknown>): boolean => {
+  if (!obj) return false;
+  if (!obj.status) return false;
+
+  if ((obj.status == 'success' || obj.status == 'fail')
+    && has(obj, 'data')) {
+    return !isNaN(obj.data) && !isUndefined(obj.data);
+  }
+
+  if (obj.status == 'error'
+    && has(obj, 'message')) {
+    return !isNaN(obj.message) && !isUndefined(obj.message);
+  }
+
+  return false;
+};
 
 /**
  * Projection returns a new object based on obj which filtered by proj.
@@ -60,7 +75,7 @@ export const parse = <T>(text: string): Response<T> => {
 
   try {
     obj = JSON.parse(text);
-  } catch (er) { return error('text is not JSON'); }
+  } catch (er) { return error('Text is not JSON'); }
 
   if (!isValid(obj)) return error('JSON response is not valid for JSend API');
 

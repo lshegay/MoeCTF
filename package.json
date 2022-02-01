@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "description": "NodeJS Based CTFCMS",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node index.js && lerna run build",
+    "dev": "node index.js && concurrently \"cd packages/admin && npm run dev\" \"cd packages/core && npm run dev\" \"cd packages/starter && npm run dev\"",
+    "start": "node index.js && concurrently \"cd packages/admin && npm run start\" \"cd packages/core && npm run start\" \"cd packages/starter && npm run start\"",
+    "test": "lerna run test"
   },
   "repository": {
     "type": "git",
@@ -19,6 +22,7 @@
   },
   "homepage": "https://github.com/Noramire/MoeCTF#readme",
   "dependencies": {
+    "concurrently": "^7.0.0",
     "lerna": "^4.0.0"
   }
 }
