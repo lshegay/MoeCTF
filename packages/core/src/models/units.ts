@@ -7,12 +7,12 @@ type Unit = {
 type Post = Unit & {
   name: string;
   date: number;
-  // dateEdited: number;
-  // authorId: string;
+  // dateEdited: number,
+  // authorId: string,
   content: string;
 }
 
-type Solved = Record<string, number>; // taskId, solvedDate
+type Solved = Record<string, number> // taskId, solvedDate
 
 type Task = Unit & {
   name: string;
@@ -33,14 +33,6 @@ type User = Unit & {
   password?: string;
 }
 
-type History = Record<UnitId, ScoreState>; // userId, HistoryUser
-type Scoreboard = Record<UnitId, ScoreboardUser> // userId, ScoreboardUser
-
-type CacheData = Unit & {
-  scoreboard: Scoreboard;
-  history: History;
-}
-
 type ScoreState = {
   date: number;
   points: number;
@@ -58,6 +50,14 @@ type ScoreboardUser = Unit & {
   points: number;
   tasks: Record<UnitId, SolvedTask>; // taskId, SolvedTask
   place: number;
+}
+
+type History = Record<UnitId, ScoreState>; // userId, HistoryUser
+type Scoreboard = Record<UnitId, ScoreboardUser> // userId, ScoreboardUser
+
+type CacheData = Unit & {
+  scoreboard: Scoreboard;
+  history: History;
 }
 
 export type {

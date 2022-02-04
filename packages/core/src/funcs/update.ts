@@ -47,19 +47,19 @@ const scoreboard = async ({ db, config }): Promise<Scoreboard> => {
         dateSum,
       });
     })
-  .sort((user1, user2) => (
-    user2.points == user1.points
-      ? user1.dateSum - user2.dateSum
-      : user2.points - user1.points
-  )).forEach(({ dateSum, _id, ...userProps }, index) => {
-    const user: ScoreboardUser = {
-      ...userProps,
-      _id,
-      place: index,
-    };
+    .sort((user1, user2) => (
+      user2.points == user1.points
+        ? user1.dateSum - user2.dateSum
+        : user2.points - user1.points
+    )).forEach(({ dateSum, _id, ...userProps }, index) => {
+      const user: ScoreboardUser = {
+        ...userProps,
+        _id,
+        place: index,
+      };
 
-    dashUsers[_id] = user;
-  });
+      dashUsers[_id] = user;
+    });
 
   const datastore = (db.cache as Datastore);
   await datastore.update({}, { $set: { scoreboard: dashUsers } });

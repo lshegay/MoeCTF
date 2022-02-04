@@ -16,7 +16,7 @@ import Container from '@components/Container';
 type PageProps = {
   user: Partial<User>;
   tasks: Task[];
-};
+}
 
 const Page = ({ user, tasks }: PageProps): JSX.Element => {
   const router = useRouter();

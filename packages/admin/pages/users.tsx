@@ -17,7 +17,7 @@ type PageProps = {
   user: Partial<User>;
   tasks: Task[];
   users: User[];
-};
+}
 
 const Page = ({ user, tasks, users }: PageProps): JSX.Element => {
   const router = useRouter();

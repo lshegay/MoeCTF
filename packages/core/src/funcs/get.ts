@@ -1,5 +1,5 @@
 import { Post, Task, User } from '../models';
-import { CacheData, Scoreboard, ScoreboardUser } from '../models/units';
+import { CacheData, Scoreboard } from '../models/units';
 
 const users = async ({ db }): Promise<User[]> => (
   db.users.find({}, { password: 0, email: 0 })

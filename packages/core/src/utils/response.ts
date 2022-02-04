@@ -6,10 +6,10 @@ import isNaN from 'lodash/isNaN';
 import isUndefined from 'lodash/isUndefined';
 
 export enum Status {
-  SUCCESS ='success',
+  SUCCESS = 'success',
   FAIL = 'fail',
   ERROR = 'error',
-};
+}
 
 export type Response<T> = {
   status: Status;
@@ -39,7 +39,7 @@ const error = <T>(message: string, data?: T, code?: number): Response<T> => ({
  * IsValid returns true if obj is valid for JSend API or not
  * @param obj - the JSend response
  */
-const isValid = (obj: Record<string, unknown>): boolean => {
+export const isValid = (obj: Record<string, unknown>): boolean => {
   if (!obj) return false;
   if (!obj.status) return false;
 

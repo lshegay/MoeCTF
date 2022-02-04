@@ -7,6 +7,6 @@ export type Database = {
   posts: Datastore;
   tasks: Datastore;
   cache: Datastore;
-};
+}
 
 export type Controller = (db: Database, config: Config) => RequestHandler;

@@ -21,7 +21,7 @@ import 'whatwg-fetch';
 type PageProps = {
   user: Partial<User>;
   POST_LIMIT: number;
-};
+}
 
 // eslint-disable-next-line max-len
 const fetcher = (url: string): Promise<Response<{posts: Post[]}>> => window.fetch(url).then((r) => r.json());

@@ -19,15 +19,20 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@models/*": [
-        "./src/models/*"
-      ],
       "@utils/*": [
         "./utils/*",
-        "./src/utils/*"
+      ],
+      "@app/*": [
+        "./app/*"
       ],
       "@components/*": [
-        "./components/*"
+        "./app/components/*"
+      ],
+      "@redux/*": [
+        "./app/redux/*"
+      ],
+      "@styles/*": [
+        "./styles/*"
       ]
     },
     "incremental": true
@@ -36,10 +41,10 @@
     "next-env.d.ts",
     "pages/**/*.ts",
     "pages/**/*.tsx",
-    "components/**/*.ts",
-    "components/**/*.tsx",
     "./utils/**/*.ts",
-    "./utils/**/*.tsx"
+    "./utils/**/*.tsx",
+    "./app/**/*.ts",
+    "./app/**/*.tsx"
   ],
   "exclude": [
     "node_modules"

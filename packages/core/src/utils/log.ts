@@ -7,7 +7,8 @@ const log = async (
 ): Promise<boolean> => {
   await fs.ensureFile(path);
   const success = await new Promise<boolean>((resolve) => {
-    fs.appendFile(path,
+    fs.appendFile(
+      path,
       `${JSON.stringify(info)}\n`,
       (error) => {
         if (error) {
@@ -16,7 +17,8 @@ const log = async (
         } else {
           resolve(true);
         }
-      });
+      }
+    );
   });
 
   return success;

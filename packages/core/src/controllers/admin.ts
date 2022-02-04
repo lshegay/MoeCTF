@@ -1,7 +1,7 @@
 import { UploadedFile } from 'express-fileupload';
 import crypto from 'crypto';
 import fs from 'fs';
-import { identity } from 'lodash';
+import { identity, isNaN } from 'lodash';
 import pickBy from 'lodash/pickBy';
 import trimStart from 'lodash/trimStart';
 import trimEnd from 'lodash/trimEnd';
@@ -71,13 +71,17 @@ const createTask: Controller = (db, config) => async (req, res): Promise<void> =
   }
 
   if (isEmpty(name)
-    || isEmpty(req.body.points)
+    || isNaN(parseInt(req.body.points, 10))
     || isEmpty(flag)) {
     res.status(400).json(response.fail(projection({
       name: 'A name is required',
       points: 'Points is required',
       flag: 'Flag is required',
-    }, { name: isEmpty(name), points: isEmpty(req.body.points), flag: isEmpty(flag) })));
+    }, {
+      name: !isEmpty(name),
+      points: !isNaN(parseInt(req.body.points, 10)),
+      flag: !isEmpty(flag),
+    })));
     return;
   }
 
@@ -207,9 +211,11 @@ const updateTask: Controller = (db, config) => async (req, res): Promise<void> =
 
     const task: Task = await db.tasks.update(
       { _id },
-      { $set: pickBy({
-        name, tags, content, points, flag: hashedFlag, ...(uploadedFile ? { file } : {}),
-      }, uploadedFile ? identity : undefined) },
+      {
+        $set: pickBy({
+          name, tags, content, points, flag: hashedFlag, ...(uploadedFile ? { file } : {}),
+        }, uploadedFile ? identity : undefined)
+      },
       { returnUpdatedDocs: true, multi: false }
     );
     res.status(201).json(response.success({ task }));

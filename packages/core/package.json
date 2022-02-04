@@ -8,14 +8,26 @@
   "author": "noramire",
   "license": "MIT",
   "scripts": {
-    "build": "swc ./src --config-file .swcrc -d ./.build",
+    "build": "node build.js",
     "test": "jest",
-    "dev": "nodemon --watch \"src/**\" --ext \"js,jsx,ts,tsx,json\" --exec \"npx swc ./src --config-file .swcrc -d ./.build & node .build/server.js\"",
+    "dev": "nodemon --watch \"src/**\" --ext \"js,jsx,ts,tsx,json\" --exec \"node build.js --dev\"",
     "start": "NODE_ENV=production node .build/server.js"
+  },
+  "exports": {
+    "./response": "./.build/utils/response.js",
+    "./models": "./.build/models/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["./.build/app.d.ts"],
+      "response": ["./.build/utils/response.d.ts"],
+      "models": ["./.build/models/index.d.ts"]
+    }
   },
   "dependencies": {
     "@babel/runtime": "^7.16.7",
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "eslint-import-resolver-typescript": "^2.5.0",
     "express": "^4.17.2",

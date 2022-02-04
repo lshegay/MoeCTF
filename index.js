@@ -3,7 +3,12 @@ const fs = require('fs');
 const { core, admin, starter } = JSON.parse(fs.readFileSync("./config.json", 'utf-8'));
 
 admin.routes = core.routes;
+admin.coreDomain = core.domain;
 starter.routes = core.routes;
+starter.coreDomain = core.domain;
+
+core.adminDomain = admin.domain;
+core.starterDomain = starter.domain;
 
 fs.writeFileSync('./packages/core/config.json', JSON.stringify(core));
 

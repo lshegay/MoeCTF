@@ -12,8 +12,8 @@ const users: Controller = (db) => async (_, res): Promise<void> => {
   }
 };
 
-const profile: Controller = () => (req, res): void => {
-  const user = get.profile({ req });
+const profile: Controller = () => async (req, res): Promise<void> => {
+  const user = await get.profile({ req });
 
   res.status(200).json(response.success({ user }));
 };

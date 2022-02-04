@@ -25,7 +25,7 @@ export type RouteNames = Readonly<{
   login?: string;
   logout?: string;
   register?: string;
-}>;
+}>
 
 export type Config = Readonly<{
   dev: boolean;
@@ -58,4 +58,4 @@ export type Config = Readonly<{
     email: string;
   };
   createAdminUser?: boolean;
-}>;
+}>

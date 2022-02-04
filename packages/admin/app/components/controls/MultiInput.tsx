@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 type MultiInputProps = {
   initialValue?: string[];
   onChange?: (v: string[]) => void;
-};
+}
 
 const MultiInput = ({ initialValue, onChange }: MultiInputProps): JSX.Element => {
   const { state, bindings, reset } = useInput('');

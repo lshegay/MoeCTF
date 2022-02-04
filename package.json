@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "NodeJS Based CTFCMS",
   "scripts": {
-    "build": "node index.js && lerna run build",
-    "dev": "node index.js && concurrently \"cd packages/admin && npm run dev\" \"cd packages/core && npm run dev\" \"cd packages/starter && npm run dev\"",
-    "start": "node index.js && concurrently \"cd packages/admin && npm run start\" \"cd packages/core && npm run start\" \"cd packages/starter && npm run start\"",
+    "build": "lerna bootstrap && node index.js && lerna run build",
+    "dev": "lerna bootstrap && node index.js && concurrently \"cd packages/admin && npm run dev\" \"cd packages/core && npm run dev\" \"cd packages/starter && npm run dev\"",
+    "start": "lerna bootstrap && node index.js && concurrently \"cd packages/admin && npm run start\" \"cd packages/core && npm run start\" \"cd packages/starter && npm run start\"",
     "test": "lerna run test"
   },
   "repository": {

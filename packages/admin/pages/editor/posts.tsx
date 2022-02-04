@@ -19,7 +19,7 @@ const Toolbar = dynamic(() => import('@components/etc/Toolbar'), { ssr: false })
 type PageProps = {
   user: Partial<User>;
   post: Partial<Post>;
-};
+}
 
 const Page = ({ user, post }: PageProps): JSX.Element => {
   const { editorState, setEditorState } = useEditor(post.content);

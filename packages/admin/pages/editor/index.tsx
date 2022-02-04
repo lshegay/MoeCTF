@@ -21,7 +21,7 @@ type PageProps = {
   task: Partial<Task>;
   minPoints: number;
   maxPoints: number;
-};
+}
 
 const Page = ({ user, task, minPoints, maxPoints }: PageProps): JSX.Element => {
   const { editorState, setEditorState } = useEditor(task.content);

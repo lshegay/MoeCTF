@@ -1,33 +1,21 @@
+import { Response, Status } from 'moectf-core/response';
 import React from 'react';
-import { Button, Text, Input } from '@geist-ui/react';
 import { useRouter } from 'next/router';
-import { css } from '@emotion/css';
-import get from '@funcs/get';
-import { isAdmin } from '@funcs/user';
-import Styles from '@utils/styles';
-import { User } from '@models/units';
-import Header from '@components/header/Header';
 import { Form, Formik } from 'formik';
-import { Response } from '@utils/response';
-import { GetServerSideProps } from 'next';
-import 'whatwg-fetch';
+import { useStyletron } from 'baseui';
+import { Block } from 'baseui/block';
+import { Heading, HeadingLevel } from 'baseui/heading';
+import { LabelMedium } from 'baseui/typography';
+import { Button } from 'baseui/button';
+import { Input } from 'baseui/input';
+import { FormControl } from 'baseui/form-control';
+import routes, { getProfile } from '@utils/routes';
+import { FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 
-type PageProps = {
-  user: Partial<User>;
-};
+type AuthFormValues = { name: string; password: string }
 
-const InputPassword: any = Input.Password;
-const LabelStyle = css(`
-  text-transform: uppercase;
-  color: #666666 !important;
-  margin-bottom: 6px;
-`);
-const ErrorStyle = css(`
-  margin: 5px 0 10px;
-`);
-
-const formValidate = (values): any => {
-  const errors: any = {};
+const formValidate = (values: AuthFormValues): Partial<AuthFormValues> => {
+  const errors: Partial<AuthFormValues> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';
@@ -40,104 +28,110 @@ const formValidate = (values): any => {
   return errors;
 };
 
-const Page = ({ user }: PageProps): JSX.Element => {
+const Page = (): JSX.Element => {
+  const { user, isValidating } = getProfile();
+  const [, { colors }] = useStyletron();
   const router = useRouter();
 
-  return (
-    <>
-      <Header user={user} />
-      <div
-        className={css(`
-          height: calc(100vh - ${Styles.header.nav.height});
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        `)}
-      >
-        <div
-          className={css(`
+  if (isValidating || user) {
+    if (user) router.push('/');
 
-          `)}
-        >
-          <Text h1>Authorization</Text>
-          <div>
-            <Formik
-              initialValues={{
-                name: '',
-                password: '',
-              }}
-              validate={formValidate}
-              onSubmit={async (values, { setSubmitting, setErrors }): Promise<void> => {
-                const res = await window.fetch('/api/login', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify(values),
-                });
-
-                const response: Response<any> = await res.json();
-                if (response.status == 'success') {
-                  router.push('/admin');
-                } else {
-                  setErrors(response.data);
-                }
-
-                setSubmitting(false);
-              }}
-            >
-              {({
-                errors,
-                submitForm,
-                isSubmitting,
-                handleChange,
-              }): JSX.Element => (
-                <Form
-                  className={css(`
-                    display: flex;
-                    flex-direction: column;
-                  `)}
-                >
-                  <Text span b font="12px" className={LabelStyle}>User name</Text>
-                  <Input
-                    scale={4 / 3}
-                    width="100%"
-                    placeholder="user-name"
-                    name="name"
-                    onChange={handleChange}
-                  />
-                  <Text span type="error" font="14px" className={ErrorStyle}>{errors.name}</Text>
-                  <Text span b font="12px" className={LabelStyle}>Password</Text>
-                  <InputPassword onChange={handleChange} name="password" scale={4 / 3} width="100%" />
-                  <Text span type="error" font="14px" className={ErrorStyle}>{errors.password}</Text>
-                  <Button type="secondary" onClick={submitForm} loading={isSubmitting} shadow>Login</Button>
-                </Form>
-              )}
-            </Formik>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-export const getServerSideProps: GetServerSideProps<PageProps> = async ({ req }) => {
-  const user: Partial<User> = await get.profile({ req }) ?? {};
-
-  if (isAdmin({ req })) {
-    return {
-      redirect: {
-        destination: '/admin',
-        permanent: true,
-      }
-    };
+    return (<FullscreenLoader />);
   }
 
-  return ({
-    props: {
-      user,
-    },
-  });
+  return (
+    <FullscreenBlock backgroundColor={colors.primaryB} display="flex" flexDirection="row">
+      <Block
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        width={['100%', '100%', '550px']}
+      >
+        <Block width={['90%', '90%', '70%']}>
+          <Formik
+            initialValues={{
+              name: '',
+              password: '',
+            }}
+            validate={formValidate}
+            onSubmit={async (values, { setSubmitting, setErrors }): Promise<void> => {
+              const res = await fetch(routes.login, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(values),
+              });
+
+              const response: Response<AuthFormValues> = await res.json();
+              if (response.status == Status.SUCCESS) {
+                router.push('/');
+              } else {
+                setErrors(response.data);
+              }
+
+              setSubmitting(false);
+            }}
+          >
+            {({
+              values,
+              errors,
+              submitForm,
+              isSubmitting,
+              handleChange,
+            }): JSX.Element => (
+              <Form
+                className="flex flex-col"
+              >
+                <HeadingLevel>
+                  <div className="text-center">
+                    <Heading>Welcome back!</Heading>
+                    <LabelMedium
+                      color={colors.contentSecondary}
+                      marginBottom="40px"
+                    >
+                      Login to manage CTF settings.
+                    </LabelMedium>
+                  </div>
+                  <FormControl label="Name" error={errors.name}>
+                    <Input
+                      name="name"
+                      value={values.name}
+                      onChange={handleChange}
+                      placeholder="Your Name"
+                    />
+                  </FormControl>
+                  <FormControl label="Password" error={errors.password}>
+                    <Input
+                      name="password"
+                      value={values.password}
+                      onChange={handleChange}
+                      type="password"
+                      placeholder="Your Password"
+                    />
+                  </FormControl>
+                  <Button
+                    onClick={submitForm}
+                    isLoading={isSubmitting}
+                  >
+                    Sign in
+                  </Button>
+                </HeadingLevel>
+              </Form>
+            )}
+          </Formik>
+        </Block>
+      </Block>
+      <Block
+        backgroundImage="url(background.jpg)"
+        backgroundSize="cover"
+        backgroundRepeat="no-repeat"
+        width={['0', '0', 'calc(100% - 550px)']}
+      />
+    </FullscreenBlock>
+  );
 };
 
 export default Page;
