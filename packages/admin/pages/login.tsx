@@ -1,7 +1,7 @@
 import { Response, Status } from 'moectf-core/response';
 import React from 'react';
 import { useRouter } from 'next/router';
-import { Form, Formik } from 'formik';
+import { Form, Formik, FormikErrors } from 'formik';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
 import { Heading, HeadingLevel } from 'baseui/heading';
@@ -14,8 +14,8 @@ import { FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 
 type AuthFormValues = { name: string; password: string }
 
-const formValidate = (values: AuthFormValues): Partial<AuthFormValues> => {
-  const errors: Partial<AuthFormValues> = {};
+const formValidate = (values: AuthFormValues) => {
+  const errors: Partial<FormikErrors<AuthFormValues>> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';

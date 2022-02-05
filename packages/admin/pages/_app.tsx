@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppProps } from 'next/app';
 import { Provider as StyletronProvider } from 'styletron-react';
+import { SnackbarProvider } from 'baseui/snackbar';
 import { styletron } from '@utils/styletron';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -14,7 +15,9 @@ const Application = ({ Component, pageProps }: AppProps): JSX.Element => (
     <StyletronProvider value={styletron}>
       <ThemeProvider>
         <PersistGate loading={<FullscreenLoader />} persistor={persistor}>
-          <Component {...pageProps} />
+          <SnackbarProvider>
+            <Component {...pageProps} />
+          </SnackbarProvider>
         </PersistGate>
       </ThemeProvider>
     </StyletronProvider>

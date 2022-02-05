@@ -45,7 +45,7 @@
     "./utils/**/*.tsx",
     "./app/**/*.ts",
     "./app/**/*.tsx"
-  ],
+, "pages/tasks"  ],
   "exclude": [
     "node_modules"
   ]

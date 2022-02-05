@@ -18,6 +18,13 @@ export type Response<T> = {
   message?: string;
 };
 
+export type ResponseS<T, S extends Status> = {
+  status: S;
+  data?: T | null;
+  code?: number;
+  message?: string;
+};
+
 const success = <T>(data?: T): Response<T> => ({
   status: Status.SUCCESS,
   data: isUndefined(data) ? null : data,

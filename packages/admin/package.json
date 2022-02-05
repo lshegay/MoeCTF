@@ -19,6 +19,7 @@
     "@reduxjs/toolkit": "^1.7.2",
     "baseui": "^10.8.0",
     "formik": "^2.2.9",
+    "lazy.js": "^0.5.1",
     "lodash": "^4.17.21",
     "nedb-promises": "^5.0.3",
     "nedb-promises-session-store": "^1.0.4",
@@ -36,6 +37,7 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
+    "@types/lazy.js": "^0.5.4",
     "@types/lodash": "^4.14.149",
     "@types/react": "^17.0.20",
     "@types/styletron-engine-atomic": "^1.1.1",

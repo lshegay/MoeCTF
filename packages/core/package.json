@@ -15,12 +15,14 @@
   },
   "exports": {
     "./response": "./.build/utils/response.js",
+    "./request": "./.build/utils/request.js",
     "./models": "./.build/models/index.js"
   },
   "typesVersions": {
     "*": {
       "*": ["./.build/app.d.ts"],
       "response": ["./.build/utils/response.d.ts"],
+      "request": ["./.build/utils/request.d.ts"],
       "models": ["./.build/models/index.d.ts"]
     }
   },

@@ -1,9 +1,7 @@
 import { combineReducers } from 'redux';
-import userReducer from './slices/user';
-import siteReducer from './slices/site';
+import user from './slices/user';
+import site from './slices/site';
 
-const reducer = combineReducers({
-  user: userReducer, site: siteReducer
-});
+const rootReducer = combineReducers({ user, site });
 
-export default reducer;
+export default rootReducer;
