@@ -9,7 +9,7 @@ import { Tag } from 'baseui/tag';
 import { FlexGridItem } from 'baseui/flex-grid';
 import { LabelLarge, ParagraphMedium } from 'baseui/typography';
 
-export const TasksSkeleton = [1, 2, 3, 4].map((v) => (
+export const TasksSkeleton = [1, 2, 3, 4, 5, 6, 7, 8].map((v) => (
   <FlexGridItem key={v}>
     <Skeleton
       width="100%"

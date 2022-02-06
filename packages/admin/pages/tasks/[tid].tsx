@@ -75,7 +75,7 @@ const Page = () => {
     <FullscreenBlock display="flex" flexDirection="column">
       <Header
         user={user}
-        title="Edit Task"
+        title="Task Info"
         description="There you can edit your task. Just be sure that
             this task has a good description and deserves enough points.
             Good luck!"
@@ -93,7 +93,7 @@ const Page = () => {
               backgroundColor={colors.backgroundPrimary}
               className="px-10 py-8 shadow-2xl"
             >
-              <HeadingLarge className="mb-10">Data</HeadingLarge>
+              <HeadingLarge className="mb-10">Edit Data</HeadingLarge>
               <Formik
                 initialValues={{
                   name: task.name,

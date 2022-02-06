@@ -86,7 +86,7 @@ const Page = () => {
       >
         <Container>
           <Card>
-            <HeadingLarge className="mb-10">Data</HeadingLarge>
+            <HeadingLarge className="mb-10">Create Data</HeadingLarge>
             <Formik
               initialValues={{
                 name: undefined,

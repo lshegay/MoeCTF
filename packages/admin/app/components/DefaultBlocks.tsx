@@ -6,9 +6,9 @@ import { StyledSpinnerNext } from 'baseui/spinner';
 import { Cell, CellProps, Grid } from 'baseui/layout-grid';
 import { Button, ButtonProps } from 'baseui/button';
 
-type FullscreenBlockProps = BlockProps & { centered?: boolean }
+type FSBProps = BlockProps & { centered?: boolean }
 
-const FullscreenBlock = ({ children, centered, ...props }: FullscreenBlockProps): JSX.Element => {
+const FullscreenBlock = ({ children, centered, className, ...props }: FSBProps): JSX.Element => {
   const [, { colors }] = useStyletron();
 
   return (
@@ -16,6 +16,7 @@ const FullscreenBlock = ({ children, centered, ...props }: FullscreenBlockProps)
       width="100%"
       height="100vh"
       backgroundColor={colors.primaryB}
+      className={`overflow-x-hidden ${className}`}
       {...(centered ? { display: 'flex', alignItems: 'center', justifyContent: 'center' } : {})}
       {...props}
     >

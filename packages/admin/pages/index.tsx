@@ -72,8 +72,9 @@ const Page = () => {
         <Container>
           <Card marginBottom="70px">
             <FlexGrid
-              flexGridColumnCount={[1, 2, 4, 4]}
+              flexGridColumnCount={[1, 1, 2, 4]}
               flexGridColumnGap="20px"
+              flexGridRowGap="20px"
             >
               <FlexGridItem>
                 <Input
@@ -98,14 +99,14 @@ const Page = () => {
               <FlexGridItem />
               <FlexGridItem display="flex" justifyContent="flex-end">
                 <ButtonLink className="w-full" href="/tasks" endEnhancer={<Plus size={18} />}>
-                  Create New
+                  Create Task
                 </ButtonLink>
               </FlexGridItem>
             </FlexGrid>
           </Card>
           <Block>
             <FlexGrid
-              flexGridColumnCount={[1, 1, 3, 4]}
+              flexGridColumnCount={[1, 1, 2, 4]}
               flexGridColumnGap={sizing.scale700}
               flexGridRowGap={sizing.scale700}
             >
