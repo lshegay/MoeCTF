@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "NodeJS Based CTFCMS",
   "scripts": {
-    "build": "lerna bootstrap && node index.js && lerna run build",
-    "dev": "lerna bootstrap && node index.js && concurrently \"cd packages/admin && npm run dev\" \"cd packages/core && npm run dev\" \"cd packages/starter && npm run dev\"",
-    "start": "lerna bootstrap && node index.js && concurrently \"cd packages/admin && npm run start\" \"cd packages/core && npm run start\" \"cd packages/starter && npm run start\"",
+    "build": "node index.mjs --build",
+    "dev": "node index.mjs --dev",
+    "start": "node index.mjs --start",
     "test": "lerna run test"
   },
   "repository": {
@@ -23,6 +23,11 @@
   "homepage": "https://github.com/Noramire/MoeCTF#readme",
   "dependencies": {
     "concurrently": "^7.0.0",
-    "lerna": "^4.0.0"
+    "lerna": "^4.0.0",
+    "tasuku": "^1.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.8.0",
+    "eslint-config-xo-space": "^0.32.0"
   }
 }

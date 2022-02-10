@@ -20,10 +20,18 @@
   },
   "typesVersions": {
     "*": {
-      "*": ["./.build/app.d.ts"],
-      "response": ["./.build/utils/response.d.ts"],
-      "request": ["./.build/utils/request.d.ts"],
-      "models": ["./.build/models/index.d.ts"]
+      "*": [
+        "./.build/app.d.ts"
+      ],
+      "response": [
+        "./.build/utils/response.d.ts"
+      ],
+      "request": [
+        "./.build/utils/request.d.ts"
+      ],
+      "models": [
+        "./.build/models/index.d.ts"
+      ]
     }
   },
   "dependencies": {
@@ -42,6 +50,7 @@
     "passport": "^0.4.1"
   },
   "devDependencies": {
+    "@faker-js/faker": "^6.0.0-alpha.5",
     "@swc/cli": "^0.1.55",
     "@swc/core": "^1.2.135",
     "@types/express": "^4.17.2",
@@ -62,6 +71,7 @@
     "node-fetch": "^2.6.6",
     "nodemon": "^2.0.12",
     "ts-jest": "^27.1.2",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "url-join": "^4.0.1"
   }
 }

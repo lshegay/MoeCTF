@@ -12,7 +12,7 @@ const log = async (
       `${JSON.stringify(info)}\n`,
       (error) => {
         if (error) {
-          console.error(error);
+          console.log(error);
           resolve(false);
         } else {
           resolve(true);

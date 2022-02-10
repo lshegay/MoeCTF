@@ -8,7 +8,7 @@ const users: Controller = (db) => async (_, res): Promise<void> => {
     res.status(200).json(response.success({ users }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -25,7 +25,7 @@ const posts: Controller = (db) => async (req, res): Promise<void> => {
     res.status(200).json(response.success({ posts }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -38,7 +38,7 @@ const post: Controller = (db) => async (req, res): Promise<void> => {
     res.status(200).json(response.success({ post }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -49,7 +49,7 @@ const tasks: Controller = (db) => async (_, res): Promise<void> => {
     res.status(200).json(response.success({ tasks }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -62,7 +62,7 @@ const task: Controller = (db) => async (req, res): Promise<void> => {
     res.status(200).json(response.success({ task }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -72,7 +72,7 @@ const scoreboard: Controller = (db) => async (_, res): Promise<void> => {
     res.status(200).json(response.success({ scoreboard }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 

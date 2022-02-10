@@ -2,6 +2,12 @@ import { Moe } from './models/moe';
 import { match, user, get, admin } from './controllers';
 
 const routes = ({ server, db, config }: Moe): void => {
+  if (config.routes.adminUsersGet) {
+    server.route(config.routes.adminUsersGet)
+      .all(user.is.authenticated, user.is.admin)
+      .get(admin.gets.users(db, config));
+  }
+
   if (config.routes.postsPost) {
     server.route(config.routes.postsPost)
       .all(user.is.authenticated, user.is.admin)

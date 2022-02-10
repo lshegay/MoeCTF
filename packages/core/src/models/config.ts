@@ -7,8 +7,7 @@ export interface DatabaseNames {
 }
 
 export type RouteNames = Readonly<{
-  categoriesPost?: string;
-  categoryDelete?: string;
+  adminUsersGet?: string;
   postsPost?: string;
   postPut?: string;
   postDelete?: string;

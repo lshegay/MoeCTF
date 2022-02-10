@@ -18,7 +18,7 @@
     "logFileDir": "",
     "timer": false,
     "serveStaticDir": true,
-    "domain": "http://127.0.0.1:4000",
+    "domain": "http://localhost:4000",
     "dynamicPoints": true,
     "maxPoints": 500,
     "minPoints": 50,
@@ -30,8 +30,7 @@
     },
     "createAdminUser": true,
     "routes": {
-      "categoriesPost": "/admin/categories",
-      "categoryDelete": "/admin/categories/:_id",
+      "adminUsersGet": "/admin/users",
       "postsPost": "/admin/posts",
       "postPut": "/admin/posts/:_id",
       "postDelete": "/admin/posts/:_id",
@@ -55,13 +54,13 @@
     "hostname": "localhost",
     "port": 5000,
     "secure": false,
-    "domain": "http://127.0.0.1:5000"
+    "domain": "http://localhost:5000"
   },
   "starter": {
     "protocol": "http:",
     "hostname": "localhost",
     "port": 5001,
     "secure": false,
-    "domain": "http://127.0.0.1:5001"
+    "domain": "http://localhost:5001"
   }
 }

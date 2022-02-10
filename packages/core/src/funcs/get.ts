@@ -1,8 +1,9 @@
-import { Post, Task, User } from '../models';
+import { Database, Post, Task, User } from '../models';
 import { CacheData, Scoreboard } from '../models/units';
 
-const users = async ({ db }): Promise<User[]> => (
-  db.users.find({}, { password: 0, email: 0 })
+// TODO: проставить типы для функций
+const users = async ({ db, email }: { db: any; email?: boolean }): Promise<User[]> => (
+  db.users.find({}, { password: 0, ...(email ? {} : { email: 0 }) })
 );
 
 const profile = async ({ req }): Promise<User | null> => (

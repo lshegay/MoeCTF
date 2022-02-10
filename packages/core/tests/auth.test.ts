@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import express from 'express';
 import { Server } from 'http';
 import fetch from 'node-fetch';

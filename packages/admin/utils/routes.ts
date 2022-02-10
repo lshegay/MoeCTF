@@ -52,6 +52,24 @@ export const getTasks = () => {
   };
 };
 
+export const getTask = (tid?: string) => {
+  const {
+    data,
+    error,
+    isValidating,
+    mutate,
+  } = useSWR<Response<{ task: Task }>>(!tid ? null : routes.taskGet.replace(':_id', tid), fetcher, OPTIONS);
+
+  return {
+    task: data?.data?.task,
+    error,
+    isValidating,
+    mutate: (task) => {
+      mutate({ ...data, data: { task } });
+    },
+  };
+};
+
 // TODO: автоматическая ревалидация
 export const getPosts = () => {
   const {
@@ -71,20 +89,21 @@ export const getPosts = () => {
   };
 };
 
-export const getTask = (tid?: string) => {
+// TODO: автоматическая ревалидация
+export const getUsers = () => {
   const {
     data,
     error,
     isValidating,
-    mutate,
-  } = useSWR<Response<{ task: Task }>>(!tid ? null : routes.taskGet.replace(':_id', tid), fetcher, OPTIONS);
+    mutate
+  } = useSWR<Response<{ users: User[] }>>(routes.adminUsersGet, fetcher, OPTIONS);
 
   return {
-    task: data?.data?.task,
+    users: data?.data?.users,
     error,
     isValidating,
-    mutate: (task) => {
-      mutate({ ...data, data: { task } });
+    mutate: (users) => {
+      mutate({ ...data, data: { users } });
     },
   };
 };

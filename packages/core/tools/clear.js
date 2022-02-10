@@ -1,4 +1,4 @@
-import fs from 'fs';
+const fs = require('fs');
 
 const { promises } = fs;
 const { F_OK } = fs.constants;
@@ -10,16 +10,16 @@ const LOGS_FILE = './logs.txt';
 const clear = async () => {
   try {
     await promises.access(DATABASE_DIR, F_OK);
-    await promises.rmdir(DATABASE_DIR, { recursive: true });
-  } catch (e) { }
+    await promises.rm(DATABASE_DIR, { recursive: true });
+  } catch (e) { console.log(e); }
   try {
     await promises.access(FILES_DIR, F_OK);
-    await promises.rmdir(FILES_DIR, { recursive: true });
-  } catch (e) { }
+    await promises.rm(FILES_DIR, { recursive: true });
+  } catch (e) { console.log(e); }
   try {
     await promises.access(LOGS_FILE, F_OK);
     await promises.unlink(LOGS_FILE);
-  } catch (e) { }
+  } catch (e) { console.log(e); }
 
   await Promise.all([
     promises.mkdir(DATABASE_DIR),
@@ -27,4 +27,4 @@ const clear = async () => {
   ]);
 };
 
-export default clear;
+module.exports = clear;

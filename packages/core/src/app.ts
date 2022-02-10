@@ -51,8 +51,7 @@ const CONFIG_DEFAULTS: Config = {
   createAdminUser: true,
 
   routes: {
-    categoriesPost: '/admin/categories',
-    categoryDelete: '/admin/categories/:_id',
+    adminUsersGet: '/admin/users',
     postsPost: '/admin/posts',
     postPut: '/admin/posts/:_id',
     postDelete: '/admin/posts/:_id',

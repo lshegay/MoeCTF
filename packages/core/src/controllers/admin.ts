@@ -9,6 +9,7 @@ import isEmpty from 'lodash/isEmpty';
 import { Post, Task } from '../models';
 import { Controller } from '../models/database';
 import response, { projection } from '../utils/response';
+import { get } from '../funcs';
 
 const createPost: Controller = (db) => async (req, res): Promise<void> => {
   const { name, content } = req.body;
@@ -18,7 +19,7 @@ const createPost: Controller = (db) => async (req, res): Promise<void> => {
     res.status(201).json(response.success({ post }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -35,7 +36,7 @@ const updatePost: Controller = (db) => async (req, res): Promise<void> => {
     res.status(201).json(response.success({ post }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -52,7 +53,7 @@ const deletePost: Controller = (db) => async (req, res): Promise<void> => {
     res.status(200).json(response.success({ numRemoved }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -121,7 +122,7 @@ const createTask: Controller = (db, config) => async (req, res): Promise<void> =
     let file = '';
 
     if (uploadedFile) {
-      //TODO: split and join is complex more than O(2n). https://stackoverflow.com/questions/7299010/why-is-string-concatenation-faster-than-array-join
+      // TODO: split and join is complex more than O(2n). https://stackoverflow.com/questions/7299010/why-is-string-concatenation-faster-than-array-join
       file = `/${trimmedStaticDir}/${uploadedFile.name.split(' ').join('_')}`;
       const filePath = `.${file}`;
       if (!fs.existsSync(`./${trimmedStaticDir}`)) {
@@ -138,7 +139,7 @@ const createTask: Controller = (db, config) => async (req, res): Promise<void> =
     res.status(201).json(response.success({ task }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -221,7 +222,7 @@ const updateTask: Controller = (db, config) => async (req, res): Promise<void> =
     res.status(201).json(response.success({ task }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -238,11 +239,24 @@ const deleteTask: Controller = (db) => async (req, res): Promise<void> => {
     res.status(200).json(response.success({ numRemoved }));
   } catch (error) {
     res.status(500).json(response.error('Server shutdowns due to internal critical error'));
-    console.error(error);
+    console.log(error);
+  }
+};
+
+const users: Controller = (db) => async (_, res): Promise<void> => {
+  try {
+    const users = await get.users({ db, email: true });
+    res.status(200).json(response.success({ users }));
+  } catch (error) {
+    res.status(500).json(response.error('Server shutdowns due to internal critical error'));
+    console.log(error);
   }
 };
 
 export default {
+  gets: {
+    users,
+  },
   creates: {
     post: createPost,
     task: createTask,

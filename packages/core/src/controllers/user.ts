@@ -53,7 +53,7 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
         req.login(user, (error) => {
           if (error) {
             res.status(500).json(response.error('Server got an internal critical error'));
-            console.error(error);
+            console.log(error);
           }
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { password, ...resUser } = user;
@@ -96,7 +96,7 @@ const login: Controller = (db, config) => async (req, res): Promise<void> => {
     }
   } catch (error) {
     res.status(500).json(response.error('Server got an internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
@@ -234,7 +234,7 @@ const taskSubmit: Controller = (db, config) => async (req, res): Promise<void> =
     res.status(200).json(response.success({ date }));
   } catch (error) {
     res.status(500).json(response.error('Server got an internal critical error'));
-    console.error(error);
+    console.log(error);
   }
 };
 
