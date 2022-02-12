@@ -1,4 +1,4 @@
-import { Config, DatabaseNames } from './config';
+import { Config, DatabaseNames, RouteNames } from './config';
 import { Database } from './database';
 import { Moe } from './moe';
 import { Post, Task, User, Unit, Scoreboard, ScoreState, ScoreboardUser, SolvedTask, Solved } from './units';
@@ -6,6 +6,7 @@ import { Post, Task, User, Unit, Scoreboard, ScoreState, ScoreboardUser, SolvedT
 export type {
   Config,
   DatabaseNames,
+  RouteNames,
   Database,
   Moe,
   Post,

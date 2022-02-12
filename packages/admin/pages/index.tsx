@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import Lazy from 'lazy.js';
+import lazyJS from 'lazy.js';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
 import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
@@ -8,44 +8,52 @@ import { Plus, Search } from 'baseui/icon';
 import Header from '@app/components/Header';
 import { TasksSkeleton, TaskCard } from '@components/Tasks';
 import { Container, FullscreenBlock, FullscreenLoader, Card, ButtonLink } from '@components/DefaultBlocks';
-import { getProfile, getTasks } from '@utils/routes';
+import { useProfile, useTasks } from '@utils/routes';
 import { Input } from 'baseui/input';
 import { Select } from 'baseui/select';
 
 const Page = () => {
-  const { user, isValidating } = getProfile();
-  const { tasks, isValidating: tasksValidating } = getTasks();
+  const { user, isValidating } = useProfile();
+  const { tasks, isValidating: tasksValidating } = useTasks();
   const [, { colors, sizing }] = useStyletron();
   const router = useRouter();
   const [filter, setFilter] = useState({ name: '', tags: [] });
 
   const tagsList = useMemo(() => {
-    if (isValidating || !tasks) return [];
+    if (isValidating || !tasks) {
+      return [];
+    }
 
-    const dict: Record<string, boolean> = {};
-    const list: { label: string; id: string }[] = [];
+    const dict = new Set();
+    const list: Array<{ label: string; id: string }> = [];
 
-    tasks.forEach((task) => task.tags?.forEach((tag) => {
-      if (!dict[tag]) list.push({ label: tag, id: tag });
-      dict[tag] = true;
-    }));
+    tasks.forEach((task) => {
+      task.tags?.forEach((tag) => {
+        if (!dict.has(tag)) {
+          list.push({ label: tag, id: tag });
+        }
+
+        dict.add(tag);
+      });
+    });
 
     return list;
   }, [tasks, isValidating]);
 
-  if (isValidating) {
+  if (!user && isValidating) {
     return (<FullscreenLoader />);
   }
 
-  if (!user) {
-    router.push('/login');
+  if (!user && !isValidating) {
+    router.push('/login')
+      .catch((e) => { console.error(e); });
     return (<FullscreenLoader />);
   }
 
   let tasksElements = TasksSkeleton;
 
   if (!tasksValidating && tasks) {
-    let lazy = Lazy(tasks)
+    let lazy = lazyJS(tasks)
       .filter((v) => v.name.toLowerCase().includes(filter.name.toLowerCase()));
 
     if (filter.tags.length > 0) {
@@ -80,9 +88,9 @@ const Page = () => {
                 <Input
                   endEnhancer={<Search size={18} />}
                   placeholder="Search by Task Name"
-                  onChange={({ currentTarget: { value } }) => (
-                    setFilter((s) => ({ ...s, name: value }))
-                  )}
+                  onChange={({ currentTarget: { value } }) => {
+                    setFilter((s) => ({ ...s, name: value }));
+                  }}
                 />
               </FlexGridItem>
               <FlexGridItem>

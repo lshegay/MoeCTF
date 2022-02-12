@@ -1,33 +1,25 @@
-import { Response, isValid, Status } from 'moectf-core/response';
+import { isValid, Status, Response, ResponseError } from 'moectf-core/response';
 
-const createError = <T>(response: Response<T>) => ({
-  message: response.message,
-  info: response.data,
-  code: response.data
-});
-
-const fetcher = async <T>(url: string) => {
-  const response: Response<T> = await (await fetch(url, {
+const fetcher = async <T>(url: string): Promise<Response<T>> => {
+  const response = await (await fetch(url, {
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-  })).json();
+  })).json() as Response<T>;
 
   if (!isValid(response)) {
-    const error = createError<T>({
-      message: `Response object wasn't the JSend type ${response}`,
+    const error: ResponseError = {
+      message: `Response object wasn't the JSend type ${JSON.stringify(response)}`,
       status: Status.ERROR,
-    });
+    };
 
     throw error;
   }
 
-  if (response.status == 'error') {
-    const error = createError<T>(response);
-
-    throw error;
+  if (response.status == Status.ERROR) {
+    throw response;
   }
 
   return response;

@@ -9,10 +9,10 @@ import { LabelMedium } from 'baseui/typography';
 import { Button } from 'baseui/button';
 import { Input } from 'baseui/input';
 import { FormControl } from 'baseui/form-control';
-import routes, { getProfile } from '@utils/routes';
+import routes, { useProfile } from '@utils/routes';
 import { FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 
-type AuthFormValues = { name: string; password: string }
+type AuthFormValues = { name: string; password: string };
 
 const formValidate = (values: AuthFormValues) => {
   const errors: Partial<FormikErrors<AuthFormValues>> = {};
@@ -29,12 +29,15 @@ const formValidate = (values: AuthFormValues) => {
 };
 
 const Page = (): JSX.Element => {
-  const { user, isValidating } = getProfile();
+  const { user, isValidating } = useProfile();
   const [, { colors }] = useStyletron();
   const router = useRouter();
 
   if (isValidating || user) {
-    if (user) router.push('/');
+    if (user) {
+      router.push('/')
+        .catch((e) => console.error(e));
+    }
 
     return (<FullscreenLoader />);
   }
@@ -60,14 +63,15 @@ const Page = (): JSX.Element => {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(values),
               });
 
-              const response: Response<AuthFormValues> = await res.json();
+              const response = await res.json() as Response<AuthFormValues>;
               if (response.status == Status.SUCCESS) {
-                router.push('/');
+                router.push('/')
+                  .catch((e) => console.error(e));
               } else {
                 setErrors(response.data);
               }
@@ -99,22 +103,22 @@ const Page = (): JSX.Element => {
                     <Input
                       name="name"
                       value={values.name}
-                      onChange={handleChange}
                       placeholder="Your Name"
+                      onChange={handleChange}
                     />
                   </FormControl>
                   <FormControl label="Password" error={errors.password}>
                     <Input
                       name="password"
                       value={values.password}
-                      onChange={handleChange}
                       type="password"
                       placeholder="Your Password"
+                      onChange={handleChange}
                     />
                   </FormControl>
                   <Button
-                    onClick={submitForm}
                     isLoading={isSubmitting}
+                    onClick={submitForm}
                   >
                     Sign in
                   </Button>

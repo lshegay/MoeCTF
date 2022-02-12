@@ -9,7 +9,7 @@ import Header from '@app/components/Header';
 import { Response, ResponseS, Status } from 'moectf-core/response';
 import { TasksSkeleton, TaskCard } from '@components/Tasks';
 import { Container, FullscreenBlock, FullscreenLoader, Card, ButtonLink } from '@components/DefaultBlocks';
-import routes, { getProfile, getPosts } from '@utils/routes';
+import routes, { useProfile, usePosts } from '@utils/routes';
 import { Input } from 'baseui/input';
 import { Select } from 'baseui/select';
 import { PostCard } from '@app/components/Posts';
@@ -47,8 +47,8 @@ const formValidate = (values: PostFormValues) => {
 };
 
 const Page = () => {
-  const { user, isValidating } = getProfile();
-  const { posts, isValidating: postsValidating, mutate } = getPosts();
+  const { user, isValidating } = useProfile();
+  const { posts, isValidating: postsValidating, mutate } = usePosts();
   const [, { colors, sizing }] = useStyletron();
   const router = useRouter();
   const [filter, setFilter] = useState({ search: '' });

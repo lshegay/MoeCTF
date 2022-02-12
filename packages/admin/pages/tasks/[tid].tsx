@@ -2,7 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@app/components/Header';
-import routes, { getProfile, getTask } from '@utils/routes';
+import routes, { useProfile, useTask } from '@utils/routes';
 import { Container, FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 import { useStyletron } from 'baseui';
 import { Skeleton } from 'baseui/skeleton';
@@ -52,22 +52,24 @@ const Page = () => {
   const router = useRouter();
   const tid = router.query.tid as string;
 
-  const { user, isValidating } = getProfile();
-  const { task, isValidating: taskValidating } = getTask(tid);
+  const { user, isValidating } = useProfile();
+  const { task, isValidating: taskValidating } = useTask(tid);
   const [, { colors }] = useStyletron();
   const { enqueue, dequeue } = useSnackbar();
 
-  if (isValidating) {
+  if (!user && !isValidating) {
+    router.push('/login')
+      .catch((e) => console.error(e));
     return (<FullscreenLoader />);
   }
 
-  if (!user) {
-    router.push('/login');
+  if (!user && isValidating) {
     return (<FullscreenLoader />);
   }
 
-  if (!taskValidating && !task) {
-    router.push('/');
+  if (!task && !taskValidating) {
+    router.push('/')
+      .catch((e) => console.error(e));
     return (<FullscreenLoader />);
   }
 
@@ -108,17 +110,17 @@ const Page = () => {
                   const formData = request.convert(values);
                   enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                  const response: TaskFormResponse = await (await fetch(routes.taskPut.replace(':_id', tid), {
+                  const response = await (await fetch(routes.taskPut.replace(':_id', tid), {
                     body: formData,
                     credentials: 'include',
                     method: 'PUT',
-                  })).json();
+                  })).json() as TaskFormResponse;
 
                   dequeue();
                   if (response.status == Status.SUCCESS) {
                     enqueue({
                       message: 'Changes were made successfully',
-                      startEnhancer: ({ size }) => (<Check size={size} />)
+                      startEnhancer: ({ size }) => (<Check size={size} />),
                     }, DURATION.short);
                   } else {
                     setErrors(response.data);
@@ -180,19 +182,20 @@ const Page = () => {
                             const response = await (await fetch(routes.taskDelete.replace(':_id', tid), {
                               credentials: 'include',
                               method: 'DELETE',
-                            })).json();
+                            })).json() as Response<unknown>;
 
                             dequeue();
                             if (response.status == Status.SUCCESS) {
                               enqueue({
                                 message: 'Task was deleted successfully',
-                                startEnhancer: ({ size }) => (<Check size={size} />)
+                                startEnhancer: ({ size }) => (<Check size={size} />),
                               }, DURATION.short);
-                              router.push('/');
+                              router.push('/')
+                                .catch((e) => console.error(e));
                             } else {
                               enqueue({
                                 message: 'Something wrong has happened',
-                                startEnhancer: ({ size }) => (<Delete size={size} />)
+                                startEnhancer: ({ size }) => (<Delete size={size} />),
                               }, DURATION.short);
                             }
                           }}

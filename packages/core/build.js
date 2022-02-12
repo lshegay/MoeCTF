@@ -11,7 +11,7 @@ exec('npx swc ./src --config-file .swcrc -d ./.build', (_, stdout) => {
 
     server.stdout.on('data', (data) => {
       console.log(data.toString());
-    })
+    });
   }
 });
 

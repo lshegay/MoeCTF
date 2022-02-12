@@ -11,12 +11,24 @@ export enum Status {
   ERROR = 'error',
 }
 
-export type Response<T> = {
-  status: Status;
-  data?: T | null;
-  code?: number;
-  message?: string;
+export type ResponseSuccess<T> = {
+  status: Status.SUCCESS;
+  data: T | null;
 };
+
+export type ResponseFail<T> = {
+  status: Status.FAIL;
+  data: Record<keyof T, string> | null;
+};
+
+export type ResponseError = {
+  status: Status.ERROR;
+  message: string;
+  data?: Record<string, unknown>;
+  code?: number;
+};
+
+export type Response<T> = ResponseSuccess<T> | ResponseFail<T> | ResponseError;
 
 export type ResponseS<T, S extends Status> = {
   status: S;
@@ -25,22 +37,26 @@ export type ResponseS<T, S extends Status> = {
   message?: string;
 };
 
-const success = <T>(data?: T): Response<T> => ({
+const success = <T>(data?: T): ResponseSuccess<T> => ({
   status: Status.SUCCESS,
   data: isUndefined(data) ? null : data,
 });
 
-const fail = <T>(data?: T): Response<T> => ({
+const fail = <T>(data?: Record<keyof T, string>): ResponseFail<T> => ({
   status: Status.FAIL,
   data: isUndefined(data) ? null : data,
 });
 
-const error = <T>(message: string, data?: T, code?: number): Response<T> => ({
-  status: Status.ERROR,
-  message,
-  ...(isUndefined(data) ? {} : { data }),
-  ...(isUndefined(code) ? {} : { code }),
-});
+const error = (message: string, data?: Record<string, unknown>, code?: number) => {
+  const response: ResponseError = {
+    status: Status.ERROR,
+    message,
+  };
+  if (code) { response.code = code; }
+  if (data) { response.data = data; }
+
+  return response;
+};
 
 /**
  * IsValid returns true if obj is valid for JSend API or not
@@ -93,5 +109,4 @@ export default {
   success,
   fail,
   error,
-  isValid,
 };

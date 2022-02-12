@@ -3,7 +3,7 @@ import React from 'react';
 import capitalize from 'lodash/capitalize';
 import { useRouter } from 'next/router';
 import Header from '@app/components/Header';
-import routes, { getProfile } from '@utils/routes';
+import routes, { useProfile } from '@utils/routes';
 import { Card, Container, FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
@@ -34,7 +34,7 @@ type TaskFormValues = {
 type TaskFormErrors = { [Property in keyof TaskFormValues]: string };
 
 type TaskFormResponse = ResponseS<TaskFormErrors, Status.ERROR>
-  | ResponseS<{ task: Task }, Status.SUCCESS>;
+| ResponseS<{ task: Task }, Status.SUCCESS>;
 
 const formValidate = (values: TaskFormValues) => {
   const errors: Partial<FormikErrors<TaskFormValues>> = {};
@@ -57,16 +57,17 @@ const formValidate = (values: TaskFormValues) => {
 const Page = () => {
   const router = useRouter();
 
-  const { user, isValidating } = getProfile();
+  const { user, isValidating } = useProfile();
   const [, { colors }] = useStyletron();
   const { enqueue, dequeue } = useSnackbar();
 
-  if (isValidating) {
+  if (!user && isValidating) {
     return (<FullscreenLoader />);
   }
 
-  if (!user) {
-    router.push('/login');
+  if (!user && !isValidating) {
+    router.push('/login')
+      .catch((e) => console.error(e));
     return (<FullscreenLoader />);
   }
 
@@ -101,23 +102,25 @@ const Page = () => {
                 const formData = request.convert(values);
                 enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                const response: TaskFormResponse = await (await fetch(routes.tasksPost, {
+                // TODO: переместить в отдельную функцию
+                const response = await (await fetch(routes.tasksPost, {
                   body: formData,
                   credentials: 'include',
                   method: 'POST',
-                })).json();
+                })).json() as TaskFormResponse;
 
                 dequeue();
                 if (response.status == Status.SUCCESS) {
                   enqueue({
                     message: 'A new was created!',
-                    startEnhancer: ({ size }) => (<Check size={size} />)
+                    startEnhancer: ({ size }) => (<Check size={size} />),
                   }, DURATION.short);
                   const { _id } = response.data.task;
 
-                  router.push(`/tasks/${_id}`);
+                  router.push(`/tasks/${_id}`)
+                    .catch((e) => console.error(e));
                 } else {
-                  setErrors(response.data as TaskFormErrors);
+                  setErrors(response.data);
                 }
 
                 setSubmitting(false);

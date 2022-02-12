@@ -8,7 +8,7 @@ import { Plus, Search } from 'baseui/icon';
 import Header from '@app/components/Header';
 import { TasksSkeleton, TaskCard } from '@components/Tasks';
 import { Container, FullscreenBlock, FullscreenLoader, Card, ButtonLink } from '@components/DefaultBlocks';
-import { getProfile, getUsers } from '@utils/routes';
+import { useProfile, useUsers } from '@utils/routes';
 import { Input } from 'baseui/input';
 import { Select } from 'baseui/select';
 import {
@@ -20,7 +20,9 @@ import {
   StringColumn,
   COLUMNS,
   NUMERICAL_FORMATS,
+  RowT,
 } from 'baseui/data-table';
+import { Status } from 'moectf-core/response';
 
 type RowDataT = [
   string,
@@ -49,23 +51,23 @@ const columns = [
   CustomColumn({
     title: 'Actions',
     mapDataToValue: (data: RowDataT) => data,
-    renderCell: (props) => {
+    renderCell(props) {
       return <>Hello world!</>;
     },
-  })
+  }),
 ];
 
 const Page = () => {
-  const { user, isValidating } = getProfile();
-  const { users, isValidating: usersValidating } = getUsers();
+  const { user, isValidating } = useProfile();
+  const { users, isValidating: usersValidating } = useUsers();
   const [css, { colors, sizing }] = useStyletron();
   const router = useRouter();
   const [filter, setFilter] = useState({ name: '', tags: [] });
 
-  const userRows = useMemo(() => {
-    if (isValidating || !users) return [];
-
-    console.log(users);
+  const userRows = useMemo<RowT[]>(() => {
+    if (isValidating || !users) {
+      return [];
+    }
 
     return users.map(({ _id, admin, name, email }) => ({
       id: _id,
@@ -73,12 +75,13 @@ const Page = () => {
     }));
   }, [users, isValidating]);
 
-  if (isValidating) {
+  if (!user && isValidating) {
     return (<FullscreenLoader />);
   }
 
-  if (!user) {
-    router.push('/login');
+  if (!user && !isValidating) {
+    router.push('/login')
+      .catch((e) => console.error(e));
     return (<FullscreenLoader />);
   }
 

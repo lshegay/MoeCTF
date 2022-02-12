@@ -1,109 +1,123 @@
-import { Post, Task, User } from 'moectf-core/models';
-import { Response } from 'moectf-core/response';
+import { Post, Task, User, RouteNames } from 'moectf-core/models';
+import { Response, ResponseError, Status } from 'moectf-core/response';
 import useSWR, { SWRConfiguration } from 'swr';
+import mapValues from 'lodash/mapValues';
 import join from 'url-join';
 import fetcher from './fetcher';
 import config from '../config.json';
 
-const routes = { ...config.routes };
+const routes: RouteNames = mapValues(config.routes, (v) => join(config.coreDomain, v));
 
-Object.keys(routes).forEach((key) => {
-  routes[key] = join(config.coreDomain, routes[key]);
-});
-
-const OPTIONS: SWRConfiguration = {
+const options: SWRConfiguration = {
   revalidateOnFocus: false,
 };
 
-export const getProfile = () => {
+export const useProfile = () => {
   const {
     data,
-    error,
     isValidating,
+    error,
     mutate,
-  } = useSWR<Response<{ user: User }>>(routes.profileGet, fetcher, OPTIONS);
+  } = useSWR<Response<{ user: User }>, ResponseError>(routes.profileGet, fetcher, options);
+
+  const response = {
+    isValidating,
+    user: data?.status == Status.SUCCESS ? data.data.user : undefined,
+    fail: data?.status == Status.FAIL ? data.data : undefined,
+    error,
+    mutate: async (user: User) => {
+      if (data?.status == Status.SUCCESS) {
+        await mutate({ ...data, data: { user } });
+      }
+    },
+  };
+
+  return response;
+};
+
+// TODO: автоматическая ревалидация
+export const useTasks = () => {
+  const {
+    data,
+    isValidating,
+    error,
+    mutate,
+  } = useSWR<Response<{ tasks: Task[] }>, ResponseError>(routes.tasksGet, fetcher, options);
 
   return {
-    user: data?.data?.user,
-    error,
+    tasks: data?.status == Status.SUCCESS ? data.data.tasks : undefined,
+    fail: data?.status == Status.FAIL ? data.data : undefined,
     isValidating,
-    mutate: (user) => {
-      mutate({ ...data, data: { user } });
+    error,
+    mutate: async (tasks: Task[]) => {
+      if (data?.status == Status.SUCCESS) {
+        await mutate({ ...data, data: { tasks } });
+      }
+    },
+  };
+};
+
+export const useTask = (tid?: string) => {
+  const {
+    data,
+    isValidating,
+    error,
+    mutate,
+  } = useSWR<Response<{ task: Task }>, ResponseError>(tid ? routes.taskGet.replace(':_id', tid) : null, fetcher, options);
+
+  return {
+    task: data?.status == Status.SUCCESS ? data.data.task : undefined,
+    fail: data?.status == Status.FAIL ? data.data : undefined,
+    isValidating,
+    error,
+    mutate: async (task: Task) => {
+      if (data?.status == Status.SUCCESS) {
+        await mutate({ ...data, data: { task } });
+      }
     },
   };
 };
 
 // TODO: автоматическая ревалидация
-export const getTasks = () => {
+export const usePosts = () => {
   const {
     data,
-    error,
     isValidating,
-    mutate
-  } = useSWR<Response<{ tasks: Task[] }>>(routes.tasksGet, fetcher, OPTIONS);
-
-  return {
-    tasks: data?.data?.tasks,
     error,
-    isValidating,
-    mutate: (tasks) => {
-      mutate({ ...data, data: { tasks } });
-    },
-  };
-};
-
-export const getTask = (tid?: string) => {
-  const {
-    data,
-    error,
-    isValidating,
     mutate,
-  } = useSWR<Response<{ task: Task }>>(!tid ? null : routes.taskGet.replace(':_id', tid), fetcher, OPTIONS);
+  } = useSWR<Response<{ posts: Post[] }>, ResponseError>(routes.postsGet, fetcher, options);
 
   return {
-    task: data?.data?.task,
-    error,
+    posts: data?.status == Status.SUCCESS ? data.data.posts : undefined,
+    fail: data?.status == Status.FAIL ? data.data : undefined,
     isValidating,
-    mutate: (task) => {
-      mutate({ ...data, data: { task } });
+    error,
+    mutate: async (posts: Post[]) => {
+      if (data?.status == Status.SUCCESS) {
+        await mutate({ ...data, data: { posts } });
+      }
     },
   };
 };
 
 // TODO: автоматическая ревалидация
-export const getPosts = () => {
+export const useUsers = () => {
   const {
     data,
-    error,
     isValidating,
+    error,
     mutate,
-  } = useSWR<Response<{ posts: Post[] }>>(routes.postsGet, fetcher, OPTIONS);
+  } = useSWR<Response<{ users: User[] }>, ResponseError>(routes.adminUsersGet, fetcher, options);
 
   return {
-    posts: data?.data?.posts,
-    error,
+    users: data?.status == Status.SUCCESS ? data.data.users : undefined,
+    fail: data?.status == Status.FAIL ? data.data : undefined,
     isValidating,
-    mutate: (posts) => {
-      mutate({ ...data, data: { posts } });
-    },
-  };
-};
-
-// TODO: автоматическая ревалидация
-export const getUsers = () => {
-  const {
-    data,
     error,
-    isValidating,
-    mutate
-  } = useSWR<Response<{ users: User[] }>>(routes.adminUsersGet, fetcher, OPTIONS);
-
-  return {
-    users: data?.data?.users,
-    error,
-    isValidating,
-    mutate: (users) => {
-      mutate({ ...data, data: { users } });
+    mutate: async (users: User[]) => {
+      if (data?.status == Status.SUCCESS) {
+        await mutate({ ...data, data: { users } });
+      }
     },
   };
 };

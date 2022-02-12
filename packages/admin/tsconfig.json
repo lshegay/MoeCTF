@@ -41,11 +41,11 @@
     "next-env.d.ts",
     "pages/**/*.ts",
     "pages/**/*.tsx",
-    "./utils/**/*.ts",
-    "./utils/**/*.tsx",
-    "./app/**/*.ts",
-    "./app/**/*.tsx"
-, "pages/tasks"  ],
+    "utils/**/*.ts",
+    "utils/**/*.tsx",
+    "app/**/*.ts",
+    "app/**/*.tsx"
+  ],
   "exclude": [
     "node_modules"
   ]
