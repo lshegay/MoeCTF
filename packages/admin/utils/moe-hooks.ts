@@ -1,24 +1,23 @@
-import { Post, Task, User, RouteNames } from 'moectf-core/models';
+import { Post, Task, User } from 'moectf-core/models';
 import { Response, ResponseError, Status } from 'moectf-core/response';
 import useSWR, { SWRConfiguration } from 'swr';
-import mapValues from 'lodash/mapValues';
-import join from 'url-join';
 import fetcher from './fetcher';
-import config from '../config.json';
+import { routes } from './moe-fetch';
 
-const routes: RouteNames = mapValues(config.routes, (v) => join(config.coreDomain, v));
-
-const options: SWRConfiguration = {
+const OPTIONS: SWRConfiguration = {
   revalidateOnFocus: false,
 };
 
+export type ErrorUndefined = ResponseError<undefined>;
+
+export type ProfileData = { user: User };
 export const useProfile = () => {
   const {
     data,
     isValidating,
     error,
     mutate,
-  } = useSWR<Response<{ user: User }>, ResponseError>(routes.profileGet, fetcher, options);
+  } = useSWR<Response<ProfileData>, ErrorUndefined>(routes.profileGet, fetcher, OPTIONS);
 
   const response = {
     isValidating,
@@ -36,13 +35,14 @@ export const useProfile = () => {
 };
 
 // TODO: автоматическая ревалидация
+export type TasksData = { tasks: Task[] };
 export const useTasks = () => {
   const {
     data,
     isValidating,
     error,
     mutate,
-  } = useSWR<Response<{ tasks: Task[] }>, ResponseError>(routes.tasksGet, fetcher, options);
+  } = useSWR<Response<TasksData>, ErrorUndefined>(routes.tasksGet, fetcher, OPTIONS);
 
   return {
     tasks: data?.status == Status.SUCCESS ? data.data.tasks : undefined,
@@ -57,13 +57,14 @@ export const useTasks = () => {
   };
 };
 
+export type TaskData = { task: Task };
 export const useTask = (tid?: string) => {
   const {
     data,
     isValidating,
     error,
     mutate,
-  } = useSWR<Response<{ task: Task }>, ResponseError>(tid ? routes.taskGet.replace(':_id', tid) : null, fetcher, options);
+  } = useSWR<Response<TaskData>, ErrorUndefined>(tid ? routes.taskGet.replace(':_id', tid) : null, fetcher, OPTIONS);
 
   return {
     task: data?.status == Status.SUCCESS ? data.data.task : undefined,
@@ -79,13 +80,14 @@ export const useTask = (tid?: string) => {
 };
 
 // TODO: автоматическая ревалидация
+export type PostsData = { posts: Post[] };
 export const usePosts = () => {
   const {
     data,
     isValidating,
     error,
     mutate,
-  } = useSWR<Response<{ posts: Post[] }>, ResponseError>(routes.postsGet, fetcher, options);
+  } = useSWR<Response<PostsData>, ErrorUndefined>(routes.postsGet, fetcher, OPTIONS);
 
   return {
     posts: data?.status == Status.SUCCESS ? data.data.posts : undefined,
@@ -101,13 +103,14 @@ export const usePosts = () => {
 };
 
 // TODO: автоматическая ревалидация
+export type UsersData = { users: User[] };
 export const useUsers = () => {
   const {
     data,
     isValidating,
     error,
     mutate,
-  } = useSWR<Response<{ users: User[] }>, ResponseError>(routes.adminUsersGet, fetcher, options);
+  } = useSWR<Response<UsersData>, ErrorUndefined>(routes.adminUsersGet, fetcher, OPTIONS);
 
   return {
     users: data?.status == Status.SUCCESS ? data.data.users : undefined,

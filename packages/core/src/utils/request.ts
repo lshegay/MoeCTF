@@ -2,7 +2,7 @@ import isNil from 'lodash/isNil';
 import isNaN from 'lodash/isNaN';
 import forEach from 'lodash/forEach';
 
-const convert = (obj: Record<string, any>): FormData => {
+const convert = (obj: Record<string, string | Blob | string[]>): FormData => {
   const form = new FormData();
   forEach(obj, (value, key) => {
     if (isNil(value) || isNaN(value)) return;

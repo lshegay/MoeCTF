@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 
 const log = async (
   path: string,
-  info: Record<string, any>
+  info: Record<string, any>,
 ): Promise<boolean> => {
   await fs.ensureFile(path);
   const success = await new Promise<boolean>((resolve) => {
@@ -17,7 +17,7 @@ const log = async (
         } else {
           resolve(true);
         }
-      }
+      },
     );
   });
 

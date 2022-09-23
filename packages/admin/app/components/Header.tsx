@@ -3,28 +3,29 @@ import React from 'react';
 import capitalize from 'lodash/capitalize';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
-import { AppNavBar, AppNavBarPropsT } from 'baseui/app-nav-bar';
+import { AppNavBar, AppNavBarPropsT, NavItemT } from 'baseui/app-nav-bar';
 import { StyledLink } from 'baseui/link';
 import { DisplayMedium, HeadingXSmall, LabelMedium } from 'baseui/typography';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { User } from 'moectf-core/models';
-import { Response } from 'moectf-core/response';
-import routes from '@utils/routes';
 import { useAppDispatch, useAppSelector } from '@redux/hooks';
 import { setTheme } from '@redux/slices/site';
-import { Container } from './DefaultBlocks';
 import { Plus } from 'baseui/icon';
 import { Button } from 'baseui/button';
+import { logout } from '@utils/moe-fetch';
+import { Container } from './DefaultBlocks';
 
 type HeaderProps = AppNavBarPropsT & {
   user: Partial<User>;
   title?: string;
   subtitle?: string;
   description?: string;
-}
+};
 
-const menu = (activeLink: string) => ([
+type AppNavItem = (Omit<NavItemT, 'info'> & { info: string });
+
+const menu = (activeLink: string): AppNavItem[] => ([
   {
     label: 'Tasks',
     info: '/',
@@ -52,7 +53,6 @@ const menu = (activeLink: string) => ([
 ].map((value) => ({ ...value, active: value.info == activeLink })));
 
 const Header = ({ user, title, subtitle, description, ...props }: HeaderProps): JSX.Element => {
-  const isUser = !!user?._id;
   const router = useRouter();
   const dispatch = useAppDispatch();
   const theme = useAppSelector((state) => state.site.theme);
@@ -63,38 +63,32 @@ const Header = ({ user, title, subtitle, description, ...props }: HeaderProps): 
     <>
       <AppNavBar
         mainItems={menu(router.asPath)}
-        onMainItemSelect={(item) => {
-          router.push(item.info);
+        onMainItemSelect={(item: AppNavItem) => {
+          router.push(item.info)
+            .catch((e) => console.error(e));
         }}
-        {...(isUser ? {
-          username: user.name,
-          userItems: [
-            { label: `Set ${capitalize(viceVersaTheme)} Theme`, info: 'theme' },
-            { label: 'Log Out', info: 'logout' },
-          ],
-          onUserItemSelect: async (item) => {
-            switch (item.info) {
-              case 'theme': {
-                dispatch(setTheme(viceVersaTheme));
-                break;
-              }
-              case 'logout': {
-                const response: Response<null> = (
-                  await (await fetch(routes.logout, { credentials: 'include' })).json()
-                );
-
-                if (response.status == 'success') {
-                  router.push('/login');
-                }
-
-                break;
-              }
-              default: {
-                break;
-              }
+        username={user.name}
+        userItems={[
+          { label: `Set ${capitalize(viceVersaTheme)} Theme`, info: 'theme' },
+          { label: 'Log Out', info: 'logout' },
+        ]}
+        onUserItemSelect={async (item) => {
+          switch (item.info) {
+            case 'theme': {
+              dispatch(setTheme(viceVersaTheme));
+              break;
             }
-          },
-        } : {})}
+            case 'logout': {
+              if (await logout()) {
+                router.push('/login')
+                  .catch((e) => console.error(e));
+              }
+
+              break;
+            }
+            default: break;
+          }
+        }}
         overrides={{
           Root: {
             style: {

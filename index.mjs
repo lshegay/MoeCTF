@@ -1,6 +1,7 @@
-import cp, { spawn } from 'child_process';
+import cp from 'child_process';
 import util from 'util';
 import task from 'tasuku';
+import concurrently from 'concurrently';
 import { readFile, writeFile } from 'fs/promises';
 
 const exec = util.promisify(cp.exec);
@@ -63,34 +64,36 @@ const setup = () => (
   })
 );
 
-const concurrently = (cmd, title) => (
-  task(title, async () => {
-    await new Promise((resolve) => {
-      const current = spawn('npx', [
-        'concurrently',
-        `"cd packages/admin && npm run ${cmd}"`,
-        `"cd packages/core && npm run ${cmd}"`,
-        `"cd packages/starter && npm run ${cmd}"`,
-      ], {
-        stdio: 'inherit',
-        shell: true,
-      });
+const dev = async (names) => {
+  await task('Development started', async () => {
+    concurrently([
+      ...names.map((name) => ({ name, command: `cd packages/${name} && npm run dev` })),
+      { name: 'config', command: 'npx nodemon --exec "node index.mjs --setup" -e json --watch config.json' }
+    ]);
+  });
+};
 
-      current.on('spawn', () => {
-        resolve();
-      });
-    });
-  })
-);
+const build = async (names) => {
+  await task('Building started', async () => {
+    concurrently(names.map((name) => ({ name, command: `cd packages/${name} && npm run build` })));
+  });
+};
+
+const start = async (names) => {
+  await task('Application launched', async () => {
+    concurrently(names.map((name) => ({ name, command: `cd packages/${name} && npm run start` })));
+  });
+};
 
 const argument = process.argv.length > 2 ? process.argv[2] : null;
+const packageNames = ['admin', 'core', 'starter'];
 
 (async () => {
   switch (argument) {
     case '--dev': {
       await bootstrap();
       await setup();
-      await concurrently('dev', 'Development is Working');
+      await dev(packageNames);
 
       break;
     }
@@ -98,7 +101,7 @@ const argument = process.argv.length > 2 ? process.argv[2] : null;
     case '--build': {
       await bootstrap();
       await setup();
-      await concurrently('build', 'Applications are Building');
+      await build(packageNames);
 
       break;
     }
@@ -106,11 +109,17 @@ const argument = process.argv.length > 2 ? process.argv[2] : null;
     case '--start': {
       await bootstrap();
       await setup();
-      await concurrently('start', 'Production is Working');
+      await start(packageNames);
 
       break;
     }
 
-    default:
+    case '--setup': {
+      await setup();
+
+      break;
+    }
+
+    default: break;
   }
 })();

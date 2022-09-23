@@ -2,7 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@app/components/Header';
-import routes, { useProfile, useTask } from '@utils/routes';
+import { useProfile, useTask } from '@utils/moe-hooks';
 import { Container, FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 import { useStyletron } from 'baseui';
 import { Skeleton } from 'baseui/skeleton';
@@ -11,31 +11,18 @@ import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
 import { HeadingLarge } from 'baseui/typography';
 import { Check, Delete } from 'baseui/icon';
 import { Textarea } from 'baseui/textarea';
-import { Formik, FormikErrors } from 'formik';
+import { Form, Formik, FormikErrors } from 'formik';
 import { FormControl } from 'baseui/form-control';
 import { Input } from 'baseui/input';
 import { TagInput } from '@app/components/Input';
 import { Button } from 'baseui/button';
 import { Uploader } from '@app/components/Uploader';
 import { useSnackbar, DURATION } from 'baseui/snackbar';
-import { Response, Status } from 'moectf-core/response';
-import request from 'moectf-core/request';
+import { Status } from 'moectf-core/response';
+import { deleteTask, updateTask, UpdateTaskValues } from '@utils/moe-fetch';
 
-type TaskFormValues = {
-  name?: string;
-  flag?: string;
-  points?: number;
-  tags?: string[];
-  file?: File;
-  content?: string;
-};
-
-type TaskFormErrors = { [Property in keyof TaskFormValues]: string };
-
-type TaskFormResponse = Response<TaskFormErrors>;
-
-const formValidate = (values: TaskFormValues) => {
-  const errors: Partial<FormikErrors<TaskFormValues>> = {};
+const formValidate = (values: UpdateTaskValues) => {
+  const errors: Partial<FormikErrors<UpdateTaskValues>> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';
@@ -57,13 +44,12 @@ const Page = () => {
   const [, { colors }] = useStyletron();
   const { enqueue, dequeue } = useSnackbar();
 
-  if (!user && !isValidating) {
-    router.push('/login')
-      .catch((e) => console.error(e));
-    return (<FullscreenLoader />);
-  }
+  if (!user) {
+    if (!isValidating) {
+      router.push('/login')
+        .catch((e) => { console.error(e); });
+    }
 
-  if (!user && isValidating) {
     return (<FullscreenLoader />);
   }
 
@@ -89,7 +75,7 @@ const Page = () => {
       >
         <Container>
           {taskValidating ? (
-            <Skeleton width="100%" height="500px" />
+            <Skeleton width="100%" height="500px" animation />
           ) : (
             <Block
               backgroundColor={colors.backgroundPrimary}
@@ -107,14 +93,9 @@ const Page = () => {
                 }}
                 validate={formValidate}
                 onSubmit={async (values, { setSubmitting, setErrors }) => {
-                  const formData = request.convert(values);
                   enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                  const response = await (await fetch(routes.taskPut.replace(':_id', tid), {
-                    body: formData,
-                    credentials: 'include',
-                    method: 'PUT',
-                  })).json() as TaskFormResponse;
+                  const response = await updateTask(tid, values);
 
                   dequeue();
                   if (response.status == Status.SUCCESS) {
@@ -133,7 +114,6 @@ const Page = () => {
                   values,
                   errors,
                   setFieldValue,
-                  submitForm,
                   isSubmitting,
                   handleChange,
                 }) => (
@@ -144,27 +124,27 @@ const Page = () => {
                     >
                       <FlexGridItem>
                         <FormControl label="Name" error={errors.name}>
-                          <Input name="name" value={values.name} onChange={handleChange} />
+                          <Input name="name" value={values.name} onChange={handleChange} required clearable />
                         </FormControl>
                       </FlexGridItem>
                       <FlexGridItem>
                         <FormControl label="Flag" error={errors.flag}>
-                          <Input name="flag" value={values.flag} onChange={handleChange} />
+                          <Input name="flag" value={values.flag} onChange={handleChange} required clearable />
                         </FormControl>
                       </FlexGridItem>
                       <FlexGridItem>
                         <FormControl label="Content" error={errors.content}>
-                          <Textarea name="content" value={values.content} onChange={handleChange} />
+                          <Textarea name="content" value={values.content} onChange={handleChange} clearable />
                         </FormControl>
                       </FlexGridItem>
                       <FlexGridItem>
                         <FormControl label="Points" error={errors.points}>
-                          <Input name="points" type="number" value={values.points} onChange={handleChange} />
+                          <Input name="points" type="number" value={values.points} onChange={handleChange} min={0} required clearable />
                         </FormControl>
                       </FlexGridItem>
                       <FlexGridItem>
-                        <FormControl label="Tags" error={errors.tags}>
-                          <TagInput name="tags" value={values.tags} onChange={(tags) => setFieldValue('tags', tags)} />
+                        <FormControl label="Tags" error={errors.tags} caption="Hit Enter to add a tag">
+                          <TagInput name="tags" value={values.tags} onChange={(tags) => setFieldValue('tags', tags)} clearable />
                         </FormControl>
                       </FlexGridItem>
                       <FlexGridItem>
@@ -179,10 +159,8 @@ const Page = () => {
                           kind="secondary"
                           onClick={async () => {
                             enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
-                            const response = await (await fetch(routes.taskDelete.replace(':_id', tid), {
-                              credentials: 'include',
-                              method: 'DELETE',
-                            })).json() as Response<unknown>;
+
+                            const response = await deleteTask(tid);
 
                             dequeue();
                             if (response.status == Status.SUCCESS) {
@@ -197,6 +175,7 @@ const Page = () => {
                                 message: 'Something wrong has happened',
                                 startEnhancer: ({ size }) => (<Delete size={size} />),
                               }, DURATION.short);
+                              console.error(response.data);
                             }
                           }}
                         >
@@ -204,7 +183,7 @@ const Page = () => {
                         </Button>
                       </Block>
                       <Block>
-                        <Button onClick={submitForm} isLoading={isSubmitting}>
+                        <Button isLoading={isSubmitting}>
                           Make Changes
                         </Button>
                       </Block>

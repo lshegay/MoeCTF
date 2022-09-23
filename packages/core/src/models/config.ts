@@ -7,14 +7,15 @@ export interface DatabaseNames {
 }
 
 export type RouteNames = Readonly<{
-  adminUsersGet?: string;
   postsPost?: string;
   postPut?: string;
   postDelete?: string;
   tasksPost?: string;
   taskPut?: string;
   taskDelete?: string;
+  adminUsersGet?: string;
   usersGet?: string;
+  userDelete?: string;
   profileGet?: string;
   postsGet?: string;
   categoriesGet?: string;
@@ -24,7 +25,7 @@ export type RouteNames = Readonly<{
   login?: string;
   logout?: string;
   register?: string;
-}>
+}>;
 
 export type Config = Readonly<{
   dev: boolean;
@@ -57,4 +58,5 @@ export type Config = Readonly<{
     email: string;
   };
   createAdminUser?: boolean;
-}>
+  cors: string[];
+}>;

@@ -4,15 +4,19 @@ const fetch = require('node-fetch').default;
 const fs = require('fs');
 const join = require('url-join');
 
-const { domain, routes, adminCreditals } = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+const { domain, routes, adminCreditals } = JSON.parse(
+  fs.readFileSync('./config.json', 'utf-8'),
+);
 
 const parseCookies = (response) => {
   const raw = response.headers.raw()['set-cookie'];
-  return raw.map((entry) => {
-    const parts = entry.split(';');
-    const cookiePart = parts[0];
-    return cookiePart;
-  }).join(';');
+  return raw
+    .map((entry) => {
+      const parts = entry.split(';');
+      const cookiePart = parts[0];
+      return cookiePart;
+    })
+    .join(';');
 };
 
 (async () => {
@@ -40,7 +44,7 @@ const parseCookies = (response) => {
 
   users = await Promise.all(users.map((v) => v.json()));
 
-  if (users[0].status == 'success') {
+  if (users[0].status === 'success') {
     console.log('Users are created!');
   }
 
@@ -63,7 +67,7 @@ const parseCookies = (response) => {
 
   // eslint-disable-next-line no-plusplus
   for (let i = 0; i < 100; i++) {
-    const res = fetch(join(domain, routes.tasksPost), {
+    const docs = fetch(join(domain, routes.tasksPost), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,18 +78,26 @@ const parseCookies = (response) => {
         points: 500,
         flag: 'flag',
         content: faker.lorem.paragraphs(2, '\n'),
-        tags: faker.random.arrayElements(['Joy', 'Misc', 'Web', 'Reverse', 'Crypto', 'Forensic', 'Stegano']),
+        tags: faker.random.arrayElements([
+          'Joy',
+          'Misc',
+          'Web',
+          'Reverse',
+          'Crypto',
+          'Forensic',
+          'Stegano',
+        ]),
       }),
     });
 
-    tasks.push(res);
+    tasks.push(docs);
   }
 
   tasks = await Promise.all(tasks);
 
   tasks = await Promise.all(tasks.map((v) => v.json()));
 
-  if (tasks[0].status == 'success') {
+  if (tasks[0].status === 'success') {
     console.log('Tasks are created!');
   } else {
     console.log(tasks[0]);

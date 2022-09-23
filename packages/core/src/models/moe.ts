@@ -8,4 +8,4 @@ export type Moe = {
   db: Database;
   config: Config;
   listen: (callback?: (c: Config) => void) => Server;
-}
+};

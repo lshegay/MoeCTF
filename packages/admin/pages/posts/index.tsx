@@ -1,39 +1,27 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import Lazy from 'lazy.js';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
 import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
+import { DatePicker } from 'baseui/datepicker';
 import { useRouter } from 'next/router';
-import { Check, Plus, Search } from 'baseui/icon';
+import { Check, Search } from 'baseui/icon';
 import Header from '@app/components/Header';
-import { Response, ResponseS, Status } from 'moectf-core/response';
-import { TasksSkeleton, TaskCard } from '@components/Tasks';
+import { Status } from 'moectf-core/response';
+import moment from 'moment';
 import { Container, FullscreenBlock, FullscreenLoader, Card, ButtonLink } from '@components/DefaultBlocks';
-import routes, { useProfile, usePosts } from '@utils/routes';
+import { useProfile, usePosts } from '@utils/moe-hooks';
 import { Input } from 'baseui/input';
-import { Select } from 'baseui/select';
 import { PostCard } from '@app/components/Posts';
 import { Formik, FormikErrors } from 'formik';
 import { DURATION, useSnackbar } from 'baseui/snackbar';
-import request from 'moectf-core/request';
 import { FormControl } from 'baseui/form-control';
 import { Textarea } from 'baseui/textarea';
-import { Button } from 'baseui/button';
 import { HeadingLarge } from 'baseui/typography';
-import { Post } from 'moectf-core/models';
+import { createPost, CreatePostValues } from '@utils/moe-fetch';
 
-type PostFormValues = {
-  name?: string;
-  content?: string;
-};
-
-type PostFormErrors = { [Property in keyof PostFormValues]: string };
-
-type PostFormResponse = ResponseS<PostFormErrors, Status.ERROR>
-  | ResponseS<{ post: Post }, Status.SUCCESS>;
-
-const formValidate = (values: PostFormValues) => {
-  const errors: Partial<FormikErrors<PostFormValues>> = {};
+const formValidate = (values: CreatePostValues) => {
+  const errors: Partial<FormikErrors<CreatePostValues>> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';
@@ -46,12 +34,17 @@ const formValidate = (values: PostFormValues) => {
   return errors;
 };
 
+type FilterState = {
+  search: string;
+  date: Date[];
+};
+
 const Page = () => {
   const { user, isValidating } = useProfile();
   const { posts, isValidating: postsValidating, mutate } = usePosts();
   const [, { colors, sizing }] = useStyletron();
   const router = useRouter();
-  const [filter, setFilter] = useState({ search: '' });
+  const [filter, setFilter] = useState<FilterState>({ search: '', date: [] });
   const { enqueue, dequeue } = useSnackbar();
 
   if (isValidating) {
@@ -59,7 +52,8 @@ const Page = () => {
   }
 
   if (!user) {
-    router.push('/login');
+    router.push('/login')
+      .catch((e) => console.error(e));
     return (<FullscreenLoader />);
   }
 
@@ -82,9 +76,23 @@ const Page = () => {
                 <Input
                   endEnhancer={<Search size={18} />}
                   placeholder="Search by Name & Content"
+                  clearable
                   onChange={({ currentTarget: { value } }) => (
                     setFilter((s) => ({ ...s, search: value }))
                   )}
+                />
+              </FlexGridItem>
+              <FlexGridItem>
+                <DatePicker
+                  range
+                  quickSelect
+                  value={filter.date}
+                  clearable
+                  onChange={({ date }) => {
+                    if (!Array.isArray(date)) return;
+
+                    setFilter((s) => ({ ...s, date }));
+                  }}
                 />
               </FlexGridItem>
             </FlexGrid>
@@ -100,17 +108,28 @@ const Page = () => {
                   {
                     !postsValidating && posts
                     && Lazy(posts)
+                      // TODO: посмотреть на таймзоны
                       .filter((v) => (
                         !v.name || v.name?.toLowerCase().includes(filter.search.toLowerCase())
                         || !v.content
                         || v.content?.toLowerCase().includes(filter.search.toLowerCase())
                       ))
+                      .filter((v) => (
+                        !filter.date[0]
+                        || !filter.date[1]
+                        || moment(v.date).isBetween(
+                          filter.date[0],
+                          filter.date[1],
+                          'days',
+                          '[]',
+                        )
+                      ))
                       .map((post) => (
                         <FlexGridItem key={post._id}>
                           <PostCard
                             post={post}
-                            onDelete={(post) => {
-                              mutate(posts.filter(({ _id }) => _id == post._id));
+                            onDelete={async () => {
+                              await mutate(posts.filter(({ _id }) => _id == post._id));
                             }}
                           />
                         </FlexGridItem>
@@ -129,24 +148,17 @@ const Page = () => {
                   onSubmit={async (values, { setSubmitting, setErrors }) => {
                     enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                    const response: PostFormResponse = await (await fetch(routes.postsPost, {
-                      method: 'POST',
-                      body: JSON.stringify(values),
-                      credentials: 'include',
-                      headers: {
-                        'Content-Type': 'application/json'
-                      },
-                    })).json();
+                    const response = await createPost(values);
 
                     dequeue();
                     if (response.status == Status.SUCCESS) {
-                      mutate({ ...posts });
                       enqueue({
                         message: 'Changes were made successfully',
                         // TODO: заменить такие функции
                         // eslint-disable-next-line react/no-unstable-nested-components
-                        startEnhancer: ({ size }) => (<Check size={size} />)
+                        startEnhancer: ({ size }) => (<Check size={size} />),
                       }, DURATION.short);
+                      await mutate({ ...posts });
                     } else {
                       setErrors(response.data);
                     }

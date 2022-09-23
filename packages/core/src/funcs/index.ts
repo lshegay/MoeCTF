@@ -1,9 +1,13 @@
-import match from './match';
-import get from './get';
-import update from './update';
+import adminFuncs from './admin';
+import getFuncs from './get';
+import matchFuncs from './match';
+import updateFuncs from './update';
+import userFuncs from './user';
 
 export {
-  match,
-  get,
-  update,
+  adminFuncs,
+  getFuncs,
+  matchFuncs,
+  updateFuncs,
+  userFuncs,
 };

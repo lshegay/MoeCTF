@@ -1,9 +1,7 @@
-/* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
-import capitalize from 'lodash/capitalize';
 import { useRouter } from 'next/router';
 import Header from '@app/components/Header';
-import routes, { useProfile } from '@utils/routes';
+import { useProfile } from '@utils/moe-hooks';
 import { Card, Container, FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
 import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
@@ -18,26 +16,11 @@ import { TagInput } from '@app/components/Input';
 import { Button } from 'baseui/button';
 import { Uploader } from '@app/components/Uploader';
 import { useSnackbar, DURATION } from 'baseui/snackbar';
-import { ResponseS, Status } from 'moectf-core/response';
-import request from 'moectf-core/request';
-import { Task } from 'moectf-core/models';
+import { Status } from 'moectf-core/response';
+import { createTask, CreateTaskValues } from '@utils/moe-fetch';
 
-type TaskFormValues = {
-  name?: string;
-  flag?: string;
-  points?: number;
-  tags?: string[];
-  file?: File;
-  content?: string;
-};
-
-type TaskFormErrors = { [Property in keyof TaskFormValues]: string };
-
-type TaskFormResponse = ResponseS<TaskFormErrors, Status.ERROR>
-| ResponseS<{ task: Task }, Status.SUCCESS>;
-
-const formValidate = (values: TaskFormValues) => {
-  const errors: Partial<FormikErrors<TaskFormValues>> = {};
+const formValidate = (values: CreateTaskValues) => {
+  const errors: Partial<FormikErrors<CreateTaskValues>> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';
@@ -61,13 +44,12 @@ const Page = () => {
   const [, { colors }] = useStyletron();
   const { enqueue, dequeue } = useSnackbar();
 
-  if (!user && isValidating) {
-    return (<FullscreenLoader />);
-  }
+  if (!user) {
+    if (!isValidating) {
+      router.push('/login')
+        .catch((e) => { console.error(e); });
+    }
 
-  if (!user && !isValidating) {
-    router.push('/login')
-      .catch((e) => console.error(e));
     return (<FullscreenLoader />);
   }
 
@@ -99,20 +81,14 @@ const Page = () => {
               }}
               validate={formValidate}
               onSubmit={async (values, { setSubmitting, setErrors }) => {
-                const formData = request.convert(values);
                 enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                // TODO: переместить в отдельную функцию
-                const response = await (await fetch(routes.tasksPost, {
-                  body: formData,
-                  credentials: 'include',
-                  method: 'POST',
-                })).json() as TaskFormResponse;
+                const response = await createTask(values);
 
                 dequeue();
                 if (response.status == Status.SUCCESS) {
                   enqueue({
-                    message: 'A new was created!',
+                    message: 'A new Task was created!',
                     startEnhancer: ({ size }) => (<Check size={size} />),
                   }, DURATION.short);
                   const { _id } = response.data.task;
@@ -141,27 +117,27 @@ const Page = () => {
                   >
                     <FlexGridItem>
                       <FormControl label="Name" error={errors.name}>
-                        <Input name="name" value={values.name} onChange={handleChange} required />
+                        <Input name="name" value={values.name} onChange={handleChange} required clearable />
                       </FormControl>
                     </FlexGridItem>
                     <FlexGridItem>
                       <FormControl label="Flag" error={errors.flag}>
-                        <Input name="flag" value={values.flag} onChange={handleChange} required />
+                        <Input name="flag" value={values.flag} onChange={handleChange} required clearable />
                       </FormControl>
                     </FlexGridItem>
                     <FlexGridItem>
                       <FormControl label="Content" error={errors.content}>
-                        <Textarea name="content" value={values.content} onChange={handleChange} />
+                        <Textarea name="content" value={values.content} onChange={handleChange} clearable />
                       </FormControl>
                     </FlexGridItem>
                     <FlexGridItem>
                       <FormControl label="Points" error={errors.points}>
-                        <Input name="points" type="number" value={values.points} onChange={handleChange} required />
+                        <Input name="points" type="number" value={values.points} onChange={handleChange} min={0} required clearable />
                       </FormControl>
                     </FlexGridItem>
                     <FlexGridItem>
-                      <FormControl label="Tags" error={errors.tags}>
-                        <TagInput name="tags" value={values.tags} onChange={(tags) => setFieldValue('tags', tags)} />
+                      <FormControl label="Tags" error={errors.tags} caption="Hit Enter to add a tag">
+                        <TagInput name="tags" value={values.tags} onChange={(tags) => setFieldValue('tags', tags)} clearable />
                       </FormControl>
                     </FlexGridItem>
                     <FlexGridItem>

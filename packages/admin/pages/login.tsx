@@ -1,4 +1,4 @@
-import { Response, Status } from 'moectf-core/response';
+import { Status } from 'moectf-core/response';
 import React from 'react';
 import { useRouter } from 'next/router';
 import { Form, Formik, FormikErrors } from 'formik';
@@ -9,13 +9,12 @@ import { LabelMedium } from 'baseui/typography';
 import { Button } from 'baseui/button';
 import { Input } from 'baseui/input';
 import { FormControl } from 'baseui/form-control';
-import routes, { useProfile } from '@utils/routes';
+import { useProfile } from '@utils/moe-hooks';
 import { FullscreenBlock, FullscreenLoader } from '@components/DefaultBlocks';
+import { LoginValues, login } from '@utils/moe-fetch';
 
-type AuthFormValues = { name: string; password: string };
-
-const formValidate = (values: AuthFormValues) => {
-  const errors: Partial<FormikErrors<AuthFormValues>> = {};
+const formValidate = (values: LoginValues) => {
+  const errors: Partial<FormikErrors<LoginValues>> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';
@@ -59,16 +58,7 @@ const Page = (): JSX.Element => {
             }}
             validate={formValidate}
             onSubmit={async (values, { setSubmitting, setErrors }): Promise<void> => {
-              const res = await fetch(routes.login, {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(values),
-              });
-
-              const response = await res.json() as Response<AuthFormValues>;
+              const response = await login(values);
               if (response.status == Status.SUCCESS) {
                 router.push('/')
                   .catch((e) => console.error(e));
@@ -82,7 +72,6 @@ const Page = (): JSX.Element => {
             {({
               values,
               errors,
-              submitForm,
               isSubmitting,
               handleChange,
             }): JSX.Element => (
@@ -118,7 +107,7 @@ const Page = (): JSX.Element => {
                   </FormControl>
                   <Button
                     isLoading={isSubmitting}
-                    onClick={submitForm}
+                    type="submit"
                   >
                     Sign in
                   </Button>

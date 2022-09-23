@@ -1,28 +1,45 @@
-import { isValid, Status, Response, ResponseError } from 'moectf-core/response';
+import { isValid, Status, Response, ResponseError, ResponseSuccess, ResponseFail } from 'moectf-core/response';
 
-const fetcher = async <T>(url: string): Promise<Response<T>> => {
-  const response = await (await fetch(url, {
+type FetcherOptions = RequestInit;
+
+const fetcher = async <TSuccess, TFail = TSuccess, TError = unknown>(
+  url: string,
+  options: FetcherOptions = {},
+): Promise<ResponseSuccess<TSuccess> | ResponseFail<TFail>> => {
+  const response = await fetch(url, {
     credentials: 'include',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
     },
-  })).json() as Response<T>;
+    ...options,
+  });
 
-  if (!isValid(response)) {
-    const error: ResponseError = {
-      message: `Response object wasn't the JSend type ${JSON.stringify(response)}`,
+  try {
+    const json = await response.json() as Response<TSuccess, TFail, TError>;
+
+    if (!isValid(json)) {
+      const error: ResponseError<undefined> = {
+        message: `Response object wasn't the JSend type. Data: ${JSON.stringify(json)}`,
+        status: Status.ERROR,
+      };
+
+      throw error;
+    }
+
+    if (json.status == Status.ERROR) {
+      throw json;
+    }
+
+    return json;
+  } catch (e) {
+    const error: ResponseError<undefined> = {
+      message: `Response data wasn't the JSON object. Data: ${(await response.text())}`,
       status: Status.ERROR,
     };
 
     throw error;
   }
-
-  if (response.status == Status.ERROR) {
-    throw response;
-  }
-
-  return response;
 };
 
 export default fetcher;

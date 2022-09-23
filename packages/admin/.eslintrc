@@ -10,6 +10,7 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking"
   ],
+  "root": true,
   "globals": {
     "Atomics": "readonly",
     "SharedArrayBuffer": "readonly"
@@ -76,6 +77,7 @@
     "baseui/no-deep-imports": "warn",
     "import/no-unresolved": "off",
     "import/prefer-default-export": "off",
-    "import/extensions": "off"
+    "import/extensions": "off",
+    "jsx-a11y/anchor-is-valid": "off"
   }
 }

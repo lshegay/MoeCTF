@@ -2,7 +2,7 @@ type UnitId = string;
 
 type Unit = {
   _id: UnitId;
-}
+};
 
 type Post = Unit & {
   name: string;
@@ -10,9 +10,9 @@ type Post = Unit & {
   // dateEdited: number,
   // authorId: string,
   content: string;
-}
+};
 
-type Solved = Record<string, number> // taskId, solvedDate
+type Solved = Record<string, number>; // taskId, solvedDate
 
 type Task = Unit & {
   name: string;
@@ -22,7 +22,7 @@ type Task = Unit & {
   points: number;
   tags?: string[];
   solved: Solved;
-}
+};
 
 type User = Unit & {
   name: string;
@@ -31,34 +31,34 @@ type User = Unit & {
   content?: string;
   email: string;
   password?: string;
-}
+};
 
 type ScoreState = {
   date: number;
   points: number;
-}
+};
 
 type SolvedTask = Unit & {
   name: string;
   tags: string[];
   date: number;
   points: number;
-}
+};
 
 type ScoreboardUser = Unit & {
   name: string;
   points: number;
   tasks: Record<UnitId, SolvedTask>; // taskId, SolvedTask
   place: number;
-}
+};
 
-type History = Record<UnitId, ScoreState>; // userId, HistoryUser
-type Scoreboard = Record<UnitId, ScoreboardUser> // userId, ScoreboardUser
+type History = Record<UnitId, ScoreState[]>; // userId, HistoryUser
+type Scoreboard = Record<UnitId, ScoreboardUser>; // userId, ScoreboardUser
 
 type CacheData = Unit & {
   scoreboard: Scoreboard;
   history: History;
-}
+};
 
 export type {
   UnitId,

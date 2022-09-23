@@ -4,13 +4,24 @@ import { useStyletron } from 'baseui';
 import { Block } from 'baseui/block';
 import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
 import { useRouter } from 'next/router';
-import { Plus, Search } from 'baseui/icon';
+import { Plus, Search, Delete, Check } from 'baseui/icon';
 import Header from '@app/components/Header';
 import { TasksSkeleton, TaskCard } from '@components/Tasks';
+import { ButtonGroup } from 'baseui/button-group';
+import { Button, KIND as ButtonKind } from 'baseui/button';
 import { Container, FullscreenBlock, FullscreenLoader, Card, ButtonLink } from '@components/DefaultBlocks';
-import { useProfile, useUsers } from '@utils/routes';
+import { useProfile, useUsers } from '@utils/moe-hooks';
 import { Input } from 'baseui/input';
 import { Select } from 'baseui/select';
+import {
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalButton,
+  SIZE,
+  ROLE,
+} from 'baseui/modal';
 import {
   StatefulDataTable,
   BooleanColumn,
@@ -21,8 +32,12 @@ import {
   COLUMNS,
   NUMERICAL_FORMATS,
   RowT,
+  ColumnT,
 } from 'baseui/data-table';
 import { Status } from 'moectf-core/response';
+import { deleteUser } from '@utils/moe-fetch';
+import { DURATION, useSnackbar } from 'baseui/snackbar';
+import { Skeleton } from 'baseui/skeleton';
 
 type RowDataT = [
   string,
@@ -31,38 +46,47 @@ type RowDataT = [
   string,
 ];
 
-const columns = [
-  CategoricalColumn({
-    title: 'ID',
-    mapDataToValue: (data: RowDataT) => data[0],
-  }),
-  BooleanColumn({
-    title: 'Is Admin',
-    mapDataToValue: (data: RowDataT) => data[1],
-  }),
-  StringColumn({
-    title: 'Name',
-    mapDataToValue: (data: RowDataT) => data[2],
-  }),
-  StringColumn({
-    title: 'E-Mail',
-    mapDataToValue: (data: RowDataT) => data[3],
-  }),
-  CustomColumn({
-    title: 'Actions',
-    mapDataToValue: (data: RowDataT) => data,
-    renderCell(props) {
-      return <>Hello world!</>;
-    },
-  }),
-];
+const MODAL_CLOSED = { userId: '', open: false };
 
 const Page = () => {
   const { user, isValidating } = useProfile();
-  const { users, isValidating: usersValidating } = useUsers();
+  const { users, isValidating: usersValidating, mutate: mutateUsers } = useUsers();
   const [css, { colors, sizing }] = useStyletron();
   const router = useRouter();
   const [filter, setFilter] = useState({ name: '', tags: [] });
+  const [modal, setModal] = useState(MODAL_CLOSED);
+  const { enqueue, dequeue } = useSnackbar();
+
+  const columns = useMemo<ColumnT[]>(() => (
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    [CategoricalColumn({
+      title: 'ID',
+      mapDataToValue: (data: RowDataT) => data[0],
+    }),
+    BooleanColumn({
+      title: 'Is Admin',
+      mapDataToValue: (data: RowDataT) => data[1],
+    }),
+    StringColumn({
+      title: 'Name',
+      mapDataToValue: (data: RowDataT) => data[2],
+    }),
+    StringColumn({
+      title: 'E-Mail',
+      mapDataToValue: (data: RowDataT) => data[3],
+    }),
+    CustomColumn({
+      title: 'Actions',
+      mapDataToValue: (data: RowDataT) => data,
+      renderCell: ({ value: [userId] }) => (
+        <ButtonGroup size="mini">
+          {user._id != userId && (
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            <Button onClick={() => { setModal({ open: true, userId }); }}>Delete</Button>
+          )}
+        </ButtonGroup>
+      ),
+    })]), [user]);
 
   const userRows = useMemo<RowT[]>(() => {
     if (isValidating || !users) {
@@ -94,15 +118,63 @@ const Page = () => {
         padding="70px 0"
       >
         <Container>
-          <Card marginBottom="70px" className={css({ height: '800px' })}>
-            <StatefulDataTable
-              columns={columns}
-              rows={userRows}
-              emptyMessage="Nothing is here? huh?"
-            />
-          </Card>
+          {userRows.length > 0 ? (
+            <Card marginBottom="70px" className={css({ height: '800px' })}>
+              <StatefulDataTable
+                columns={columns}
+                rows={userRows}
+                rowHeight={44}
+              />
+            </Card>
+          ) : (
+            <Skeleton height="800px" animation />
+          )}
         </Container>
       </Block>
+      <Modal
+        onClose={() => setModal(MODAL_CLOSED)}
+        closeable
+        isOpen={modal.open}
+        animate
+        autoFocus
+        size={SIZE.default}
+        role={ROLE.dialog}
+      >
+        <ModalHeader>Delete User</ModalHeader>
+        <ModalBody>
+          This action cannot be undone. Are you sure?
+        </ModalBody>
+        <ModalFooter>
+          <ModalButton kind={ButtonKind.tertiary} onClick={() => setModal(MODAL_CLOSED)}>
+            Cancel
+          </ModalButton>
+          <ModalButton
+            onClick={async () => {
+              enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
+              const { userId } = modal;
+              setModal(MODAL_CLOSED);
+
+              const response = await deleteUser(modal.userId);
+
+              dequeue();
+              if (response.status == Status.SUCCESS) {
+                enqueue({
+                  message: 'User was successfully deleted!',
+                  startEnhancer: Check,
+                }, DURATION.short);
+                await mutateUsers(users.filter(({ _id }) => _id != userId));
+              } else {
+                enqueue({
+                  message: response.data._id,
+                  startEnhancer: Delete,
+                }, DURATION.short);
+              }
+            }}
+          >
+            Delete
+          </ModalButton>
+        </ModalFooter>
+      </Modal>
     </FullscreenBlock>
   );
 };

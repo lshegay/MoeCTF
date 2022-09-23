@@ -1,27 +1,35 @@
+import { RequestHandler } from 'express';
+import { Config } from 'src/models';
 import response from '../utils/response';
-import { Controller } from '../models/database';
-import match from '../funcs/match';
+import { Database } from '../models/database';
+import { matchFuncs } from '../funcs';
 
-const isNotEnded: Controller = (_, config) => (req, res, next): void => {
-  if (match.isNotEnded({ config, req })) {
-    return next();
-  }
+const release = (db: Database, config: Config) => {
+  const match = matchFuncs(db, config);
 
-  res.status(403).json(response.fail({ message: 'Game has already finished' }));
-};
-
-const isStarted: Controller = (_, config) => (req, res, next): void => {
-  if (match.isStarted({ config, req })) {
-    return next();
-  }
-  res.status(403).json(response.fail({ message: 'Game has not started yet' }));
-};
-
-export default {
-  is: {
-    started: isStarted,
-    not: {
-      ended: isNotEnded,
+  const isNotEnded: RequestHandler = (req, res, next): void => {
+    if (match.isNotEnded(req.user)) {
+      return next();
     }
-  },
+  
+    res.status(403).json(response.fail({ message: 'Game has already finished' }));
+  };
+  
+  const isStarted: RequestHandler = (req, res, next): void => {
+    if (match.isStarted(req.user)) {
+      return next();
+    }
+    res.status(403).json(response.fail({ message: 'Game has not started yet' }));
+  };
+  
+  return {
+    is: {
+      started: isStarted,
+      not: {
+        ended: isNotEnded,
+      },
+    },
+  };
 };
+
+export default release;

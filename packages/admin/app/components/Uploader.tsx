@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { FileUploader, FileUploaderProps } from 'baseui/file-uploader';
+import { FileUploader, FileUploaderProps, StyleProps } from 'baseui/file-uploader';
 import { LabelMedium } from 'baseui/typography';
 
-type UploaderProps = Omit<FileUploaderProps, 'onChange'|'value'> & {
+type UploaderProps = Omit<FileUploaderProps, 'onChange' | 'value'> & {
   onChange?: (file: File) => void;
   value?: File;
 };
 
-const ContentMessage = (
-  ({ value }) => (
+const ContentMessage: React.ComponentType<StyleProps> = (
+  ({ value }: StyleProps & { value: File }) => (
     <LabelMedium>{value?.name ? `Uploaded: ${value.name}` : 'Drop files here to Upload'}</LabelMedium>
   )
 );
@@ -30,7 +30,7 @@ export const Uploader = ({ onChange, value: initialValue, ...props }: UploaderPr
         }
       }}
       overrides={{
-        ContentMessage: { component: ContentMessage as any, props: { value } }
+        ContentMessage: { component: ContentMessage, props: { value } },
       }}
     />
   );

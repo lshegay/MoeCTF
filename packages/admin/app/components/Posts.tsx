@@ -2,32 +2,23 @@ import React, { useState } from 'react';
 import { Formik, FormikErrors } from 'formik';
 import { Input } from 'baseui/input';
 import truncate from 'lodash/truncate';
+import moment from 'moment';
 import { useStyletron } from 'baseui';
 import { Skeleton } from 'baseui/skeleton';
 import { Block } from 'baseui/block';
 import { FlexGrid, FlexGridItem } from 'baseui/flex-grid';
 import { LabelLarge, ParagraphMedium, ParagraphSmall } from 'baseui/typography';
 import { Post } from 'moectf-core/models';
-import { ResponseS, Status } from 'moectf-core/response';
+import { Status } from 'moectf-core/response';
 import { DURATION, useSnackbar } from 'baseui/snackbar';
-import routes from '@utils/routes';
+import { deletePost, updatePost, UpdatePostValues } from '@utils/moe-fetch';
 import { FormControl } from 'baseui/form-control';
 import { Textarea } from 'baseui/textarea';
 import { Check, Delete } from 'baseui/icon';
 import { ButtonLink } from './DefaultBlocks';
 
-type PostFormValues = {
-  name?: string;
-  content?: string;
-};
-
-type PostFormErrors = { [Property in keyof PostFormValues]: string };
-
-type PostFormResponse = ResponseS<PostFormErrors, Status.ERROR>
-  | ResponseS<{ post: Post }, Status.SUCCESS>;
-
-const formValidate = (values: PostFormValues) => {
-  const errors: Partial<FormikErrors<PostFormValues>> = {};
+const formValidate = (values: UpdatePostValues) => {
+  const errors: Partial<FormikErrors<UpdatePostValues>> = {};
 
   if (values.name == '') {
     errors.name = 'Please provide a user name.';
@@ -52,8 +43,8 @@ export const TasksSkeleton = [1, 2, 3, 4, 5, 6, 7, 8].map((v) => (
 
 type PostCardProps = {
   post: Post;
-  onDelete: (post: Post) => void;
-}
+  onDelete: (post: Post) => void | Promise<void>;
+};
 
 export const PostCard = ({ post, onDelete }: PostCardProps) => {
   const [, { colors }] = useStyletron();
@@ -78,7 +69,7 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
                   {post.name}
                 </LabelLarge>
                 <ParagraphSmall color={colors.contentTertiary} marginBottom="10px">
-                  {new Date(post.date).toUTCString()}
+                  {moment(post.date).toLocaleString()}
                 </ParagraphSmall>
                 <ParagraphMedium>
                   {truncate(post.content, { length: 80 })}
@@ -97,24 +88,21 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
                     onClick={async () => {
                       enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                      const response: PostFormResponse = await (await fetch(routes.postDelete.replace(':_id', post._id), {
-                        method: 'DELETE',
-                        credentials: 'include',
-                      })).json();
+                      const response = await deletePost(post._id);
 
                       dequeue();
                       if (response.status == Status.SUCCESS) {
-                        onDelete(post);
+                        await onDelete(post);
                         enqueue({
                           message: 'Post was deleted successfully',
                           // eslint-disable-next-line react/no-unstable-nested-components
-                          startEnhancer: ({ size }) => (<Check size={size} />)
+                          startEnhancer: ({ size }) => (<Check size={size} />),
                         }, DURATION.short);
                       } else {
                         enqueue({
                           message: 'Something has been wrong',
                           // eslint-disable-next-line react/no-unstable-nested-components
-                          startEnhancer: ({ size }) => (<Delete size={size} />)
+                          startEnhancer: ({ size }) => (<Delete size={size} />),
                         }, DURATION.short);
                       }
                       setEditMode(false);
@@ -146,21 +134,14 @@ export const PostCard = ({ post, onDelete }: PostCardProps) => {
               onSubmit={async (values, { setSubmitting, setErrors }) => {
                 enqueue({ message: 'Making Changes', progress: true }, DURATION.infinite);
 
-                const response: PostFormResponse = await (await fetch(routes.postPut.replace(':_id', post._id), {
-                  method: 'PUT',
-                  body: JSON.stringify(values),
-                  credentials: 'include',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                })).json();
+                const response = await updatePost(post._id, values);
 
                 dequeue();
                 if (response.status == Status.SUCCESS) {
                   enqueue({
                     message: 'Changes were made successfully',
                     // eslint-disable-next-line react/no-unstable-nested-components
-                    startEnhancer: ({ size }) => (<Check size={size} />)
+                    startEnhancer: ({ size }) => (<Check size={size} />),
                   }, DURATION.short);
                   setEditMode(false);
                 } else {

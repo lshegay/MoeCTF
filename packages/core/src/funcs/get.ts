@@ -1,53 +1,34 @@
 import { Database, Post, Task, User } from '../models';
-import { CacheData, Scoreboard } from '../models/units';
+import { CacheData } from '../models/units';
 
-// TODO: проставить типы для функций
-const users = async ({ db, email }: { db: any; email?: boolean }): Promise<User[]> => (
-  db.users.find({}, { password: 0, ...(email ? {} : { email: 0 }) })
-);
+const release = (db: Database) => ({
+  users: async () => db.users.find<User>({}, { password: 0, email: 0 }),
+  profile: (user?: User) => user ?? null,
+  posts: async (start?: number, limit?: number): Promise<Post[]> => {
+    let query = db.posts.find<Post>({});
+    if (start) query = query.skip(start);
+    if (limit) query = query.limit(limit);
+  
+    return query.sort({ date: -1 }).exec();
+  },
+  post: async (_id: string): Promise<Post> => (
+    db.posts.findOne({ _id })
+  ),
+  tasks: async (): Promise<Omit<Task, 'flag'>[]> => (
+    db.tasks.find<Task>({}, { flag: 0 })
+  ),
+  task: async (_id: string): Promise<Omit<Task, 'flag'>> => (
+    db.tasks.findOne<Task>({ _id }, { flag: 0 })
+  ),
+  cache: async (): Promise<CacheData> => {
+    const datastore = db.cache;
+    let cacheData = (await datastore.find<CacheData>({}))[0];
+    if (!cacheData) {
+      cacheData = await datastore.insert({ scoreboard: {}, history: {} });
+    }
 
-const profile = async ({ req }): Promise<User | null> => (
-  req.user as (User | null)
-);
+    return cacheData;
+  },
+});
 
-const posts = async ({ db, start, limit }): Promise<Post[]> => (
-  db.posts.find({}).skip(start).limit(limit).sort({ date: -1 })
-    .exec()
-);
-
-const post = async ({ _id, db }): Promise<Post> => (
-  db.posts.findOne({ _id })
-);
-
-const tasks = async ({ db }): Promise<Task[]> => (
-  db.tasks.find({}, { flag: 0 })
-);
-
-const task = async ({ _id, db }): Promise<Task> => (
-  db.tasks.findOne({ _id }, { flag: 0 })
-);
-
-const cache = async ({ db }): Promise<CacheData> => {
-  const datastore = (db.cache as Datastore);
-  let cacheData = (await datastore.find<CacheData>({}))[0];
-  if (cacheData == null) {
-    cacheData = await datastore.insert({ scoreboard: {}, history: {} });
-  }
-
-  return cacheData;
-};
-
-const scoreboard = async ({ db }): Promise<Scoreboard> => (
-  (await cache({ db })).scoreboard
-);
-
-export default {
-  users,
-  profile,
-  posts,
-  post,
-  tasks,
-  task,
-  cache,
-  scoreboard,
-};
+export default release;

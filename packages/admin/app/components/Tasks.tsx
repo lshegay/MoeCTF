@@ -21,34 +21,53 @@ export const TasksSkeleton = [1, 2, 3, 4, 5, 6, 7, 8].map((v) => (
 
 type TaskCardProps = {
   task: Task;
-}
+  onTagClick?: (tag: string) => void;
+};
 
-export const TaskCard = ({ task }: TaskCardProps) => {
+export const TaskCard = ({ task, onTagClick }: TaskCardProps) => {
   const [, { colors }] = useStyletron();
 
   return (
     <NextLink href={`/tasks/${task._id}`} passHref>
-      <a className="block transition shadow-2xl hover:shadow-md hover:ease-out active:shadow-none">
+      <a
+        href=""
+        onClick={(e) => {
+          if (e.target instanceof Element) {
+            if (e.target.parentElement.attributes.getNamedItem('data-baseweb').value == 'tag') {
+              e.preventDefault();
+            }
+          }
+        }}
+        tabIndex={0}
+      >
         <Block
           display="flex"
           flexDirection="column"
           justifyContent="space-between"
           width="100%"
-          height="200px"
+          minHeight="200px"
           padding="20px"
           backgroundColor={colors.primaryB}
+          className="block transition shadow-2xl hover:shadow-md hover:ease-out active:shadow-none"
         >
           <Block>
             <LabelLarge className="mb-2 hover:underline inline-block">
-              {task.name}
+              {truncate(task.name, { length: 50 })}
             </LabelLarge>
-            <ParagraphMedium color={colors.contentTertiary}>
+            <ParagraphMedium color={colors.contentTertiary} marginBottom="20px">
               {truncate(task.content, { length: 80 })}
             </ParagraphMedium>
           </Block>
           <Block marginLeft="-5px">
             {task.tags.map((name) => (
-              <Tag closeable={false} key={name}>{name}</Tag>
+              <Tag
+                key={name}
+                closeable={false}
+                onClick={() => { if (onTagClick) { onTagClick(name); } }}
+              >
+                {name}
+
+              </Tag>
             ))}
           </Block>
         </Block>

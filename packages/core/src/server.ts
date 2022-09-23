@@ -13,17 +13,13 @@ const server = async (): Promise<Moe> => {
     console.log('No custom config was used. "config.json" was not found.');
   }
 
-  const server = express();
-  server.use(cors({
-    origin: [CONFIG.starterDomain, CONFIG.adminDomain],
-    credentials: true,
-  }));
+  CONFIG.cors = [CONFIG.starterDomain, CONFIG.adminDomain];
 
-  const application = await start(server, undefined, CONFIG);
+  const application = await start(express(), undefined, CONFIG);
 
   application.listen((config) => {
     console.log(`Server is up at: ${config.protocol}//${config.hostname}:${config.port}`);
-  });
+  }).on('error', (e) => { console.log(e) });
 
   return application;
 };
